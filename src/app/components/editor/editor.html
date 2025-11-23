@@ -1,0 +1,62 @@
+<div class="flex h-[calc(100vh-8rem)] flex-col">
+    <div class="mb-4 flex items-center justify-between">
+        <h1 class="text-2xl font-bold text-gray-900">Course Editor</h1>
+        <div class="flex gap-2">
+            <button
+                class="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">Save
+                Draft</button>
+            <button
+                class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Publish</button>
+        </div>
+    </div>
+
+    <div class="flex flex-1 gap-6">
+        <!-- Sidebar -->
+        <div class="w-64 flex-none rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+            <h2 class="mb-4 text-sm font-semibold text-gray-500 uppercase tracking-wider">Modules</h2>
+            <ul class="space-y-2">
+                @for (module of modules; track module.id) {
+                <li>
+                    <button (click)="selectedModule.set(module)"
+                        [class.bg-indigo-50]="selectedModule()?.id === module.id"
+                        [class.text-indigo-600]="selectedModule()?.id === module.id"
+                        class="w-full rounded-md px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">
+                        {{ module.title }}
+                    </button>
+                </li>
+                }
+            </ul>
+            <button
+                class="mt-4 flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-gray-300 py-2 text-sm font-medium text-gray-600 hover:border-gray-400 hover:bg-gray-50">
+                <span class="text-xl">+</span> Add Module
+            </button>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+            @if (selectedModule(); as module) {
+            <div class="space-y-6">
+                <div>
+                    <label for="title" class="block text-sm font-medium leading-6 text-gray-900">Module Title</label>
+                    <div class="mt-2">
+                        <input type="text" name="title" id="title" [value]="module.title"
+                            class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="content" class="block text-sm font-medium leading-6 text-gray-900">Content</label>
+                    <div class="mt-2">
+                        <textarea id="content" name="content" rows="12"
+                            class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">{{ module.content }}</textarea>
+                    </div>
+                </div>
+            </div>
+            } @else {
+            <div class="flex h-full items-center justify-center text-gray-500">
+                Select a module to edit
+            </div>
+            }
+        </div>
+    </div>
+</div>
