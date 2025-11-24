@@ -8,5 +8,13 @@
     "WELCOME": "Welkom",
     "LANGUAGE": "Taal",
     "ENGLISH": "Engels",
-    "DUTCH": "Nederlands"
+    "DUTCH": "Nederlands",
+    "LANDING_TITLE": "Verrijk je online leerervaring",
+    "LANDING_SUBTITLE": "Anim aute id magna aliqua ad ad non deserunt sunt. Qui irure qui lorem cupidatat commodo. Elit sunt amet fugiat veniam occaecat fugiat aliqua.",
+    "GET_STARTED": "Aan de slag",
+    "LEARN_MORE": "Meer informatie",
+    "NO_COURSES": "Geen cursussen gevonden.",
+    "CREATED_ON": "Aangemaakt op",
+    "COMPLETED": "Voltooid",
+    "IN_PROGRESS": "In uitvoering"
 }

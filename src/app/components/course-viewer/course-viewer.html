@@ -1,0 +1,59 @@
+<div class="flex h-[calc(100vh-64px)]">
+    <!-- Sidebar -->
+    <div class="w-64 bg-gray-100 border-r border-gray-200 overflow-y-auto">
+        <div class="p-4">
+            <h2 class="text-lg font-bold text-gray-900 mb-4">Course Content</h2>
+            <nav class="space-y-1">
+                @if (pages$ | async; as pages) {
+                @for (page of pages; track page.id) {
+                <button (click)="selectPage(page)" [class.bg-indigo-50]="selectedPage()?.id === page.id"
+                    [class.text-indigo-600]="selectedPage()?.id === page.id"
+                    class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md hover:bg-gray-50 hover:text-gray-900 group relative">
+
+                    <span class="flex-1 text-left truncate">{{ page.title }}</span>
+
+                    @if (isCompleted(page.id)) {
+                    <span class="ml-2 text-green-500">
+                        <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </span>
+                    }
+                </button>
+                }
+                }
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 overflow-y-auto p-8">
+        @if (selectedPage(); as page) {
+        <div class="max-w-3xl mx-auto">
+            <h1 class="text-3xl font-bold text-gray-900 mb-6">{{ page.title }}</h1>
+
+            <div class="prose prose-indigo max-w-none mb-8" [innerHTML]="page.content | marked"></div>
+
+            <div class="border-t border-gray-200 pt-6 flex justify-end">
+                @if (!isCompleted(page.id)) {
+                <button (click)="completeLesson(page.id)"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Mark as Complete
+                </button>
+                } @else {
+                <span
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-green-700 bg-green-100">
+                    Completed
+                </span>
+                }
+            </div>
+        </div>
+        } @else {
+        <div class="flex items-center justify-center h-full text-gray-500">
+            Select a lesson to start learning
+        </div>
+        }
+    </div>
+</div>

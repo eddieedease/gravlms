@@ -1,5 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { UserService } from '../../services/user.service';
+import { CourseService } from '../../services/course.service';
+import { LearningService } from '../../services/learning.service';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 
@@ -11,9 +13,12 @@ import { DatePipe } from '@angular/common';
 })
 export class Admin implements OnInit {
   private userService = inject(UserService);
+  private courseService = inject(CourseService);
+  private learningService = inject(LearningService);
   private fb = inject(FormBuilder);
 
   users = signal<any[]>([]);
+  courses = signal<any[]>([]);
   isEditing = signal(false);
   showForm = signal(false);
   currentUserId: number | null = null;
@@ -24,13 +29,42 @@ export class Admin implements OnInit {
     role: ['editor', Validators.required]
   });
 
+  assignForm = this.fb.group({
+    userId: ['', Validators.required],
+    courseId: ['', Validators.required]
+  });
+
+  assignedCourses = signal<any[]>([]);
+
   ngOnInit() {
     this.loadUsers();
+    this.loadCourses();
+
+    // Listen to user selection changes
+    this.assignForm.controls.userId.valueChanges.subscribe(userId => {
+      if (userId) {
+        this.loadAssignedCourses(Number(userId));
+      } else {
+        this.assignedCourses.set([]);
+      }
+    });
   }
 
   loadUsers() {
     this.userService.getUsers().subscribe(users => {
       this.users.set(users);
+    });
+  }
+
+  loadCourses() {
+    this.courseService.getCourses().subscribe(courses => {
+      this.courses.set(courses);
+    });
+  }
+
+  loadAssignedCourses(userId: number) {
+    this.learningService.getUserCourses(userId).subscribe(courses => {
+      this.assignedCourses.set(courses);
     });
   }
 
@@ -80,6 +114,38 @@ export class Admin implements OnInit {
     if (confirm('Are you sure?')) {
       this.userService.deleteUser(id).subscribe(() => {
         this.loadUsers();
+      });
+    }
+  }
+
+  onAssign() {
+    if (this.assignForm.valid) {
+      const { userId, courseId } = this.assignForm.value;
+      if (userId && courseId) {
+        this.learningService.assignCourse(Number(userId), Number(courseId)).subscribe({
+          next: () => {
+            alert('Course assigned successfully');
+            this.loadAssignedCourses(Number(userId));
+            this.assignForm.patchValue({ courseId: '' }); // Reset course selection only
+          },
+          error: (err) => {
+            alert(err.error?.error || 'Failed to assign course');
+          }
+        });
+      }
+    }
+  }
+
+  detachCourse(courseId: number) {
+    const userId = this.assignForm.value.userId;
+    if (userId && confirm('Are you sure you want to remove this course from the user?')) {
+      this.learningService.detachCourse(Number(userId), courseId).subscribe({
+        next: () => {
+          this.loadAssignedCourses(Number(userId));
+        },
+        error: (err) => {
+          alert(err.error?.error || 'Failed to detach course');
+        }
       });
     }
   }

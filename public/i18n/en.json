@@ -8,5 +8,13 @@
     "WELCOME": "Welcome",
     "LANGUAGE": "Language",
     "ENGLISH": "English",
-    "DUTCH": "Dutch"
+    "DUTCH": "Dutch",
+    "LANDING_TITLE": "Enrich your online learning experience",
+    "LANDING_SUBTITLE": "Anim aute id magna aliqua ad ad non deserunt sunt. Qui irure qui lorem cupidatat commodo. Elit sunt amet fugiat veniam occaecat fugiat aliqua.",
+    "GET_STARTED": "Get started",
+    "LEARN_MORE": "Learn more",
+    "NO_COURSES": "No courses found.",
+    "CREATED_ON": "Created on",
+    "COMPLETED": "Completed",
+    "IN_PROGRESS": "In Progress"
 }

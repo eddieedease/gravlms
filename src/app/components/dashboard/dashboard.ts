@@ -1,14 +1,15 @@
 import { Component, inject } from '@angular/core';
 import { AsyncPipe, DatePipe } from '@angular/common';
-import { CourseService } from '../../services/course.service';
+import { LearningService } from '../../services/learning.service';
 import { TranslateModule } from '@ngx-translate/core';
+import { RouterLink } from '@angular/router';
 
 @Component({
     selector: 'app-dashboard',
-    imports: [AsyncPipe, DatePipe, TranslateModule],
+    imports: [AsyncPipe, DatePipe, TranslateModule, RouterLink],
     templateUrl: './dashboard.html'
 })
 export class DashboardComponent {
-    private courseService = inject(CourseService);
-    courses$ = this.courseService.getCourses();
+    private learningService = inject(LearningService);
+    courses$ = this.learningService.getMyCourses();
 }

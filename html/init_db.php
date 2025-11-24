@@ -70,6 +70,45 @@ try {
     $pdo->exec($sqlPages);
     echo "Table 'course_pages' created or already exists.<br>";
 
+    // Create user_courses table (Assignments)
+    $sqlUserCourses = "CREATE TABLE IF NOT EXISTS user_courses (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        course_id INT NOT NULL,
+        assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
+        UNIQUE(user_id, course_id)
+    )";
+    $pdo->exec($sqlUserCourses);
+    echo "Table 'user_courses' created or already exists.<br>";
+
+    // Create completed_lessons table
+    $sqlCompletedLessons = "CREATE TABLE IF NOT EXISTS completed_lessons (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        page_id INT NOT NULL,
+        completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (page_id) REFERENCES course_pages(id) ON DELETE CASCADE,
+        UNIQUE(user_id, page_id)
+    )";
+    $pdo->exec($sqlCompletedLessons);
+    echo "Table 'completed_lessons' created or already exists.<br>";
+
+    // Create completed_courses table
+    $sqlCompletedCourses = "CREATE TABLE IF NOT EXISTS completed_courses (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        course_id INT NOT NULL,
+        completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
+        UNIQUE(user_id, course_id)
+    )";
+    $pdo->exec($sqlCompletedCourses);
+    echo "Table 'completed_courses' created or already exists.<br>";
+
 } catch (\PDOException $e) {
     throw new \PDOException($e->getMessage(), (int) $e->getCode());
 }
