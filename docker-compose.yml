@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # 1. Apache and PHP Service
+  web:
+    build: .
+    # image: php:8.3-apache # You can change the PHP version here
+    container_name: mamp_apache_php
+    volumes:
+      # Mount your local project directory to Apache's web root
+      - ./html:/var/www/html
+      # You can optionally mount a custom php.ini or Apache config here
+    ports:
+      - "8080:80" # Map host port 8080 to container port 80
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  # 2. MySQL/MariaDB Service
+  db:
+    image: mysql:8.0 # You can use mariadb instead if preferred
+    container_name: mamp_mysql
+    environment:
+      # Required for first-time setup
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: my_app_db
+      MYSQL_USER: admin 
+      MYSQL_PASSWORD: admin
+    volumes:
+      # Persist your database data
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306" # Optional: allows connecting from your host machine
+    restart: unless-stopped
+
+  # 3. phpMyAdmin Service
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: mamp_phpmyadmin
+    environment:
+      # This links phpMyAdmin to the 'db' service
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: your_root_password_here # Use the same root password as above
+    ports:
+      - "8081:80" # Map host port 8081 to phpMyAdmin's port 80
+    depends_on:
+      - db
+    restart: unless-stopped
+
+# Define volumes for data persistence
+volumes:
+  db_data:
