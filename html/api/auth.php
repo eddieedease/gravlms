@@ -1,6 +1,8 @@
 <?php
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 
 function registerAuthRoutes($app)
 {
@@ -20,10 +22,26 @@ function registerAuthRoutes($app)
             $user = $stmt->fetch();
 
             if ($user && password_verify($password, $user['password'])) {
-                $token = base64_encode(random_bytes(32));
+                // JWT Configuration
+                $secretKey = getenv('JWT_SECRET') ?: 'your-secret-key-change-in-production';
+                $issuedAt = time();
+                $expirationTime = $issuedAt + 3600; // 1 hour
+                $payload = [
+                    'iat' => $issuedAt,
+                    'exp' => $expirationTime,
+                    'iss' => 'gravlms',
+                    'data' => [
+                        'id' => $user['id'],
+                        'username' => $user['username'],
+                        'role' => $user['role']
+                    ]
+                ];
+
+                $jwt = JWT::encode($payload, $secretKey, 'HS256');
+
                 return jsonResponse($response, [
                     'status' => 'success',
-                    'token' => $token,
+                    'token' => $jwt,
                     'user' => [
                         'id' => $user['id'],
                         'username' => $user['username'],

@@ -23,17 +23,6 @@ $app->add(function ($request, $handler) {
         ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
 });
 
-// Auth Middleware (kept in index to keep simple)
-$authMiddleware = function (Request $request, $handler) {
-    $authHeader = $request->getHeaderLine('Authorization');
-    if (!$authHeader) {
-        $response = new \Slim\Psr7\Response();
-        $response->getBody()->write(json_encode(['error' => 'Unauthorized']));
-        return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
-    }
-    return $handler->handle($request);
-};
-
 // simple test route
 $app->get('/api/test', function (Request $request, Response $response, $args) {
     $data = ['status' => 'success', 'message' => 'Hello from Slim PHP Backend!'];
@@ -44,15 +33,19 @@ $app->get('/api/test', function (Request $request, Response $response, $args) {
 // Include API modules
 require_once __DIR__ . '/api/db.php';
 require_once __DIR__ . '/api/helpers.php';
+require_once __DIR__ . '/api/middleware.php';
 require_once __DIR__ . '/api/auth.php';
 require_once __DIR__ . '/api/users.php';
 require_once __DIR__ . '/api/courses.php';
 require_once __DIR__ . '/api/pages.php';
 
+// Create JWT middleware instance
+$jwtMiddleware = jwtAuthMiddleware();
+
 // Register routes from modules
 registerAuthRoutes($app);
-registerUserRoutes($app, $authMiddleware);
-registerCourseRoutes($app, $authMiddleware);
-registerPageRoutes($app, $authMiddleware);
+registerUserRoutes($app, $jwtMiddleware);
+registerCourseRoutes($app, $jwtMiddleware);
+registerPageRoutes($app, $jwtMiddleware);
 
 $app->run();
