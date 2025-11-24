@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
-import { Auth } from './services/auth';
+import { AuthService } from './services/auth.service';
 import { ApiService } from './services/api.service';
 import { AsyncPipe, JsonPipe } from '@angular/common';
 
@@ -11,7 +11,7 @@ import { AsyncPipe, JsonPipe } from '@angular/common';
   styleUrl: './app.css'
 })
 export class App {
-  protected readonly auth = inject(Auth);
+  protected readonly auth = inject(AuthService);
   private readonly apiService = inject(ApiService);
 
   protected readonly apiMessage$ = this.apiService.getTestMessage();

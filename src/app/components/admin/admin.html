@@ -2,15 +2,48 @@
     <div class="sm:flex sm:items-center">
         <div class="sm:flex-auto">
             <h1 class="text-base font-semibold leading-6 text-gray-900">Users</h1>
-            <p class="mt-2 text-sm text-gray-700">A list of all the users in your account including their name, title,
-                email and role.</p>
+            <p class="mt-2 text-sm text-gray-700">Manage users of the LMS.</p>
         </div>
         <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-            <button type="button"
+            <button type="button" (click)="startCreate()"
                 class="block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Add
                 user</button>
         </div>
     </div>
+
+    @if (showForm()) {
+    <div class="mt-8 p-4 border rounded bg-gray-50">
+        <h2 class="text-lg font-medium mb-4">{{ isEditing() ? 'Edit User' : 'Create User' }}</h2>
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Username</label>
+                <input type="text" formControlName="username"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Password {{ isEditing() ? '(leave blank to keep)'
+                    : '' }}</label>
+                <input type="password" formControlName="password"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Role</label>
+                <select formControlName="role"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    <option value="admin">Admin</option>
+                    <option value="editor">Editor</option>
+                </select>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button type="button" (click)="cancel()"
+                    class="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">Cancel</button>
+                <button type="submit" [disabled]="form.invalid"
+                    class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Save</button>
+            </div>
+        </form>
+    </div>
+    }
+
     <div class="mt-8 flow-root">
         <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
             <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
@@ -18,27 +51,31 @@
                     <thead>
                         <tr>
                             <th scope="col"
-                                class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">Name</th>
-                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Title</th>
-                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status
+                                class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">ID</th>
+                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Username
                             </th>
                             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Role</th>
+                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Created At
+                            </th>
                             <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-0">
-                                <span class="sr-only">Edit</span>
+                                <span class="sr-only">Actions</span>
                             </th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
-                        @for (person of people; track person.email) {
+                        @for (user of users(); track user.id) {
                         <tr>
                             <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">{{
-                                person.name }}</td>
-                            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ person.title }}</td>
-                            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ person.status }}</td>
-                            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ person.role }}</td>
+                                user.id }}</td>
+                            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ user.username }}</td>
+                            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ user.role }}</td>
+                            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ user.created_at |
+                                date:'short' }}</td>
                             <td class="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
-                                <a href="#" class="text-indigo-600 hover:text-indigo-900">Edit<span class="sr-only">, {{
-                                        person.name }}</span></a>
+                                <a href="javascript:void(0)" (click)="startEdit(user)"
+                                    class="text-indigo-600 hover:text-indigo-900 mr-4">Edit</a>
+                                <a href="javascript:void(0)" (click)="deleteUser(user.id)"
+                                    class="text-red-600 hover:text-red-900">Delete</a>
                             </td>
                         </tr>
                         }
