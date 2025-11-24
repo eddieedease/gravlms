@@ -1,0 +1,12 @@
+{
+    "HELLO": "Hello",
+    "HOME": "Home",
+    "DASHBOARD": "Dashboard",
+    "LOGIN": "Login",
+    "LOGOUT": "Logout",
+    "COURSES": "Courses",
+    "WELCOME": "Welcome",
+    "LANGUAGE": "Language",
+    "ENGLISH": "English",
+    "DUTCH": "Dutch"
+}
