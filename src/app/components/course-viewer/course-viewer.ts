@@ -4,13 +4,14 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { LearningService } from '../../services/learning.service';
 import { CourseService } from '../../services/course.service';
 import { TranslateModule } from '@ngx-translate/core';
+import { MarkedPipe } from '../../pipes/marked.pipe';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map, switchMap, tap } from 'rxjs/operators';
-import { MarkedPipe } from '../../pipes/marked.pipe';
+
 
 @Component({
     selector: 'app-course-viewer',
-    imports: [CommonModule, TranslateModule, RouterLink, MarkedPipe],
+    imports: [CommonModule, TranslateModule, MarkedPipe],
     templateUrl: './course-viewer.html'
 })
 export class CourseViewerComponent {

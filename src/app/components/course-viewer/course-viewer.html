@@ -34,7 +34,9 @@
         <div class="max-w-3xl mx-auto">
             <h1 class="text-3xl font-bold text-gray-900 mb-6">{{ page.title }}</h1>
 
-            <div class="prose prose-indigo max-w-none mb-8" [innerHTML]="page.content | marked"></div>
+            <div class="prose prose-indigo max-w-none mb-8">
+                <div class="markdown-content" [innerHTML]="selectedPage()?.content | marked"></div>
+            </div>
 
             <div class="border-t border-gray-200 pt-6 flex justify-end">
                 @if (!isCompleted(page.id)) {

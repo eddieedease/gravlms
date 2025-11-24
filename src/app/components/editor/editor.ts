@@ -1,6 +1,8 @@
-import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, inject, OnInit, signal, computed, ElementRef, viewChild } from '@angular/core';
 import { CourseService } from '../../services/course.service';
+import { AuthService } from '../../services/auth.service';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { marked } from 'marked';
 
 @Component({
@@ -11,7 +13,12 @@ import { marked } from 'marked';
 })
 export class Editor implements OnInit {
   private courseService = inject(CourseService);
+  private authService = inject(AuthService);
+  private http = inject(HttpClient);
   private fb = inject(FormBuilder);
+
+  fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
+  uploadStatus = signal<string>('');
 
   courses = signal<any[]>([]);
   selectedCourse = signal<any>(null);
@@ -174,5 +181,63 @@ export class Editor implements OnInit {
 
     // Optimistic update
     this.loadPages();
+  }
+
+  triggerFileInput() {
+    this.fileInput()?.nativeElement.click();
+  }
+
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.uploadImage(input.files[0]);
+    }
+  }
+
+  uploadImage(file: File) {
+    // Validate file type
+    if (!['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) {
+      this.uploadStatus.set('Error: Only JPG and PNG images are allowed');
+      return;
+    }
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      this.uploadStatus.set('Error: File size must not exceed 5MB');
+      return;
+    }
+
+    this.uploadStatus.set('Uploading...');
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`
+    });
+
+    this.http.post<any>('http://localhost:8080/api/uploads', formData, { headers }).subscribe({
+      next: (response) => {
+        this.uploadStatus.set('Upload successful!');
+        this.insertImageMarkdown(response.filename);
+        setTimeout(() => this.uploadStatus.set(''), 3000);
+      },
+      error: (error) => {
+        this.uploadStatus.set('Error: ' + (error.error?.error || 'Upload failed'));
+        setTimeout(() => this.uploadStatus.set(''), 5000);
+      }
+    });
+  }
+
+  insertImageMarkdown(filename: string) {
+    const imageUrl = `http://localhost:8080/api/uploads/${filename}`;
+    const markdown = `![Image](${imageUrl})`;
+
+    const currentContent = this.form.get('content')?.value || '';
+    const newContent = currentContent + '\n\n' + markdown;
+
+    this.form.patchValue({ content: newContent });
+    this.updatePreview(newContent);
   }
 }

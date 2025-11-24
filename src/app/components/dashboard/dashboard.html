@@ -17,7 +17,7 @@
                         <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
                             [class.bg-green-100]="course.is_completed" [class.text-green-800]="course.is_completed"
                             [class.bg-yellow-100]="!course.is_completed" [class.text-yellow-800]="!course.is_completed">
-                            {{ course.is_completed ? 'Completed' : 'In Progress' }}
+                            {{ (course.is_completed ? 'COMPLETED' : 'IN_PROGRESS') | translate }}
                         </p>
                     </div>
                 </div>
@@ -29,7 +29,8 @@
                     </div>
                     <div class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
                         <p>
-                            Created on <time [dateTime]="course.created_at">{{ course.created_at | date }}</time>
+                            {{ 'CREATED_ON' | translate }} <time [dateTime]="course.created_at">{{ course.created_at |
+                                date }}</time>
                         </p>
                     </div>
                 </div>
@@ -38,7 +39,7 @@
         }
         @if (courses.length === 0) {
         <li class="px-4 py-4 sm:px-6 text-center text-gray-500">
-            No courses found.
+            {{ 'NO_COURSES' | translate }}
         </li>
         }
         }
