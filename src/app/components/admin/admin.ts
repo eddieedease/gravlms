@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { UserService } from '../../services/user.service';
 import { CourseService } from '../../services/course.service';
 import { LearningService } from '../../services/learning.service';
+import { GroupsService } from '../../services/groups.service';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 
@@ -15,16 +16,32 @@ export class Admin implements OnInit {
   private userService = inject(UserService);
   private courseService = inject(CourseService);
   private learningService = inject(LearningService);
+  private groupsService = inject(GroupsService);
   private fb = inject(FormBuilder);
 
   users = signal<any[]>([]);
   courses = signal<any[]>([]);
+  groups = signal<any[]>([]);
+
+  // Tab State
+  activeTab = signal<'users' | 'groups'>('users');
+
+  // User Management State
   isEditing = signal(false);
   showForm = signal(false);
   currentUserId: number | null = null;
 
+  // Group Management State
+  showGroupForm = signal(false);
+  isEditingGroup = signal(false);
+  currentGroupId: number | null = null;
+  selectedGroup: any = null;
+  groupUsers = signal<any[]>([]);
+  groupCourses = signal<any[]>([]);
+
   form = this.fb.group({
     username: ['', Validators.required],
+    email: ['', [Validators.required, Validators.email]],
     password: [''], // Optional on edit
     role: ['editor', Validators.required]
   });
@@ -34,11 +51,25 @@ export class Admin implements OnInit {
     courseId: ['', Validators.required]
   });
 
+  groupForm = this.fb.group({
+    name: ['', Validators.required],
+    description: ['']
+  });
+
+  assignGroupUserForm = this.fb.group({
+    userId: ['', Validators.required]
+  });
+
+  assignGroupCourseForm = this.fb.group({
+    courseId: ['', Validators.required]
+  });
+
   assignedCourses = signal<any[]>([]);
 
   ngOnInit() {
     this.loadUsers();
     this.loadCourses();
+    this.loadGroups();
 
     // Listen to user selection changes
     this.assignForm.controls.userId.valueChanges.subscribe(userId => {
@@ -62,12 +93,19 @@ export class Admin implements OnInit {
     });
   }
 
+  loadGroups() {
+    this.groupsService.getGroups().subscribe(groups => {
+      this.groups.set(groups);
+    });
+  }
+
   loadAssignedCourses(userId: number) {
     this.learningService.getUserCourses(userId).subscribe(courses => {
       this.assignedCourses.set(courses);
     });
   }
 
+  // User Management
   startCreate() {
     this.isEditing.set(false);
     this.currentUserId = null;
@@ -81,11 +119,16 @@ export class Admin implements OnInit {
     this.currentUserId = user.id;
     this.form.patchValue({
       username: user.username,
+      email: user.email,
       role: user.role
     });
     this.form.controls.password.removeValidators(Validators.required);
     this.form.controls.password.updateValueAndValidity();
     this.showForm.set(true);
+  }
+
+  setTab(tab: 'users' | 'groups') {
+    this.activeTab.set(tab);
   }
 
   cancel() {
@@ -146,6 +189,117 @@ export class Admin implements OnInit {
         error: (err) => {
           alert(err.error?.error || 'Failed to detach course');
         }
+      });
+    }
+  }
+
+  // Group Management
+  startCreateGroup() {
+    this.isEditingGroup.set(false);
+    this.currentGroupId = null;
+    this.groupForm.reset();
+    this.showGroupForm.set(true);
+  }
+
+  startEditGroup(group: any) {
+    this.isEditingGroup.set(true);
+    this.currentGroupId = group.id;
+    this.groupForm.patchValue({
+      name: group.name,
+      description: group.description
+    });
+    this.showGroupForm.set(true);
+  }
+
+  cancelGroup() {
+    this.showGroupForm.set(false);
+    this.groupForm.reset();
+  }
+
+  onSubmitGroup() {
+    if (this.groupForm.valid) {
+      const group = this.groupForm.value;
+      if (this.isEditingGroup() && this.currentGroupId) {
+        this.groupsService.updateGroup(this.currentGroupId, group).subscribe(() => {
+          this.loadGroups();
+          this.cancelGroup();
+        });
+      } else {
+        this.groupsService.createGroup(group).subscribe(() => {
+          this.loadGroups();
+          this.cancelGroup();
+        });
+      }
+    }
+  }
+
+  deleteGroup(id: number) {
+    if (confirm('Are you sure you want to delete this group?')) {
+      this.groupsService.deleteGroup(id).subscribe(() => {
+        this.loadGroups();
+        if (this.selectedGroup && this.selectedGroup.id === id) {
+          this.selectedGroup = null;
+        }
+      });
+    }
+  }
+
+  selectGroup(group: any) {
+    this.selectedGroup = group;
+    this.loadGroupDetails(group.id);
+  }
+
+  loadGroupDetails(groupId: number) {
+    this.groupsService.getGroupUsers(groupId).subscribe(users => {
+      this.groupUsers.set(users);
+    });
+    this.groupsService.getGroupCourses(groupId).subscribe(courses => {
+      this.groupCourses.set(courses);
+    });
+  }
+
+  addUserToGroup() {
+    if (this.assignGroupUserForm.valid && this.selectedGroup) {
+      const userId = this.assignGroupUserForm.value.userId;
+      this.groupsService.addUserToGroup(this.selectedGroup.id, Number(userId)).subscribe({
+        next: () => {
+          this.loadGroupDetails(this.selectedGroup.id);
+          this.assignGroupUserForm.reset();
+        },
+        error: (err) => {
+          alert(err.error?.error || 'Failed to add user to group');
+        }
+      });
+    }
+  }
+
+  removeUserFromGroup(userId: number) {
+    if (this.selectedGroup && confirm('Remove user from group?')) {
+      this.groupsService.removeUserFromGroup(this.selectedGroup.id, userId).subscribe(() => {
+        this.loadGroupDetails(this.selectedGroup.id);
+      });
+    }
+  }
+
+  addCourseToGroup() {
+    if (this.assignGroupCourseForm.valid && this.selectedGroup) {
+      const courseId = this.assignGroupCourseForm.value.courseId;
+      this.groupsService.addCourseToGroup(this.selectedGroup.id, Number(courseId)).subscribe({
+        next: () => {
+          this.loadGroupDetails(this.selectedGroup.id);
+          this.assignGroupCourseForm.reset();
+        },
+        error: (err) => {
+          alert(err.error?.error || 'Failed to add course to group');
+        }
+      });
+    }
+  }
+
+  removeCourseFromGroup(courseId: number) {
+    if (this.selectedGroup && confirm('Remove course from group?')) {
+      this.groupsService.removeCourseFromGroup(this.selectedGroup.id, courseId).subscribe(() => {
+        this.loadGroupDetails(this.selectedGroup.id);
       });
     }
   }

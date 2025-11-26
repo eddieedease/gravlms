@@ -1,2 +1,56 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+
+@theme {
+    --color-algolia-bg: #05051e;
+    --color-algolia-card: #0b0b29;
+    --color-algolia-primary: #5468ff;
+    --color-algolia-secondary: #00aeff;
+    --color-algolia-text: #f5f5f7;
+    --color-algolia-muted: #9ca3af;
+
+    --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+body {
+    background-color: var(--color-algolia-bg);
+    color: var(--color-algolia-text);
+    font-family: var(--font-sans);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--color-algolia-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: #374151;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #4b5563;
+}
+
+/* Glassmorphism Utilities */
+.glass-panel {
+    background: rgba(11, 11, 41, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.input-field {
+    @apply block w-full rounded-md border-0 py-2.5 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-algolia-primary bg-white/5 sm:text-sm sm:leading-6;
+}
+
+.btn-primary {
+    @apply rounded-md bg-algolia-primary px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-algolia-primary transition-all duration-200;
+}
+
+.btn-secondary {
+    @apply rounded-md bg-white/10 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-white/20 ring-1 ring-inset ring-white/10 transition-all duration-200;
+}

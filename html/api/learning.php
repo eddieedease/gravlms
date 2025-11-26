@@ -59,15 +59,21 @@ function registerLearningRoutes($app, $authMiddleware)
                 $pdo = getDbConnection();
                 // Get courses assigned to user, include completion status if needed
                 // For now just get the courses
-                $sql = "SELECT c.*, 
+                // Get courses assigned to user directly OR via groups
+                $sql = "SELECT DISTINCT c.*, 
                         (SELECT COUNT(*) FROM completed_courses cc WHERE cc.course_id = c.id AND cc.user_id = ?) as is_completed
                         FROM courses c
-                        JOIN user_courses uc ON c.id = uc.course_id
-                        WHERE uc.user_id = ?
+                        WHERE c.id IN (
+                            SELECT course_id FROM user_courses WHERE user_id = ?
+                            UNION
+                            SELECT gc.course_id FROM group_courses gc 
+                            JOIN group_users gu ON gc.group_id = gu.group_id 
+                            WHERE gu.user_id = ?
+                        )
                         ORDER BY c.display_order ASC";
 
                 $stmt = $pdo->prepare($sql);
-                $stmt->execute([$userId, $userId]);
+                $stmt->execute([$userId, $userId, $userId]);
                 $courses = $stmt->fetchAll();
                 return jsonResponse($response, $courses);
             } catch (PDOException $e) {

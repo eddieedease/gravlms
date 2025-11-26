@@ -4,21 +4,26 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
+// Ensure autoloader is loaded (should be loaded via index.php)
+if (!class_exists('Firebase\JWT\JWT')) {
+    throw new \Exception('Firebase JWT library not loaded. Ensure vendor/autoload.php is included.');
+}
+
 function registerAuthRoutes($app)
 {
     $app->post('/api/login', function (Request $request, Response $response, $args) {
         $data = json_decode($request->getBody()->getContents(), true);
-        $username = $data['username'] ?? null;
+        $email = $data['email'] ?? null;
         $password = $data['password'] ?? null;
 
-        if (!$username || !$password) {
-            return jsonResponse($response, ['error' => 'Username and password are required'], 400);
+        if (!$email || !$password) {
+            return jsonResponse($response, ['error' => 'Email and password are required'], 400);
         }
 
         try {
             $pdo = getDbConnection();
-            $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ?");
-            $stmt->execute([$username]);
+            $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
+            $stmt->execute([$email]);
             $user = $stmt->fetch();
 
             if ($user && password_verify($password, $user['password'])) {
@@ -33,6 +38,7 @@ function registerAuthRoutes($app)
                     'data' => [
                         'id' => $user['id'],
                         'username' => $user['username'],
+                        'email' => $user['email'],
                         'role' => $user['role']
                     ]
                 ];
@@ -45,6 +51,7 @@ function registerAuthRoutes($app)
                     'user' => [
                         'id' => $user['id'],
                         'username' => $user['username'],
+                        'email' => $user['email'],
                         'role' => $user['role']
                     ]
                 ]);
