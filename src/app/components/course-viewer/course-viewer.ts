@@ -7,6 +7,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { MarkedPipe } from '../../pipes/marked.pipe';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map, switchMap, tap } from 'rxjs/operators';
+import { combineLatest } from 'rxjs';
 
 
 @Component({
@@ -39,10 +40,24 @@ export class CourseViewerComponent {
     completedPageIds = signal<number[]>([]);
 
     constructor() {
-        // When progress loads, update completedPageIds
-        this.progress$.subscribe(progress => {
-            if (progress && progress.completed_page_ids) {
-                this.completedPageIds.set(progress.completed_page_ids);
+        // Combine pages and progress to determine which page to show
+        combineLatest([this.pages$, this.progress$]).subscribe(([pages, progress]) => {
+            if (pages && pages.length > 0) {
+                // Update completed IDs
+                if (progress && progress.completed_page_ids) {
+                    this.completedPageIds.set(progress.completed_page_ids);
+                }
+
+                // Find first incomplete page
+                const completedIds = this.completedPageIds();
+                const firstIncomplete = pages.find(p => !completedIds.includes(p.id));
+
+                if (firstIncomplete) {
+                    this.selectPage(firstIncomplete);
+                } else {
+                    // If all completed (or none), select the first one
+                    this.selectPage(pages[0]);
+                }
             }
         });
     }
