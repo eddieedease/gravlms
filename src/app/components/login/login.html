@@ -1,31 +1,29 @@
-<div class="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8 bg-algolia-bg">
+<div class="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8 bg-gray-50">
     <div class="sm:mx-auto sm:w-full sm:max-w-sm">
-        <h2 class="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-white">Sign in to your account
+        <h2 class="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">Sign in to your account
         </h2>
     </div>
 
-    <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm glass-panel p-8 rounded-xl shadow-2xl">
+    <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm card p-8">
         <form class="space-y-6" [formGroup]="form" (ngSubmit)="onSubmit()">
             <div>
-                <label for="email" class="block text-sm font-medium leading-6 text-gray-300">Email address</label>
+                <label for="email" class="block text-sm font-medium leading-6 text-gray-900">Email address</label>
                 <div class="mt-2">
-                    <input id="email" type="email" formControlName="email" required
-                        class="input-field placeholder:text-gray-500">
+                    <input id="email" type="email" formControlName="email" required class="input-field">
                 </div>
             </div>
 
             <div>
                 <div class="flex items-center justify-between">
-                    <label for="password" class="block text-sm font-medium leading-6 text-gray-300">Password</label>
+                    <label for="password" class="block text-sm font-medium leading-6 text-gray-900">Password</label>
                 </div>
                 <div class="mt-2">
-                    <input id="password" type="password" formControlName="password" required
-                        class="input-field placeholder:text-gray-500">
+                    <input id="password" type="password" formControlName="password" required class="input-field">
                 </div>
             </div>
 
             @if (errorMessage) {
-            <div class="text-red-400 text-sm mt-2 bg-red-900/20 p-2 rounded border border-red-900/50">{{ errorMessage }}
+            <div class="text-red-600 text-sm mt-2 bg-red-50 p-2 rounded border border-red-200">{{ errorMessage }}
             </div>
             }
 

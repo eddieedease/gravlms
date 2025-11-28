@@ -1,48 +1,80 @@
-<div class="bg-white shadow-xl overflow-hidden rounded-xl">
-    <div class="px-4 py-5 border-b border-gray-200 sm:px-6 bg-gray-50">
-        <h3 class="text-lg leading-6 font-medium text-gray-900">
-            {{ 'COURSES' | translate }}
-        </h3>
+<div class="space-y-8">
+    <!-- Welcome Banner -->
+    <div class="relative overflow-hidden rounded-xl bg-algolia-primary px-6 py-10 shadow-xl sm:px-12 sm:py-16">
+        <div class="absolute inset-0 -z-10 overflow-hidden">
+            <svg class="absolute left-[max(50%,25rem)] top-0 h-[64rem] w-[128rem] -translate-x-1/2 stroke-white/10 [mask-image:radial-gradient(64rem_64rem_at_top,white,transparent)]"
+                aria-hidden="true">
+                <defs>
+                    <pattern id="e813992c-7d03-4cc4-a2bd-151760b470a0" width="200" height="200" x="50%" y="-1"
+                        patternUnits="userSpaceOnUse">
+                        <path d="M100 200V.5M.5 .5H200" fill="none" />
+                    </pattern>
+                </defs>
+                <svg x="50%" y="-1" class="overflow-visible fill-white/5">
+                    <path
+                        d="M-100.5 0h201v201h-201Z M699.5 0h201v201h-201Z M499.5 400h201v201h-201Z M-300.5 600h201v201h-201Z"
+                        stroke-width="0" />
+                </svg>
+                <rect width="100%" height="100%" stroke-width="0" fill="url(#e813992c-7d03-4cc4-a2bd-151760b470a0)" />
+            </svg>
+        </div>
+        <div class="relative mx-auto max-w-2xl lg:mx-0">
+            <h2 class="text-3xl font-bold tracking-tight text-white sm:text-4xl">Welcome back to your learning journey
+            </h2>
+            <p class="mt-6 text-lg leading-8 text-indigo-100">Pick up where you left off or start a new course today.
+                Your progress is tracked automatically.</p>
+        </div>
     </div>
-    <ul class="divide-y divide-gray-200">
+
+    <!-- Course Grid -->
+    <div>
+        <h3 class="text-xl font-semibold leading-7 text-gray-900 mb-6">{{ 'COURSES' | translate }}</h3>
+
         @if (courses$ | async; as courses) {
-        @for (course of courses; track course.id) {
-        <li>
-            <div class="px-4 py-4 sm:px-6 hover:bg-gray-50 transition-colors">
-                <div class="flex items-center justify-between">
-                    <p class="text-sm font-medium text-indigo-600 truncate">
-                        <a [routerLink]="['/learn', course.id]" class="hover:underline hover:text-indigo-800">{{
-                            course.title }}</a>
-                    </p>
-                    <div class="ml-2 flex-shrink-0 flex">
-                        <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                            [class.bg-green-100]="course.is_completed" [class.text-green-800]="course.is_completed"
-                            [class.bg-yellow-100]="!course.is_completed" [class.text-yellow-800]="!course.is_completed">
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            @for (course of courses; track course.id) {
+            <div class="card hover:shadow-md transition-shadow duration-200 flex flex-col h-full">
+                <div class="p-6 flex-1">
+                    <div class="flex items-center justify-between mb-4">
+                        <span
+                            class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset"
+                            [class.bg-green-50]="course.is_completed" [class.text-green-700]="course.is_completed"
+                            [class.ring-green-600/20]="course.is_completed" [class.bg-yellow-50]="!course.is_completed"
+                            [class.text-yellow-800]="!course.is_completed"
+                            [class.ring-yellow-600/20]="!course.is_completed">
                             {{ (course.is_completed ? 'COMPLETED' : 'IN_PROGRESS') | translate }}
-                        </p>
+                        </span>
+                        <time [dateTime]="course.created_at" class="text-xs text-gray-500">{{ course.created_at | date
+                            }}</time>
                     </div>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-2">
+                        <a [routerLink]="['/learn', course.id]" class="hover:text-algolia-primary transition-colors">
+                            {{ course.title }}
+                        </a>
+                    </h4>
+                    <p class="text-sm text-gray-600 line-clamp-3">{{ course.description }}</p>
                 </div>
-                <div class="mt-2 sm:flex sm:justify-between">
-                    <div class="sm:flex">
-                        <p class="flex items-center text-sm text-gray-700">
-                            {{ course.description }}
-                        </p>
-                    </div>
-                    <div class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                        <p>
-                            {{ 'CREATED_ON' | translate }} <time [dateTime]="course.created_at">{{ course.created_at |
-                                date }}</time>
-                        </p>
-                    </div>
+                <div class="border-t border-gray-100 px-6 py-4 bg-gray-50 rounded-b-xl">
+                    <a [routerLink]="['/learn', course.id]"
+                        class="text-sm font-medium text-algolia-primary hover:text-indigo-500 transition-colors flex items-center gap-1">
+                        Continue Learning <span aria-hidden="true">&rarr;</span>
+                    </a>
                 </div>
             </div>
-        </li>
-        }
+            }
+        </div>
+
         @if (courses.length === 0) {
-        <li class="px-4 py-4 sm:px-6 text-center text-gray-500">
-            {{ 'NO_COURSES' | translate }}
-        </li>
+        <div class="text-center py-12 bg-white rounded-xl border border-gray-200 border-dashed">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                aria-hidden="true">
+                <path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+            </svg>
+            <h3 class="mt-2 text-sm font-semibold text-gray-900">{{ 'NO_COURSES' | translate }}</h3>
+            <p class="mt-1 text-sm text-gray-500">Get started by creating a new course.</p>
+        </div>
         }
         }
-    </ul>
+    </div>
 </div>

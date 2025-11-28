@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { UserService } from '../../services/user.service';
 import { CourseService } from '../../services/course.service';
 import { LearningService } from '../../services/learning.service';
@@ -22,6 +22,25 @@ export class Admin implements OnInit {
   users = signal<any[]>([]);
   courses = signal<any[]>([]);
   groups = signal<any[]>([]);
+
+  // Search State
+  searchTerm = signal('');
+
+  filteredUsers = computed(() => {
+    const term = this.searchTerm().toLowerCase();
+    return this.users().filter(user =>
+      user.username.toLowerCase().includes(term) ||
+      user.email.toLowerCase().includes(term)
+    );
+  });
+
+  filteredGroups = computed(() => {
+    const term = this.searchTerm().toLowerCase();
+    return this.groups().filter(group =>
+      group.name.toLowerCase().includes(term) ||
+      (group.description && group.description.toLowerCase().includes(term))
+    );
+  });
 
   // Tab State
   activeTab = signal<'users' | 'groups'>('users');
@@ -129,6 +148,7 @@ export class Admin implements OnInit {
 
   setTab(tab: 'users' | 'groups') {
     this.activeTab.set(tab);
+    this.searchTerm.set('');
   }
 
   cancel() {

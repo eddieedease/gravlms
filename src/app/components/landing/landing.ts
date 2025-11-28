@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { RouterLink, Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-landing',
@@ -8,6 +9,13 @@ import { TranslateModule } from '@ngx-translate/core';
   templateUrl: './landing.html',
   styleUrl: './landing.css',
 })
-export class Landing {
+export class Landing implements OnInit {
+  auth = inject(AuthService);
+  router = inject(Router);
 
+  ngOnInit() {
+    if (this.auth.currentUser()) {
+      this.router.navigate(['/dashboard']);
+    }
+  }
 }

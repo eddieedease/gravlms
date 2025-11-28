@@ -2,12 +2,12 @@
 @plugin "@tailwindcss/typography";
 
 @theme {
-    --color-algolia-bg: #05051e;
-    --color-algolia-card: #0b0b29;
-    --color-algolia-primary: #5468ff;
-    --color-algolia-secondary: #00aeff;
-    --color-algolia-text: #f5f5f7;
-    --color-algolia-muted: #9ca3af;
+    --color-algolia-bg: #f9fafb;
+    --color-algolia-card: #ffffff;
+    --color-algolia-primary: #4f46e5;
+    --color-algolia-secondary: #0ea5e9;
+    --color-algolia-text: #111827;
+    --color-algolia-muted: #6b7280;
 
     --font-sans: 'Inter', system-ui, sans-serif;
 }
@@ -28,29 +28,29 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #374151;
+    background: #d1d5db;
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #4b5563;
+    background: #9ca3af;
 }
 
 /* Glassmorphism Utilities */
 .glass-panel {
-    background: rgba(11, 11, 41, 0.7);
+    background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.glass-panel-dark {
+    background: rgba(11, 11, 41, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .input-field {
-    @apply block w-full rounded-md border-0 py-2.5 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-algolia-primary bg-white/5 sm:text-sm sm:leading-6;
-}
-
-/* Fix dropdown options visibility */
-.input-field option {
-    background-color: #1f2937;
-    color: white;
+    @apply block w-full rounded-md border-0 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-algolia-primary sm:text-sm sm:leading-6 bg-white;
 }
 
 .btn-primary {
@@ -58,5 +58,9 @@ body {
 }
 
 .btn-secondary {
-    @apply rounded-md bg-white/10 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-white/20 ring-1 ring-inset ring-white/10 transition-all duration-200;
+    @apply rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-all duration-200;
+}
+
+.card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-100;
 }

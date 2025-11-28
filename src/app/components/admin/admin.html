@@ -1,23 +1,23 @@
-<div class="min-h-screen bg-algolia-bg px-4 sm:px-6 lg:px-8 py-8">
+<div class="min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-8 py-8">
     <!-- Header -->
     <div class="mb-8">
-        <h1 class="text-3xl font-bold text-white">Admin Panel</h1>
-        <p class="mt-2 text-gray-400">Manage users, groups, and course assignments</p>
+        <h1 class="text-3xl font-bold text-gray-900">Admin Panel</h1>
+        <p class="mt-2 text-gray-600">Manage users, groups, and course assignments</p>
     </div>
 
     <!-- Tab Navigation -->
-    <div class="border-b border-white/10 mb-8">
+    <div class="border-b border-gray-200 mb-8">
         <nav class="-mb-px flex space-x-8">
             <button (click)="setTab('users')" [class.border-algolia-primary]="activeTab() === 'users'"
-                [class.text-white]="activeTab() === 'users'" [class.border-transparent]="activeTab() !== 'users'"
-                [class.text-gray-400]="activeTab() !== 'users'"
-                class="border-b-2 py-4 px-1 text-sm font-medium transition-colors hover:text-white hover:border-gray-300">
+                [class.text-algolia-primary]="activeTab() === 'users'"
+                [class.border-transparent]="activeTab() !== 'users'" [class.text-gray-500]="activeTab() !== 'users'"
+                class="border-b-2 py-4 px-1 text-sm font-medium transition-colors hover:text-gray-700 hover:border-gray-300">
                 Users
             </button>
             <button (click)="setTab('groups')" [class.border-algolia-primary]="activeTab() === 'groups'"
-                [class.text-white]="activeTab() === 'groups'" [class.border-transparent]="activeTab() !== 'groups'"
-                [class.text-gray-400]="activeTab() !== 'groups'"
-                class="border-b-2 py-4 px-1 text-sm font-medium transition-colors hover:text-white hover:border-gray-300">
+                [class.text-algolia-primary]="activeTab() === 'groups'"
+                [class.border-transparent]="activeTab() !== 'groups'" [class.text-gray-500]="activeTab() !== 'groups'"
+                class="border-b-2 py-4 px-1 text-sm font-medium transition-colors hover:text-gray-700 hover:border-gray-300">
                 Groups
             </button>
         </nav>
@@ -27,12 +27,16 @@
     @if (activeTab() === 'users') {
     <div>
         <!-- Users Header -->
-        <div class="sm:flex sm:items-center mb-6">
+        <div class="sm:flex sm:items-center mb-6 justify-between">
             <div class="sm:flex-auto">
-                <h2 class="text-xl font-semibold text-white">Users</h2>
-                <p class="mt-1 text-sm text-gray-400">Manage user accounts and permissions</p>
+                <h2 class="text-xl font-semibold text-gray-900">Users</h2>
+                <p class="mt-1 text-sm text-gray-600">Manage user accounts and permissions</p>
             </div>
-            <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+            <div class="mt-4 sm:mt-0 sm:flex-none flex gap-4">
+                <div class="relative">
+                    <input type="text" [value]="searchTerm()" (input)="searchTerm.set($any($event.target).value)"
+                        placeholder="Search users..." class="input-field w-64">
+                </div>
                 <button type="button" (click)="startCreate()" class="btn-primary">
                     Add User
                 </button>
@@ -40,11 +44,11 @@
         </div>
 
         <!-- Course Assignment Section -->
-        <div class="glass-panel p-6 rounded-xl mb-6">
-            <h3 class="text-lg font-medium text-white mb-4">Assign Course to User</h3>
+        <div class="card p-6 mb-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Assign Course to User</h3>
             <form [formGroup]="assignForm" (ngSubmit)="onAssign()" class="flex gap-4 items-end flex-wrap">
                 <div class="flex-1 min-w-[200px]">
-                    <label class="block text-sm font-medium text-gray-300 mb-2">User</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">User</label>
                     <select formControlName="userId" class="input-field">
                         <option value="">Select User</option>
                         @for (user of users(); track user.id) {
@@ -53,7 +57,7 @@
                     </select>
                 </div>
                 <div class="flex-1 min-w-[200px]">
-                    <label class="block text-sm font-medium text-gray-300 mb-2">Course</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Course</label>
                     <select formControlName="courseId" class="input-field">
                         <option value="">Select Course</option>
                         @for (course of courses(); track course.id) {
@@ -68,13 +72,13 @@
 
             @if (assignedCourses().length > 0) {
             <div class="mt-6">
-                <h4 class="text-sm font-medium text-gray-300 mb-3">Assigned Courses</h4>
-                <ul class="divide-y divide-white/10 border border-white/10 rounded-lg">
+                <h4 class="text-sm font-medium text-gray-700 mb-3">Assigned Courses</h4>
+                <ul class="divide-y divide-gray-200 border border-gray-200 rounded-lg">
                     @for (course of assignedCourses(); track course.id) {
                     <li class="flex items-center justify-between py-3 px-4">
-                        <span class="text-white">{{ course.title }}</span>
+                        <span class="text-gray-900">{{ course.title }}</span>
                         <button type="button" (click)="detachCourse(course.id)"
-                            class="text-red-400 hover:text-red-300 text-sm font-medium">Remove</button>
+                            class="text-red-600 hover:text-red-500 text-sm font-medium">Remove</button>
                     </li>
                     }
                 </ul>
@@ -84,25 +88,25 @@
 
         <!-- User Form -->
         @if (showForm()) {
-        <div class="glass-panel p-6 rounded-xl mb-6">
-            <h3 class="text-lg font-medium text-white mb-4">{{ isEditing() ? 'Edit User' : 'Create User' }}</h3>
+        <div class="card p-6 mb-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">{{ isEditing() ? 'Edit User' : 'Create User' }}</h3>
             <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-2">Username</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
                     <input type="text" formControlName="username" class="input-field">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
                     <input type="email" formControlName="email" class="input-field">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
                         Password {{ isEditing() ? '(leave blank to keep)' : '' }}
                     </label>
                     <input type="password" formControlName="password" class="input-field">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-2">Role</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Role</label>
                     <select formControlName="role" class="input-field">
                         <option value="admin">Admin</option>
                         <option value="editor">Editor</option>
@@ -118,36 +122,36 @@
         }
 
         <!-- Users Table -->
-        <div class="glass-panel rounded-xl overflow-hidden">
+        <div class="card overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-white/10">
-                    <thead class="bg-white/5">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
                         <tr>
-                            <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-white sm:pl-6">ID</th>
-                            <th class="px-3 py-3.5 text-left text-sm font-semibold text-white">Username</th>
-                            <th class="px-3 py-3.5 text-left text-sm font-semibold text-white">Email</th>
-                            <th class="px-3 py-3.5 text-left text-sm font-semibold text-white">Role</th>
-                            <th class="px-3 py-3.5 text-left text-sm font-semibold text-white">Created</th>
+                            <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">ID</th>
+                            <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Username</th>
+                            <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Email</th>
+                            <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Role</th>
+                            <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Created</th>
                             <th class="relative py-3.5 pl-3 pr-4 sm:pr-6">
                                 <span class="sr-only">Actions</span>
                             </th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-white/10">
-                        @for (user of users(); track user.id) {
-                        <tr class="hover:bg-white/5 transition-colors">
-                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-white sm:pl-6">{{
+                    <tbody class="divide-y divide-gray-200 bg-white">
+                        @for (user of filteredUsers(); track user.id) {
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{
                                 user.id }}</td>
-                            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-300">{{ user.username }}</td>
-                            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-300">{{ user.email }}</td>
-                            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-300">{{ user.role }}</td>
-                            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-300">{{ user.created_at |
+                            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ user.username }}</td>
+                            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ user.email }}</td>
+                            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ user.role }}</td>
+                            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ user.created_at |
                                 date:'short' }}</td>
                             <td class="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                 <button (click)="startEdit(user)"
-                                    class="text-algolia-primary hover:text-indigo-400 mr-4">Edit</button>
+                                    class="text-algolia-primary hover:text-indigo-600 mr-4">Edit</button>
                                 <button (click)="deleteUser(user.id)"
-                                    class="text-red-400 hover:text-red-300">Delete</button>
+                                    class="text-red-600 hover:text-red-500">Delete</button>
                             </td>
                         </tr>
                         }
@@ -162,12 +166,16 @@
     @if (activeTab() === 'groups') {
     <div>
         <!-- Groups Header -->
-        <div class="sm:flex sm:items-center mb-6">
+        <div class="sm:flex sm:items-center mb-6 justify-between">
             <div class="sm:flex-auto">
-                <h2 class="text-xl font-semibold text-white">Groups</h2>
-                <p class="mt-1 text-sm text-gray-400">Manage user groups and course assignments</p>
+                <h2 class="text-xl font-semibold text-gray-900">Groups</h2>
+                <p class="mt-1 text-sm text-gray-600">Manage user groups and course assignments</p>
             </div>
-            <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+            <div class="mt-4 sm:mt-0 sm:flex-none flex gap-4">
+                <div class="relative">
+                    <input type="text" [value]="searchTerm()" (input)="searchTerm.set($any($event.target).value)"
+                        placeholder="Search groups..." class="input-field w-64">
+                </div>
                 <button type="button" (click)="startCreateGroup()" class="btn-primary">
                     Add Group
                 </button>
@@ -176,15 +184,16 @@
 
         <!-- Group Form -->
         @if (showGroupForm()) {
-        <div class="glass-panel p-6 rounded-xl mb-6">
-            <h3 class="text-lg font-medium text-white mb-4">{{ isEditingGroup() ? 'Edit Group' : 'Create Group' }}</h3>
+        <div class="card p-6 mb-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">{{ isEditingGroup() ? 'Edit Group' : 'Create Group' }}
+            </h3>
             <form [formGroup]="groupForm" (ngSubmit)="onSubmitGroup()" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-2">Name</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Name</label>
                     <input type="text" formControlName="name" class="input-field">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
                     <textarea formControlName="description" rows="3" class="input-field"></textarea>
                 </div>
                 <div class="flex justify-end gap-3 pt-4">
@@ -197,32 +206,32 @@
         }
 
         <!-- Groups Table -->
-        <div class="glass-panel rounded-xl overflow-hidden mb-6">
+        <div class="card overflow-hidden mb-6">
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-white/10">
-                    <thead class="bg-white/5">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
                         <tr>
-                            <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-white sm:pl-6">ID</th>
-                            <th class="px-3 py-3.5 text-left text-sm font-semibold text-white">Name</th>
-                            <th class="px-3 py-3.5 text-left text-sm font-semibold text-white">Description</th>
+                            <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">ID</th>
+                            <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Name</th>
+                            <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Description</th>
                             <th class="relative py-3.5 pl-3 pr-4 sm:pr-6">
                                 <span class="sr-only">Actions</span>
                             </th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-white/10">
-                        @for (group of groups(); track group.id) {
-                        <tr [class.bg-algolia-primary/20]="selectedGroup?.id === group.id"
-                            class="cursor-pointer hover:bg-white/5 transition-colors" (click)="selectGroup(group)">
-                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-white sm:pl-6">{{
+                    <tbody class="divide-y divide-gray-200 bg-white">
+                        @for (group of filteredGroups(); track group.id) {
+                        <tr [class.bg-algolia-primary/10]="selectedGroup?.id === group.id"
+                            class="cursor-pointer hover:bg-gray-50 transition-colors" (click)="selectGroup(group)">
+                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{
                                 group.id }}</td>
-                            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-300">{{ group.name }}</td>
-                            <td class="px-3 py-4 text-sm text-gray-300">{{ group.description }}</td>
+                            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ group.name }}</td>
+                            <td class="px-3 py-4 text-sm text-gray-500">{{ group.description }}</td>
                             <td class="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                 <button (click)="$event.stopPropagation(); startEditGroup(group)"
-                                    class="text-algolia-primary hover:text-indigo-400 mr-4">Edit</button>
+                                    class="text-algolia-primary hover:text-indigo-600 mr-4">Edit</button>
                                 <button (click)="$event.stopPropagation(); deleteGroup(group.id)"
-                                    class="text-red-400 hover:text-red-300">Delete</button>
+                                    class="text-red-600 hover:text-red-500">Delete</button>
                             </td>
                         </tr>
                         }
@@ -233,13 +242,13 @@
 
         <!-- Group Details -->
         @if (selectedGroup) {
-        <div class="glass-panel p-6 rounded-xl">
-            <h3 class="text-xl font-semibold text-white mb-6">Details for {{ selectedGroup.name }}</h3>
+        <div class="card p-6">
+            <h3 class="text-xl font-semibold text-gray-900 mb-6">Details for {{ selectedGroup.name }}</h3>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <!-- Group Users -->
                 <div>
-                    <h4 class="text-lg font-medium text-white mb-4">Users in Group</h4>
+                    <h4 class="text-lg font-medium text-gray-900 mb-4">Users in Group</h4>
                     <form [formGroup]="assignGroupUserForm" (ngSubmit)="addUserToGroup()" class="flex gap-2 mb-4">
                         <select formControlName="userId" class="input-field flex-1">
                             <option value="">Select User</option>
@@ -250,12 +259,12 @@
                         <button type="submit" [disabled]="assignGroupUserForm.invalid"
                             class="btn-primary disabled:opacity-50 whitespace-nowrap">Add</button>
                     </form>
-                    <ul class="divide-y divide-white/10 border border-white/10 rounded-lg">
+                    <ul class="divide-y divide-gray-200 border border-gray-200 rounded-lg">
                         @for (user of groupUsers(); track user.id) {
                         <li class="flex items-center justify-between py-3 px-4">
-                            <span class="text-white">{{ user.username }}</span>
+                            <span class="text-gray-900">{{ user.username }}</span>
                             <button (click)="removeUserFromGroup(user.id)"
-                                class="text-red-400 hover:text-red-300 text-sm">Remove</button>
+                                class="text-red-600 hover:text-red-500 text-sm">Remove</button>
                         </li>
                         }
                         @if (groupUsers().length === 0) {
@@ -266,7 +275,7 @@
 
                 <!-- Group Courses -->
                 <div>
-                    <h4 class="text-lg font-medium text-white mb-4">Courses in Group</h4>
+                    <h4 class="text-lg font-medium text-gray-900 mb-4">Courses in Group</h4>
                     <form [formGroup]="assignGroupCourseForm" (ngSubmit)="addCourseToGroup()" class="flex gap-2 mb-4">
                         <select formControlName="courseId" class="input-field flex-1">
                             <option value="">Select Course</option>
@@ -277,12 +286,12 @@
                         <button type="submit" [disabled]="assignGroupCourseForm.invalid"
                             class="btn-primary disabled:opacity-50 whitespace-nowrap">Add</button>
                     </form>
-                    <ul class="divide-y divide-white/10 border border-white/10 rounded-lg">
+                    <ul class="divide-y divide-gray-200 border border-gray-200 rounded-lg">
                         @for (course of groupCourses(); track course.id) {
                         <li class="flex items-center justify-between py-3 px-4">
-                            <span class="text-white">{{ course.title }}</span>
+                            <span class="text-gray-900">{{ course.title }}</span>
                             <button (click)="removeCourseFromGroup(course.id)"
-                                class="text-red-400 hover:text-red-300 text-sm">Remove</button>
+                                class="text-red-600 hover:text-red-500 text-sm">Remove</button>
                         </li>
                         }
                         @if (groupCourses().length === 0) {

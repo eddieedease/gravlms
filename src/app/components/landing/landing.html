@@ -1,18 +1,75 @@
-<div class="bg-algolia-bg min-h-[80vh]">
+<div class="bg-white">
+    <!-- Hero Section -->
     <div class="relative isolate px-6 pt-14 lg:px-8">
         <div class="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
+            <div class="hidden sm:mb-8 sm:flex sm:justify-center">
+                <div
+                    class="relative rounded-full px-3 py-1 text-sm leading-6 text-gray-600 ring-1 ring-gray-900/10 hover:ring-gray-900/20">
+                    Announcing our new course platform. <a href="#" class="font-semibold text-algolia-primary"><span
+                            class="absolute inset-0" aria-hidden="true"></span>Read more <span
+                            aria-hidden="true">&rarr;</span></a>
+                </div>
+            </div>
             <div class="text-center">
-                <h1 class="text-4xl font-bold tracking-tight text-white sm:text-6xl">{{ 'LANDING_TITLE' | translate
+                <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">{{ 'LANDING_TITLE' | translate
                     }}</h1>
-                <p class="mt-6 text-lg leading-8 text-gray-300">{{ 'LANDING_SUBTITLE' | translate }}</p>
+                <p class="mt-6 text-lg leading-8 text-gray-600">{{ 'LANDING_SUBTITLE' | translate }}</p>
                 <div class="mt-10 flex items-center justify-center gap-x-6">
-                    <a routerLink="/login" class="btn-primary">{{
-                        'GET_STARTED' | translate }}</a>
-                    <a href="#"
-                        class="text-sm font-semibold leading-6 text-white hover:text-gray-300 transition-colors">{{
-                        'LEARN_MORE' | translate }}
+                    <a routerLink="/login" class="btn-primary">{{ 'GET_STARTED' | translate }}</a>
+                    <a href="#" class="text-sm font-semibold leading-6 text-gray-900">{{ 'LEARN_MORE' | translate }}
                         <span aria-hidden="true">→</span></a>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature Section -->
+    <div class="bg-white py-24 sm:py-32">
+        <div class="mx-auto max-w-7xl px-6 lg:px-8">
+            <div class="mx-auto max-w-2xl lg:text-center">
+                <h2 class="text-base font-semibold leading-7 text-algolia-primary">Learn faster</h2>
+                <p class="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Everything you need to
+                    master your
+                    skills</p>
+                <p class="mt-6 text-lg leading-8 text-gray-600">Quis tellus eget adipiscing convallis sit sit eget
+                    aliquet quis.
+                    Suspendisse eget egestas a elementum pulvinar et feugiat blandit at. In mi viverra elit nunc.</p>
+            </div>
+            <div class="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-4xl">
+                <dl class="grid max-w-xl grid-cols-1 gap-x-8 gap-y-10 lg:max-w-none lg:grid-cols-2 lg:gap-y-16">
+                    <div class="relative pl-16">
+                        <dt class="text-base font-semibold leading-7 text-gray-900">
+                            <div
+                                class="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-algolia-primary">
+                                <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                    stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M12 16.5V9.75m0 0l3 3.75m-3-3.75l-3 3.75M12 9.75V17.25x8 21H16a2.25 2.25 0 002.25-2.25V5.25A2.25 2.25 0 0016 3H8a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 008 21z" />
+                                </svg>
+                            </div>
+                            Push to deploy
+                        </dt>
+                        <dd class="mt-2 text-base leading-7 text-gray-600">Morbi viverra dui mi arcu sed. Tellus semper
+                            adipiscing
+                            suspendisse semper morbi. Odio urna massa nunc massa.</dd>
+                    </div>
+                    <div class="relative pl-16">
+                        <dt class="text-base font-semibold leading-7 text-gray-900">
+                            <div
+                                class="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-algolia-primary">
+                                <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                    stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                </svg>
+                            </div>
+                            SSL certificates
+                        </dt>
+                        <dd class="mt-2 text-base leading-7 text-gray-600">Sit quis amet rutrum tellus ullamcorper
+                            ultricies libero
+                            dolor eget. Sem sodales gravida quam turpis enim lacus amet.</dd>
+                    </div>
+                </dl>
             </div>
         </div>
     </div>
