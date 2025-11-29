@@ -57,11 +57,12 @@ try {
     $pdo->exec($sqlCourses);
     echo "Table 'courses' created or already exists.<br>";
 
-    // Create course_pages table
+    // Create course_pages table (Course Items)
     $sqlPages = "CREATE TABLE IF NOT EXISTS course_pages (
         id INT AUTO_INCREMENT PRIMARY KEY,
         title VARCHAR(255) NOT NULL,
         content TEXT,
+        type ENUM('page', 'test') DEFAULT 'page',
         course_id INT NULL,
         display_order INT DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -146,15 +147,13 @@ try {
     $pdo->exec($sqlGroupCourses);
     echo "Table 'group_courses' created or already exists.<br>";
 
-    // Create tests table
+    // Create tests table (Linked to Page ID now)
     $sqlTests = "CREATE TABLE IF NOT EXISTS tests (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        course_id INT NOT NULL,
-        title VARCHAR(255) NOT NULL,
+        page_id INT NOT NULL,
         description TEXT,
-        display_order INT DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+        FOREIGN KEY (page_id) REFERENCES course_pages(id) ON DELETE CASCADE
     )";
     $pdo->exec($sqlTests);
     echo "Table 'tests' created or already exists.<br>";
@@ -183,6 +182,45 @@ try {
     )";
     $pdo->exec($sqlTestQuestionOptions);
     echo "Table 'test_question_options' created or already exists.<br>";
+
+
+    // --- Migrations for existing databases ---
+
+    // Ensure 'type' column exists in course_pages
+    $stmt = $pdo->query("SHOW COLUMNS FROM course_pages LIKE 'type'");
+    if ($stmt->rowCount() == 0) {
+        $pdo->exec("ALTER TABLE course_pages ADD COLUMN type ENUM('page', 'test') DEFAULT 'page' AFTER content");
+        echo "Migration: Added 'type' column to course_pages.<br>";
+    }
+
+    // Ensure 'page_id' column exists in tests
+    $stmt = $pdo->query("SHOW COLUMNS FROM tests LIKE 'page_id'");
+    if ($stmt->rowCount() == 0) {
+        // Add as nullable first to avoid errors with existing data
+        $pdo->exec("ALTER TABLE tests ADD COLUMN page_id INT NULL AFTER id");
+        echo "Migration: Added 'page_id' column to tests.<br>";
+    }
+
+    // Drop legacy columns from tests (course_id, title, display_order)
+    $legacyCols = ['course_id', 'title', 'display_order'];
+    foreach ($legacyCols as $col) {
+        $stmt = $pdo->query("SHOW COLUMNS FROM tests LIKE '$col'");
+        if ($stmt->rowCount() > 0) {
+            // Drop FK for course_id if exists
+            if ($col === 'course_id') {
+                $sql = "SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE 
+                        WHERE TABLE_NAME = 'tests' AND COLUMN_NAME = 'course_id' AND TABLE_SCHEMA = '$db'";
+                $stmtFK = $pdo->query($sql);
+                $fk = $stmtFK->fetch(PDO::FETCH_ASSOC);
+                if ($fk) {
+                    $fkName = $fk['CONSTRAINT_NAME'];
+                    $pdo->exec("ALTER TABLE tests DROP FOREIGN KEY $fkName");
+                }
+            }
+            $pdo->exec("ALTER TABLE tests DROP COLUMN $col");
+            echo "Migration: Dropped column '$col' from tests.<br>";
+        }
+    }
 
 
 } catch (\PDOException $e) {

@@ -8,7 +8,7 @@ function registerPageRoutes($app, $authMiddleware)
         $group->get('', function (Request $request, Response $response, $args) {
             try {
                 $pdo = getDbConnection();
-                $stmt = $pdo->query("SELECT id, title, content, course_id, display_order, created_at FROM course_pages ORDER BY display_order ASC, created_at ASC");
+                $stmt = $pdo->query("SELECT id, title, content, type, course_id, display_order, created_at FROM course_pages ORDER BY display_order ASC, created_at ASC");
                 $pages = $stmt->fetchAll();
                 return jsonResponse($response, $pages);
             } catch (PDOException $e) {
@@ -20,6 +20,7 @@ function registerPageRoutes($app, $authMiddleware)
             $data = json_decode($request->getBody()->getContents(), true);
             $title = $data['title'] ?? null;
             $content = $data['content'] ?? '';
+            $type = $data['type'] ?? 'page';
             $course_id = $data['course_id'] ?? null;
 
             if (!$title) {
@@ -28,9 +29,10 @@ function registerPageRoutes($app, $authMiddleware)
 
             try {
                 $pdo = getDbConnection();
-                $stmt = $pdo->prepare("INSERT INTO course_pages (title, content, course_id) VALUES (?, ?, ?)");
-                $stmt->execute([$title, $content, $course_id]);
-                return jsonResponse($response, ['status' => 'success', 'message' => 'Page created'], 201);
+                $stmt = $pdo->prepare("INSERT INTO course_pages (title, content, type, course_id) VALUES (?, ?, ?, ?)");
+                $stmt->execute([$title, $content, $type, $course_id]);
+                $id = $pdo->lastInsertId();
+                return jsonResponse($response, ['status' => 'success', 'message' => 'Page created', 'id' => $id], 201);
             } catch (PDOException $e) {
                 return jsonResponse($response, ['error' => $e->getMessage()], 500);
             }
@@ -41,6 +43,7 @@ function registerPageRoutes($app, $authMiddleware)
             $data = json_decode($request->getBody()->getContents(), true);
             $title = $data['title'] ?? null;
             $content = $data['content'] ?? null;
+            $type = $data['type'] ?? null;
             $course_id = $data['course_id'] ?? null;
             $display_order = $data['display_order'] ?? null;
 
@@ -55,6 +58,10 @@ function registerPageRoutes($app, $authMiddleware)
                 if ($content !== null) {
                     $fields[] = "content = ?";
                     $values[] = $content;
+                }
+                if ($type !== null) {
+                    $fields[] = "type = ?";
+                    $values[] = $type;
                 }
                 if ($course_id !== null) {
                     $fields[] = "course_id = ?";

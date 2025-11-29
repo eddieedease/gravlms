@@ -23,19 +23,10 @@ export class CourseViewerComponent {
 
     courseId = toSignal(this.route.paramMap.pipe(map(params => Number(params.get('courseId')))));
 
-    // Fetch course details (pages)
-    // In a real app we might want a specific endpoint for "my course details" that includes progress
-    // For now we'll fetch pages and progress separately
-
+    // Fetch course items (pages and tests)
     pages$ = this.route.paramMap.pipe(
         switchMap(params => this.courseService.getPages().pipe(
             map(pages => pages.filter(p => p.course_id == params.get('courseId')).sort((a, b) => a.display_order - b.display_order))
-        ))
-    );
-
-    tests$ = this.route.paramMap.pipe(
-        switchMap(params => this.courseService.getTests(Number(params.get('courseId'))).pipe(
-            map(tests => tests.sort((a, b) => a.display_order - b.display_order))
         ))
     );
 
@@ -44,7 +35,6 @@ export class CourseViewerComponent {
     );
 
     selectedPage = signal<any>(null);
-    selectedTest = signal<any>(null);
     completedPageIds = signal<number[]>([]);
 
     constructor() {
@@ -60,11 +50,14 @@ export class CourseViewerComponent {
                 const completedIds = this.completedPageIds();
                 const firstIncomplete = pages.find(p => !completedIds.includes(p.id));
 
-                if (firstIncomplete) {
-                    this.selectPage(firstIncomplete);
-                } else {
-                    // If all completed (or none), select the first one
-                    this.selectPage(pages[0]);
+                // If we already have a selection, don't override it unless it's invalid
+                if (!this.selectedPage()) {
+                    if (firstIncomplete) {
+                        this.selectPage(firstIncomplete);
+                    } else {
+                        // If all completed (or none), select the first one
+                        this.selectPage(pages[0]);
+                    }
                 }
             }
         });
@@ -72,12 +65,6 @@ export class CourseViewerComponent {
 
     selectPage(page: any) {
         this.selectedPage.set(page);
-        this.selectedTest.set(null);
-    }
-
-    selectTest(test: any) {
-        this.selectedTest.set(test);
-        this.selectedPage.set(null);
     }
 
     completeLesson(pageId: number) {
@@ -85,9 +72,14 @@ export class CourseViewerComponent {
         if (cid) {
             this.learningService.completeLesson(cid, pageId).subscribe(res => {
                 this.completedPageIds.update(ids => [...ids, pageId]);
-                // Optionally refresh progress or show success message
             });
         }
+    }
+
+    onTestPassed(pageId: number) {
+        this.completedPageIds.update(ids => [...ids, pageId]);
+        // Auto-advance to next lesson?
+        // For now, just mark complete.
     }
 
     isCompleted(pageId: number) {

@@ -10,6 +10,20 @@
                     [class.text-indigo-600]="selectedPage()?.id === page.id"
                     class="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-50 hover:text-gray-900 group relative">
 
+                    @if (page.type === 'test') {
+                    <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
+                        </path>
+                    </svg>
+                    } @else {
+                    <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                    }
+
                     <span class="flex-1 text-left truncate">{{ page.title }}</span>
 
                     @if (isCompleted(page.id)) {
@@ -24,21 +38,6 @@
                 </button>
                 }
                 }
-
-                @if (tests$ | async; as tests) {
-                @if (tests.length > 0) {
-                <div class="pt-4 pb-2">
-                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Tests</h3>
-                </div>
-                @for (test of tests; track test.id) {
-                <button (click)="selectTest(test)" [class.bg-indigo-50]="selectedTest()?.id === test.id"
-                    [class.text-indigo-600]="selectedTest()?.id === test.id"
-                    class="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-50 hover:text-gray-900 group relative">
-                    <span class="flex-1 text-left truncate">{{ test.title }}</span>
-                </button>
-                }
-                }
-                }
             </nav>
         </div>
     </div>
@@ -46,11 +45,17 @@
     <!-- Main Content -->
     <div class="flex-1 overflow-y-auto bg-white">
         @if (selectedPage(); as page) {
+        @if (page.type === 'test') {
+        <div class="p-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-6">{{ page.title }}</h1>
+            <app-test-viewer [pageId]="page.id" (passed)="onTestPassed(page.id)"></app-test-viewer>
+        </div>
+        } @else {
         <div class="max-w-3xl mx-auto p-8">
             <h1 class="text-3xl font-bold text-gray-900 mb-6">{{ page.title }}</h1>
 
             <div class="prose prose-indigo max-w-none mb-8">
-                <div class="markdown-content" [innerHTML]="selectedPage()?.content | marked"></div>
+                <div class="markdown-content" [innerHTML]="page.content | marked"></div>
             </div>
 
             <div class="border-t border-gray-200 pt-6 flex justify-end">
@@ -67,10 +72,7 @@
                 }
             </div>
         </div>
-        } @else if (selectedTest(); as test) {
-        <div class="p-8">
-            <app-test-viewer [testId]="test.id"></app-test-viewer>
-        </div>
+        }
         } @else {
         <div class="flex items-center justify-center h-full text-gray-500">
             Select a lesson to start learning

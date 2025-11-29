@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CourseService } from '../../services/course.service';
@@ -19,10 +19,8 @@ interface Question {
 
 interface Test {
   id?: number;
-  course_id: number;
-  title: string;
+  page_id: number;
   description: string;
-  display_order: number;
   questions: Question[];
 }
 
@@ -33,34 +31,56 @@ interface Test {
   templateUrl: './test-editor.html',
   styleUrls: ['./test-editor.css']
 })
-export class TestEditorComponent implements OnInit {
-  @Input() courseId!: number;
-  @Input() testId: number | null = null;
-  @Output() close = new EventEmitter<void>();
+export class TestEditorComponent implements OnInit, OnChanges {
+  @Input() pageId!: number;
   @Output() saved = new EventEmitter<void>();
 
   test: Test = {
-    course_id: 0,
-    title: '',
+    page_id: 0,
     description: '',
-    display_order: 0,
     questions: []
   };
+
+  loading = false;
 
   constructor(private courseService: CourseService) { }
 
   ngOnInit() {
-    if (this.testId) {
-      this.courseService.getTest(this.testId).subscribe(data => {
-        this.test = data;
-        // Ensure options are boolean for checkbox binding
-        this.test.questions.forEach(q => {
-          q.options.forEach(o => o.is_correct = !!o.is_correct);
-        });
-      });
-    } else {
-      this.test.course_id = this.courseId;
+    if (this.pageId) {
+      this.loadTest();
     }
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['pageId'] && !changes['pageId'].firstChange) {
+      this.loadTest();
+    }
+  }
+
+  loadTest() {
+    this.loading = true;
+    this.test = {
+      page_id: this.pageId,
+      description: '',
+      questions: []
+    };
+
+    this.courseService.getTestByPageId(this.pageId).subscribe({
+      next: (data) => {
+        if (data) {
+          this.test = data;
+          // Ensure options are boolean
+          this.test.questions.forEach(q => {
+            q.options.forEach(o => o.is_correct = !!o.is_correct);
+          });
+        }
+        this.loading = false;
+      },
+      error: (err) => {
+        // 404 is expected if no test created yet
+        this.loading = false;
+      }
+    });
   }
 
   addQuestion() {
@@ -88,20 +108,10 @@ export class TestEditorComponent implements OnInit {
   }
 
   save() {
-    if (this.testId) {
-      this.courseService.updateTest(this.testId, this.test).subscribe(() => {
-        this.saved.emit();
-        this.close.emit();
-      });
-    } else {
-      this.courseService.createTest(this.test).subscribe(() => {
-        this.saved.emit();
-        this.close.emit();
-      });
-    }
-  }
-
-  cancel() {
-    this.close.emit();
+    this.test.page_id = this.pageId;
+    this.courseService.saveTest(this.test).subscribe(() => {
+      this.saved.emit();
+      alert('Test saved!');
+    });
   }
 }

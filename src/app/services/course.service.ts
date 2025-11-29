@@ -34,7 +34,7 @@ export class CourseService {
         return this.http.delete<any>(`http://localhost:8080/api/courses/${id}`, { headers: this.getHeaders() });
     }
 
-    // Pages
+    // Pages (Course Items)
     getPages() {
         return this.http.get<any[]>(this.apiUrl, { headers: this.getHeaders() });
     }
@@ -51,24 +51,17 @@ export class CourseService {
         return this.http.delete<any>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() });
     }
 
-    // Tests
-    getTests(courseId: number) {
-        return this.http.get<any[]>(`http://localhost:8080/api/courses/${courseId}/tests`, { headers: this.getHeaders() });
+    // Tests (Linked to Page ID)
+    getTestByPageId(pageId: number) {
+        return this.http.get<any>(`http://localhost:8080/api/pages/${pageId}/test`, { headers: this.getHeaders() });
     }
 
-    getTest(id: number) {
-        return this.http.get<any>(`http://localhost:8080/api/tests/${id}`, { headers: this.getHeaders() });
-    }
-
-    createTest(test: any) {
+    // Create/Update test for a page
+    saveTest(test: any) {
         return this.http.post<any>('http://localhost:8080/api/tests', test, { headers: this.getHeaders() });
     }
 
-    updateTest(id: number, test: any) {
-        return this.http.put<any>(`http://localhost:8080/api/tests/${id}`, test, { headers: this.getHeaders() });
-    }
-
-    deleteTest(id: number) {
-        return this.http.delete<any>(`http://localhost:8080/api/tests/${id}`, { headers: this.getHeaders() });
+    submitTest(testId: number, answers: any) {
+        return this.http.post<any>(`http://localhost:8080/api/tests/${testId}/submit`, { answers }, { headers: this.getHeaders() });
     }
 }
