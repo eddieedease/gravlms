@@ -50,4 +50,25 @@ export class CourseService {
     deletePage(id: number) {
         return this.http.delete<any>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() });
     }
+
+    // Tests
+    getTests(courseId: number) {
+        return this.http.get<any[]>(`http://localhost:8080/api/courses/${courseId}/tests`, { headers: this.getHeaders() });
+    }
+
+    getTest(id: number) {
+        return this.http.get<any>(`http://localhost:8080/api/tests/${id}`, { headers: this.getHeaders() });
+    }
+
+    createTest(test: any) {
+        return this.http.post<any>('http://localhost:8080/api/tests', test, { headers: this.getHeaders() });
+    }
+
+    updateTest(id: number, test: any) {
+        return this.http.put<any>(`http://localhost:8080/api/tests/${id}`, test, { headers: this.getHeaders() });
+    }
+
+    deleteTest(id: number) {
+        return this.http.delete<any>(`http://localhost:8080/api/tests/${id}`, { headers: this.getHeaders() });
+    }
 }

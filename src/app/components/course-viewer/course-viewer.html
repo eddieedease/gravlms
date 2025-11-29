@@ -24,6 +24,21 @@
                 </button>
                 }
                 }
+
+                @if (tests$ | async; as tests) {
+                @if (tests.length > 0) {
+                <div class="pt-4 pb-2">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Tests</h3>
+                </div>
+                @for (test of tests; track test.id) {
+                <button (click)="selectTest(test)" [class.bg-indigo-50]="selectedTest()?.id === test.id"
+                    [class.text-indigo-600]="selectedTest()?.id === test.id"
+                    class="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-50 hover:text-gray-900 group relative">
+                    <span class="flex-1 text-left truncate">{{ test.title }}</span>
+                </button>
+                }
+                }
+                }
             </nav>
         </div>
     </div>
@@ -51,6 +66,10 @@
                 </span>
                 }
             </div>
+        </div>
+        } @else if (selectedTest(); as test) {
+        <div class="p-8">
+            <app-test-viewer [testId]="test.id"></app-test-viewer>
         </div>
         } @else {
         <div class="flex items-center justify-center h-full text-gray-500">

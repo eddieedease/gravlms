@@ -1,0 +1,85 @@
+<div class="max-w-3xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+    @if (test(); as t) {
+    <div class="mb-8 border-b border-gray-200 dark:border-gray-700 pb-6">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">{{ t.title }}</h1>
+        <p class="text-gray-600 dark:text-gray-300">{{ t.description }}</p>
+    </div>
+
+    @if (submitted()) {
+    <div class="mb-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+        <h2 class="text-xl font-bold text-blue-900 dark:text-blue-100 mb-2">Test Results</h2>
+        <p class="text-lg text-blue-800 dark:text-blue-200">
+            You scored <span class="font-bold">{{ score() }}</span> out of <span class="font-bold">{{ totalQuestions()
+                }}</span>
+        </p>
+        <button (click)="retry()"
+            class="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-colors">
+            Retry Test
+        </button>
+    </div>
+    }
+
+    <div class="space-y-8">
+        @for (question of t.questions; track question.id; let i = $index) {
+        <div class="p-4 rounded-lg" [class.bg-gray-50]="!submitted()" [class.dark:bg-gray-750]="!submitted()">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                {{ i + 1 }}. {{ question.question_text }}
+            </h3>
+
+            <div class="space-y-3">
+                @for (option of question.options; track option.id) {
+                <div class="flex items-center p-3 rounded-md border transition-colors cursor-pointer"
+                    [class.border-gray-200]="!submitted()" [class.dark:border-gray-700]="!submitted()"
+                    [class.hover:bg-gray-100]="!submitted()" [class.dark:hover:bg-gray-700]="!submitted()"
+                    [class.bg-green-50]="submitted() && option.is_correct"
+                    [class.border-green-200]="submitted() && option.is_correct"
+                    [class.bg-red-50]="submitted() && !option.is_correct && userAnswers()[question.id]?.includes(option.id)"
+                    [class.border-red-200]="submitted() && !option.is_correct && userAnswers()[question.id]?.includes(option.id)"
+                    (click)="toggleOption(question.id, option.id)">
+                    <div class="flex items-center h-5">
+                        <input type="radio" [name]="'question_' + question.id"
+                            [checked]="userAnswers()[question.id]?.includes(option.id)" [disabled]="submitted()"
+                            class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300">
+                    </div>
+                    <div class="ml-3 text-sm">
+                        <label class="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+                            {{ option.option_text }}
+                        </label>
+                    </div>
+                    @if (submitted() && option.is_correct) {
+                    <div class="ml-auto text-green-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7">
+                            </path>
+                        </svg>
+                    </div>
+                    }
+                    @if (submitted() && !option.is_correct && userAnswers()[question.id]?.includes(option.id)) {
+                    <div class="ml-auto text-red-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </div>
+                    }
+                </div>
+                }
+            </div>
+        </div>
+        }
+    </div>
+
+    @if (!submitted()) {
+    <div class="mt-8 flex justify-end">
+        <button (click)="submit()"
+            class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-md transition-colors">
+            Submit Answers
+        </button>
+    </div>
+    }
+    } @else {
+    <div class="flex justify-center py-12">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    </div>
+    }
+</div>

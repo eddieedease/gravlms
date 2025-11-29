@@ -4,10 +4,11 @@ import { AuthService } from '../../services/auth.service';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { marked } from 'marked';
+import { TestEditorComponent } from '../test-editor/test-editor';
 
 @Component({
   selector: 'app-editor',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TestEditorComponent],
   templateUrl: './editor.html',
   styleUrl: './editor.css',
 })
@@ -32,8 +33,19 @@ export class Editor implements OnInit {
       .sort((a, b) => a.display_order - b.display_order);
   });
 
+  tests = signal<any[]>([]);
+  courseTests = computed(() => {
+    if (!this.selectedCourse()) return [];
+    return this.tests()
+      .filter(t => t.course_id === this.selectedCourse().id)
+      .sort((a, b) => a.display_order - b.display_order);
+  });
+
   selectedPage = signal<any>(null);
   previewHtml = signal<string>('');
+
+  showTestEditor = signal<boolean>(false);
+  selectedTestId = signal<number | null>(null);
 
   form = this.fb.group({
     title: ['', Validators.required],
@@ -81,9 +93,17 @@ export class Editor implements OnInit {
     });
   }
 
+  loadTests(courseId: number) {
+    this.courseService.getTests(courseId).subscribe(tests => {
+      this.tests.set(tests);
+    });
+  }
+
   selectCourse(course: any) {
     this.selectedCourse.set(course);
     this.selectedPage.set(null);
+    this.showTestEditor.set(false);
+    this.loadTests(course.id);
   }
 
   createCourse() {
@@ -107,6 +127,7 @@ export class Editor implements OnInit {
 
   selectPage(page: any) {
     this.selectedPage.set(page);
+    this.showTestEditor.set(false);
     this.form.patchValue({
       title: page.title,
       content: page.content,
@@ -181,6 +202,37 @@ export class Editor implements OnInit {
 
     // Optimistic update
     this.loadPages();
+  }
+
+  // Tests
+  createTest() {
+    this.selectedTestId.set(null);
+    this.showTestEditor.set(true);
+  }
+
+  editTest(test: any) {
+    this.selectedTestId.set(test.id);
+    this.showTestEditor.set(true);
+  }
+
+  deleteTest(test: any) {
+    if (confirm(`Delete test "${test.title}"?`)) {
+      this.courseService.deleteTest(test.id).subscribe(() => {
+        if (this.selectedCourse()) {
+          this.loadTests(this.selectedCourse().id);
+        }
+      });
+    }
+  }
+
+  onTestSaved() {
+    if (this.selectedCourse()) {
+      this.loadTests(this.selectedCourse().id);
+    }
+  }
+
+  closeTestEditor() {
+    this.showTestEditor.set(false);
   }
 
   triggerFileInput() {

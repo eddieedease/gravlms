@@ -8,11 +8,12 @@ import { MarkedPipe } from '../../pipes/marked.pipe';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map, switchMap, tap } from 'rxjs/operators';
 import { combineLatest } from 'rxjs';
+import { TestViewerComponent } from '../test-viewer/test-viewer';
 
 
 @Component({
     selector: 'app-course-viewer',
-    imports: [CommonModule, TranslateModule, MarkedPipe],
+    imports: [CommonModule, TranslateModule, MarkedPipe, TestViewerComponent],
     templateUrl: './course-viewer.html'
 })
 export class CourseViewerComponent {
@@ -32,11 +33,18 @@ export class CourseViewerComponent {
         ))
     );
 
+    tests$ = this.route.paramMap.pipe(
+        switchMap(params => this.courseService.getTests(Number(params.get('courseId'))).pipe(
+            map(tests => tests.sort((a, b) => a.display_order - b.display_order))
+        ))
+    );
+
     progress$ = this.route.paramMap.pipe(
         switchMap(params => this.learningService.getCourseProgress(Number(params.get('courseId'))))
     );
 
     selectedPage = signal<any>(null);
+    selectedTest = signal<any>(null);
     completedPageIds = signal<number[]>([]);
 
     constructor() {
@@ -64,6 +72,12 @@ export class CourseViewerComponent {
 
     selectPage(page: any) {
         this.selectedPage.set(page);
+        this.selectedTest.set(null);
+    }
+
+    selectTest(test: any) {
+        this.selectedTest.set(test);
+        this.selectedPage.set(null);
     }
 
     completeLesson(pageId: number) {
