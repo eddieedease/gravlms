@@ -12,7 +12,7 @@ import { CourseService } from '../../services/course.service';
 })
 export class TestViewerComponent implements OnInit, OnChanges {
   @Input() pageId!: number;
-  @Output() passed = new EventEmitter<void>();
+  @Output() passed = new EventEmitter<{ pageId: number, courseCompleted: boolean }>();
 
   test = signal<any>(null);
   userAnswers = signal<{ [questionId: number]: number[] }>({}); // questionId -> array of selected option IDs
@@ -97,7 +97,10 @@ export class TestViewerComponent implements OnInit, OnChanges {
         this.submitted.set(true);
 
         if (result.passed) {
-          this.passed.emit();
+          this.passed.emit({
+            pageId: this.pageId,
+            courseCompleted: result.course_completed || false
+          });
         }
       },
       error: (err) => {

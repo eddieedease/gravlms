@@ -48,7 +48,8 @@
         @if (page.type === 'test') {
         <div class="p-8">
             <h1 class="text-3xl font-bold text-gray-900 mb-6">{{ page.title }}</h1>
-            <app-test-viewer [pageId]="page.id" (passed)="onTestPassed(page.id)"></app-test-viewer>
+            <app-test-viewer [pageId]="page.id"
+                (passed)="onTestPassed($event.pageId, $event.courseCompleted)"></app-test-viewer>
         </div>
         } @else {
         <div class="max-w-3xl mx-auto p-8">
@@ -79,4 +80,9 @@
         </div>
         }
     </div>
+
+    <!-- Completion Modal -->
+    <app-completion-modal [isOpen]="showCompletionModal()" [courseTitle]="courseTitle()"
+        (navigateDashboard)="navigateToDashboard()">
+    </app-completion-modal>
 </div>

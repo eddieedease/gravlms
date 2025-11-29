@@ -118,7 +118,9 @@ function registerTestRoutes($app, $jwtMiddleware)
             $testId = $args['id'];
             $data = json_decode($request->getBody()->getContents(), true);
             $userAnswers = $data['answers'] ?? []; // question_id -> [option_ids]
-            $userId = $request->getAttribute('user_id'); // From JWT
+
+            $user = $request->getAttribute('user');
+            $userId = $user->id;
 
             $pdo = getDbConnection();
 
@@ -148,6 +150,8 @@ function registerTestRoutes($app, $jwtMiddleware)
 
             $passed = $correctCount == $totalQuestions; // Strict passing for now
 
+            $courseCompleted = false;
+
             if ($passed) {
                 // Mark page as completed
                 // First get page_id
@@ -160,13 +164,41 @@ function registerTestRoutes($app, $jwtMiddleware)
                     // Insert into completed_lessons
                     $stmt = $pdo->prepare("INSERT IGNORE INTO completed_lessons (user_id, page_id) VALUES (?, ?)");
                     $stmt->execute([$userId, $pageId]);
+
+                    // Check if all lessons in the course are completed
+                    // Get course_id from page
+                    $stmtPage = $pdo->prepare("SELECT course_id FROM course_pages WHERE id = ?");
+                    $stmtPage->execute([$pageId]);
+                    $page = $stmtPage->fetch();
+
+                    if ($page && $page['course_id']) {
+                        $courseId = $page['course_id'];
+
+                        $stmtTotal = $pdo->prepare("SELECT COUNT(*) FROM course_pages WHERE course_id = ?");
+                        $stmtTotal->execute([$courseId]);
+                        $totalLessons = $stmtTotal->fetchColumn();
+
+                        $stmtCompleted = $pdo->prepare("SELECT COUNT(*) FROM completed_lessons cl 
+                                                      JOIN course_pages cp ON cl.page_id = cp.id 
+                                                      WHERE cl.user_id = ? AND cp.course_id = ?");
+                        $stmtCompleted->execute([$userId, $courseId]);
+                        $completedCount = $stmtCompleted->fetchColumn();
+
+                        if ($totalLessons > 0 && $completedCount == $totalLessons) {
+                            // Mark course as complete
+                            $stmtCourse = $pdo->prepare("INSERT IGNORE INTO completed_courses (user_id, course_id) VALUES (?, ?)");
+                            $stmtCourse->execute([$userId, $courseId]);
+                            $courseCompleted = true;
+                        }
+                    }
                 }
             }
 
             return jsonResponse($response, [
                 'passed' => $passed,
                 'score' => $correctCount,
-                'total' => $totalQuestions
+                'total' => $totalQuestions,
+                'course_completed' => $courseCompleted
             ]);
         });
 
