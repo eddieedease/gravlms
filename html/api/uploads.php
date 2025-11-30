@@ -35,8 +35,13 @@ function registerUploadRoutes($app, $authMiddleware)
         // Generate unique filename
         $extension = pathinfo($uploadedFile->getClientFilename(), PATHINFO_EXTENSION);
         $filename = uniqid('img_', true) . '.' . $extension;
-        // Upload to root level (two levels up from api folder: api -> backend -> root)
-        $uploadPath = __DIR__ . '/../../uploads/' . $filename;
+
+        // In development (Docker), uploads go to /var/www/uploads (mounted from public/uploads)
+        // In production (built app), uploads go to ../../uploads/ (root level)
+        // Check if we're in Docker environment
+        $uploadPath = file_exists('/var/www/uploads')
+            ? '/var/www/uploads/' . $filename
+            : __DIR__ . '/../../uploads/' . $filename;
 
         try {
             $uploadedFile->moveTo($uploadPath);
@@ -54,8 +59,11 @@ function registerUploadRoutes($app, $authMiddleware)
     // Serve uploaded image (public access)
     $app->get('/api/uploads/{filename}', function (Request $request, Response $response, $args) {
         $filename = $args['filename'];
-        // Serve from root level (two levels up from api folder)
-        $filepath = __DIR__ . '/../../uploads/' . $filename;
+
+        // Use same logic as upload: Docker dev vs production
+        $filepath = file_exists('/var/www/uploads')
+            ? '/var/www/uploads/' . $filename
+            : __DIR__ . '/../../uploads/' . $filename;
 
         // Validate filename (prevent directory traversal)
         if (preg_match('/[^a-zA-Z0-9_\-\.]/', $filename) || strpos($filename, '..') !== false) {

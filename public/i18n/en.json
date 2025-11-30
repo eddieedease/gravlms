@@ -102,5 +102,11 @@
     "NO_COURSES_IN_GROUP": "No courses in this group.",
     "SIGN_IN_TITLE": "Sign in to your account",
     "EMAIL_ADDRESS": "Email address",
-    "SIGN_IN": "Sign in"
+    "SIGN_IN": "Sign in",
+    "EMAIL_SETTINGS": "Email Settings",
+    "EMAIL_SETTINGS_DESC": "Configure and test email functionality",
+    "TEST_EMAIL_CONFIGURATION": "Test Email Configuration",
+    "TEST_EMAIL_DESC": "Send a test email to verify your SMTP settings are correct.",
+    "RECIPIENT_EMAIL": "Recipient Email",
+    "SEND_TEST_EMAIL": "Send Test Email"
 }

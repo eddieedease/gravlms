@@ -48,3 +48,5 @@ html/config.php
 # Uploads - ignore all files but keep the folder
 html/uploads/*
 !html/uploads/.gitkeep
+public/uploads/*
+!public/uploads/.gitkeep

@@ -34,6 +34,7 @@ class ComposerStaticInitb48e6ceb0669e57f455498ba217af02f
             'Psr\\Container\\' => 14,
             'ParagonIE\\ConstantTime\\' => 23,
             'Packback\\Lti1p3\\' => 16,
+            'PHPMailer\\PHPMailer\\' => 20,
         ),
         'L' =>
         array (
@@ -103,6 +104,10 @@ class ComposerStaticInitb48e6ceb0669e57f455498ba217af02f
         'Packback\\Lti1p3\\' =>
         array (
             0 => __DIR__ . '/..' . '/packbackbooks/lti-1p3-tool/src',
+        ),
+        'PHPMailer\\PHPMailer\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/phpmailer/phpmailer/src',
         ),
         'Laravel\\SerializableClosure\\' =>
         array (

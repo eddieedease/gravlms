@@ -43,7 +43,6 @@ export class Editor implements OnInit {
   previewHtml = signal<string>('');
 
   ltiTools = signal<any[]>([]);
-  showLtiSelector = signal(false);
 
   pageForm = this.fb.group({
     title: ['', Validators.required],
@@ -296,15 +295,5 @@ export class Editor implements OnInit {
     this.apiService.getLtiTools().subscribe(tools => {
       this.ltiTools.set(tools);
     });
-  }
-
-  insertLtiTool(tool: any) {
-    const markdown = `[lti-tool id="${tool.id}"]`;
-    const currentContent = this.pageForm.get('content')?.value || '';
-    const newContent = currentContent + '\n\n' + markdown;
-
-    this.pageForm.patchValue({ content: newContent });
-    this.updatePreview(newContent);
-    this.showLtiSelector.set(false);
   }
 }

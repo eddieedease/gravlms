@@ -13,6 +13,11 @@ export class ApiService {
     this.apiUrl = this.config.apiUrl;
   }
 
+  // Email
+  sendTestEmail(email: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/admin/test-email`, { email });
+  }
+
   getTestMessage(): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/test`);
   }

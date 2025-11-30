@@ -9,6 +9,8 @@ services:
     volumes:
       # Mount your local project directory to Apache's web root
       - ./html:/var/www/html
+      # Mount public/uploads so Angular dev server can serve uploaded files
+      - ./public/uploads:/var/www/uploads
       # You can optionally mount a custom php.ini or Apache config here
     ports:
       - "8080:80" # Map host port 8080 to container port 80
@@ -24,7 +26,7 @@ services:
       # Required for first-time setup
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: my_app_db
-      MYSQL_USER: admin 
+      MYSQL_USER: admin
       MYSQL_PASSWORD: admin
     volumes:
       # Persist your database data

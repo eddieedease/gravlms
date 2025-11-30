@@ -49,7 +49,7 @@ export class Admin implements OnInit {
   });
 
   // Tab State
-  activeTab = signal<'users' | 'groups' | 'courses' | 'lti'>('users');
+  activeTab = signal<'users' | 'groups' | 'courses' | 'lti' | 'email'>('users');
 
   // User Management State
   isEditing = signal(false);
@@ -63,6 +63,11 @@ export class Admin implements OnInit {
   selectedGroup: any = null;
   groupUsers = signal<any[]>([]);
   groupCourses = signal<any[]>([]);
+
+  // Email State
+  testEmailControl = this.fb.control('', [Validators.required, Validators.email]);
+  isSendingEmail = signal(false);
+  emailStatus = signal<{ success: boolean; message: string } | null>(null);
 
   form = this.fb.group({
     username: ['', Validators.required],
@@ -152,7 +157,7 @@ export class Admin implements OnInit {
     this.showForm.set(true);
   }
 
-  setTab(tab: 'users' | 'groups' | 'lti') {
+  setTab(tab: 'users' | 'groups' | 'lti' | 'email') {
     this.activeTab.set(tab);
     this.searchTerm.set('');
   }
@@ -326,6 +331,33 @@ export class Admin implements OnInit {
     if (this.selectedGroup && confirm('Remove course from group?')) {
       this.groupsService.removeCourseFromGroup(this.selectedGroup.id, courseId).subscribe(() => {
         this.loadGroupDetails(this.selectedGroup.id);
+      });
+    }
+  }
+
+  // Email
+  sendTestEmail() {
+    if (this.testEmailControl.valid) {
+      this.isSendingEmail.set(true);
+      this.emailStatus.set(null);
+
+      const email = this.testEmailControl.value!;
+
+      this.apiService.sendTestEmail(email).subscribe({
+        next: (response) => {
+          this.isSendingEmail.set(false);
+          this.emailStatus.set({
+            success: true,
+            message: response.message || 'Email sent successfully!'
+          });
+        },
+        error: (err) => {
+          this.isSendingEmail.set(false);
+          this.emailStatus.set({
+            success: false,
+            message: err.error?.message || 'Failed to send email. Check your configuration.'
+          });
+        }
       });
     }
   }
