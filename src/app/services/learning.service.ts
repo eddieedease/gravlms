@@ -1,14 +1,20 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AuthService } from './auth.service';
+import { ConfigService } from './config.service';
 
 @Injectable({
     providedIn: 'root'
 })
 export class LearningService {
-    private apiUrl = 'http://localhost:8080/api/learning';
+    private apiUrl: string;
     private http = inject(HttpClient);
     private authService = inject(AuthService);
+    private config = inject(ConfigService);
+
+    constructor() {
+        this.apiUrl = `${this.config.apiUrl}/learning`;
+    }
 
     private getHeaders() {
         const token = this.authService.getToken();

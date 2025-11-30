@@ -1,60 +1,63 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AuthService } from './auth.service';
+import { ConfigService } from './config.service';
 
 @Injectable({
     providedIn: 'root'
 })
 export class CourseService {
-    private apiUrl = 'http://localhost:8080/api/pages';
+    private apiUrl: string;
 
-    constructor(private http: HttpClient, private authService: AuthService) { }
+    constructor(private http: HttpClient, private authService: AuthService, private config: ConfigService) {
+        this.apiUrl = this.config.apiUrl;
+    }
 
     // Courses
     getCourses() {
-        return this.http.get<any[]>('http://localhost:8080/api/courses');
+        return this.http.get<any[]>(`${this.apiUrl}/courses`);
     }
 
     createCourse(course: any) {
-        return this.http.post<any>('http://localhost:8080/api/courses', course);
+        return this.http.post<any>(`${this.apiUrl}/courses`, course);
     }
 
     updateCourse(id: number, course: any) {
-        return this.http.put<any>(`http://localhost:8080/api/courses/${id}`, course);
+        return this.http.put<any>(`${this.apiUrl}/courses/${id}`, course);
     }
 
     deleteCourse(id: number) {
-        return this.http.delete<any>(`http://localhost:8080/api/courses/${id}`);
+        return this.http.delete<any>(`${this.apiUrl}/courses/${id}`);
     }
 
     // Pages (Course Items)
     getPages() {
-        return this.http.get<any[]>(this.apiUrl);
+        return this.http.get<any[]>(`${this.apiUrl}/pages`);
     }
 
     createPage(page: any) {
-        return this.http.post<any>(this.apiUrl, page);
+        return this.http.post<any>(`${this.apiUrl}/pages`, page);
     }
 
     updatePage(id: number, page: any) {
-        return this.http.put<any>(`${this.apiUrl}/${id}`, page);
+        return this.http.put<any>(`${this.apiUrl}/pages/${id}`, page);
     }
 
     deletePage(id: number) {
-        return this.http.delete<any>(`${this.apiUrl}/${id}`);
+        return this.http.delete<any>(`${this.apiUrl}/pages/${id}`);
     }
 
     // Tests (Linked to Page ID)
     getTestByPageId(pageId: number) {
-        return this.http.get<any>(`http://localhost:8080/api/pages/${pageId}/test`);
+        return this.http.get<any>(`${this.apiUrl}/pages/${pageId}/test`);
     }
 
     // Create/Update test for a page
     saveTest(test: any) {
-        return this.http.post<any>('http://localhost:8080/api/tests', test);
+        return this.http.post<any>(`${this.apiUrl}/tests`, test);
     }
 
     submitTest(testId: number, answers: any) {
-        return this.http.post<any>(`http://localhost:8080/api/tests/${testId}/submit`, { answers });
+        return this.http.post<any>(`${this.apiUrl}/tests/${testId}/submit`, { answers });
     }
 }

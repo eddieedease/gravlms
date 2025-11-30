@@ -42,6 +42,9 @@ __screenshots__/
 .DS_Store
 Thumbs.db
 
+# Configuration files with sensitive data
+html/config.php
+
 # Uploads - ignore all files but keep the folder
 html/uploads/*
 !html/uploads/.gitkeep

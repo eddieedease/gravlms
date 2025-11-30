@@ -2,15 +2,17 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { tap } from 'rxjs/operators';
+import { ConfigService } from './config.service';
 
 @Injectable({
     providedIn: 'root'
 })
 export class AuthService {
-    private apiUrl = 'http://localhost:8080/api';
+    private apiUrl: string;
     currentUser = signal<any>(null);
 
-    constructor(private http: HttpClient, private router: Router) {
+    constructor(private http: HttpClient, private router: Router, private config: ConfigService) {
+        this.apiUrl = this.config.apiUrl;
         const token = localStorage.getItem('token');
         const user = localStorage.getItem('user');
         if (token && user) {

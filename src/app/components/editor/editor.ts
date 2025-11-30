@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal, computed, ElementRef, viewChild } fr
 import { CourseService } from '../../services/course.service';
 import { AuthService } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
+import { ConfigService } from '../../services/config.service';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { marked } from 'marked';
@@ -20,6 +21,7 @@ export class Editor implements OnInit {
   private authService = inject(AuthService);
   private http = inject(HttpClient);
   private apiService = inject(ApiService);
+  private config = inject(ConfigService);
   private fb = inject(FormBuilder);
 
   fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
@@ -266,7 +268,7 @@ export class Editor implements OnInit {
       'Authorization': `Bearer ${token}`
     });
 
-    this.http.post<any>('http://localhost:8080/api/uploads', formData, { headers }).subscribe({
+    this.http.post<any>(`${this.config.apiUrl}/uploads`, formData, { headers }).subscribe({
       next: (response) => {
         this.uploadStatus.set('Upload successful!');
         this.insertImageMarkdown(response.filename);
@@ -280,7 +282,7 @@ export class Editor implements OnInit {
   }
 
   insertImageMarkdown(filename: string) {
-    const imageUrl = `http://localhost:8080/api/uploads/${filename}`;
+    const imageUrl = `${this.config.apiUrl}/uploads/${filename}`;
     const markdown = `![Image](${imageUrl})`;
 
     const currentContent = this.pageForm.get('content')?.value || '';
