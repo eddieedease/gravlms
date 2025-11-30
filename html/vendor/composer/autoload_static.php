@@ -6,99 +6,143 @@ namespace Composer\Autoload;
 
 class ComposerStaticInitb48e6ceb0669e57f455498ba217af02f
 {
-    public static $files = array(
-        '253c157292f75eb38082b5acb06f3f01' => __DIR__ . '/..' . '/nikic/fast-route/src/functions.php',
+    public static $files = array (
         '7b11c4dc42b3b3023073cb14e519683c' => __DIR__ . '/..' . '/ralouphie/getallheaders/src/getallheaders.php',
+        '6e3fae29631ef280660b3cdad06f25a8' => __DIR__ . '/..' . '/symfony/deprecation-contracts/function.php',
+        '37a3dc5111fe8f707ab4c132ef1dbc62' => __DIR__ . '/..' . '/guzzlehttp/guzzle/src/functions_include.php',
+        '253c157292f75eb38082b5acb06f3f01' => __DIR__ . '/..' . '/nikic/fast-route/src/functions.php',
+        'decc78cc4436b1292c6c0d151b19445c' => __DIR__ . '/..' . '/phpseclib/phpseclib/phpseclib/bootstrap.php',
         'b33e3d135e5d9e47d845c576147bda89' => __DIR__ . '/..' . '/php-di/php-di/src/functions.php',
     );
 
-    public static $prefixLengthsPsr4 = array(
+    public static $prefixLengthsPsr4 = array (
+        'p' =>
+        array (
+            'phpseclib3\\' => 11,
+        ),
         'S' =>
-            array(
-                'Slim\\Psr7\\' => 10,
-                'Slim\\' => 5,
-            ),
+        array (
+            'Slim\\Psr7\\' => 10,
+            'Slim\\' => 5,
+        ),
         'P' =>
-            array(
-                'Psr\\Log\\' => 8,
-                'Psr\\Http\\Server\\' => 16,
-                'Psr\\Http\\Message\\' => 17,
-                'Psr\\Container\\' => 14,
-            ),
+        array (
+            'Psr\\Log\\' => 8,
+            'Psr\\Http\\Server\\' => 16,
+            'Psr\\Http\\Message\\' => 17,
+            'Psr\\Http\\Client\\' => 16,
+            'Psr\\Container\\' => 14,
+            'ParagonIE\\ConstantTime\\' => 23,
+            'Packback\\Lti1p3\\' => 16,
+        ),
         'L' =>
-            array(
-                'Laravel\\SerializableClosure\\' => 28,
-            ),
+        array (
+            'Laravel\\SerializableClosure\\' => 28,
+        ),
         'I' =>
-            array(
-                'Invoker\\' => 8,
-            ),
+        array (
+            'Invoker\\' => 8,
+        ),
+        'G' =>
+        array (
+            'GuzzleHttp\\Psr7\\' => 16,
+            'GuzzleHttp\\Promise\\' => 19,
+            'GuzzleHttp\\' => 11,
+        ),
         'F' =>
-            array(
-                'Firebase\\JWT\\' => 13,
-                'Fig\\Http\\Message\\' => 17,
-                'FastRoute\\' => 10,
-            ),
+        array (
+            'Firebase\\JWT\\' => 13,
+            'Fig\\Http\\Message\\' => 17,
+            'FastRoute\\' => 10,
+        ),
         'D' =>
-            array(
-                'DI\\' => 3,
-            ),
+        array (
+            'DI\\' => 3,
+        ),
     );
 
-    public static $prefixDirsPsr4 = array(
+    public static $prefixDirsPsr4 = array (
+        'phpseclib3\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/phpseclib/phpseclib/phpseclib',
+        ),
         'Slim\\Psr7\\' =>
-            array(
-                0 => __DIR__ . '/..' . '/slim/psr7/src',
-            ),
+        array (
+            0 => __DIR__ . '/..' . '/slim/psr7/src',
+        ),
         'Slim\\' =>
-            array(
-                0 => __DIR__ . '/..' . '/slim/slim/Slim',
-            ),
+        array (
+            0 => __DIR__ . '/..' . '/slim/slim/Slim',
+        ),
         'Psr\\Log\\' =>
-            array(
-                0 => __DIR__ . '/..' . '/psr/log/src',
-            ),
+        array (
+            0 => __DIR__ . '/..' . '/psr/log/src',
+        ),
         'Psr\\Http\\Server\\' =>
-            array(
-                0 => __DIR__ . '/..' . '/psr/http-server-middleware/src',
-                1 => __DIR__ . '/..' . '/psr/http-server-handler/src',
-            ),
+        array (
+            0 => __DIR__ . '/..' . '/psr/http-server-middleware/src',
+            1 => __DIR__ . '/..' . '/psr/http-server-handler/src',
+        ),
         'Psr\\Http\\Message\\' =>
-            array(
-                0 => __DIR__ . '/..' . '/psr/http-factory/src',
-                1 => __DIR__ . '/..' . '/psr/http-message/src',
-            ),
+        array (
+            0 => __DIR__ . '/..' . '/psr/http-factory/src',
+            1 => __DIR__ . '/..' . '/psr/http-message/src',
+        ),
+        'Psr\\Http\\Client\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/psr/http-client/src',
+        ),
         'Psr\\Container\\' =>
-            array(
-                0 => __DIR__ . '/..' . '/psr/container/src',
-            ),
+        array (
+            0 => __DIR__ . '/..' . '/psr/container/src',
+        ),
+        'ParagonIE\\ConstantTime\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/paragonie/constant_time_encoding/src',
+        ),
+        'Packback\\Lti1p3\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/packbackbooks/lti-1p3-tool/src',
+        ),
         'Laravel\\SerializableClosure\\' =>
-            array(
-                0 => __DIR__ . '/..' . '/laravel/serializable-closure/src',
-            ),
+        array (
+            0 => __DIR__ . '/..' . '/laravel/serializable-closure/src',
+        ),
         'Invoker\\' =>
-            array(
-                0 => __DIR__ . '/..' . '/php-di/invoker/src',
-            ),
+        array (
+            0 => __DIR__ . '/..' . '/php-di/invoker/src',
+        ),
+        'GuzzleHttp\\Psr7\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/guzzlehttp/psr7/src',
+        ),
+        'GuzzleHttp\\Promise\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/guzzlehttp/promises/src',
+        ),
+        'GuzzleHttp\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/guzzlehttp/guzzle/src',
+        ),
         'Firebase\\JWT\\' =>
-            array(
-                0 => __DIR__ . '/..' . '/firebase/php-jwt/src',
-            ),
+        array (
+            0 => __DIR__ . '/..' . '/firebase/php-jwt/src',
+        ),
         'Fig\\Http\\Message\\' =>
-            array(
-                0 => __DIR__ . '/..' . '/fig/http-message-util/src',
-            ),
+        array (
+            0 => __DIR__ . '/..' . '/fig/http-message-util/src',
+        ),
         'FastRoute\\' =>
-            array(
-                0 => __DIR__ . '/..' . '/nikic/fast-route/src',
-            ),
+        array (
+            0 => __DIR__ . '/..' . '/nikic/fast-route/src',
+        ),
         'DI\\' =>
-            array(
-                0 => __DIR__ . '/..' . '/php-di/php-di/src',
-            ),
+        array (
+            0 => __DIR__ . '/..' . '/php-di/php-di/src',
+        ),
     );
 
-    public static $classMap = array(
+    public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
     );
 

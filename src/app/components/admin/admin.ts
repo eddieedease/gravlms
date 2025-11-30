@@ -5,10 +5,11 @@ import { LearningService } from '../../services/learning.service';
 import { GroupsService } from '../../services/groups.service';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DatePipe } from '@angular/common';
+import { LtiManagementComponent } from './lti-management/lti-management';
 
 @Component({
   selector: 'app-admin',
-  imports: [ReactiveFormsModule, DatePipe],
+  imports: [ReactiveFormsModule, DatePipe, LtiManagementComponent],
   templateUrl: './admin.html',
   styleUrl: './admin.css',
 })
@@ -43,7 +44,7 @@ export class Admin implements OnInit {
   });
 
   // Tab State
-  activeTab = signal<'users' | 'groups'>('users');
+  activeTab = signal<'users' | 'groups' | 'lti'>('users');
 
   // User Management State
   isEditing = signal(false);
@@ -146,7 +147,7 @@ export class Admin implements OnInit {
     this.showForm.set(true);
   }
 
-  setTab(tab: 'users' | 'groups') {
+  setTab(tab: 'users' | 'groups' | 'lti') {
     this.activeTab.set(tab);
     this.searchTerm.set('');
   }

@@ -3,6 +3,7 @@
         "slim/slim": "^4.0",
         "slim/psr7": "^1.8",
         "php-di/php-di": "^7.1",
-        "firebase/php-jwt": "*"
+        "firebase/php-jwt": "*",
+        "packbackbooks/lti-1p3-tool": "^6.0"
     }
 }

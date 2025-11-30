@@ -1,0 +1,296 @@
+<?php
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Packback\Lti1p3\LtiOidcLogin;
+use Packback\Lti1p3\LtiMessageLaunch;
+use GravLMS\Lti\LtiDatabase;
+use GravLMS\Lti\LtiCache;
+use GravLMS\Lti\LtiCookie;
+use GravLMS\Lti\LtiServiceConnector;
+
+require_once __DIR__ . '/LtiDatabase.php';
+require_once __DIR__ . '/LtiCache.php';
+require_once __DIR__ . '/LtiCookie.php';
+require_once __DIR__ . '/LtiServiceConnector.php';
+
+function registerLtiRoutes($app, $jwtMiddleware)
+{
+
+    // --- Admin: LTI Platforms (Issuers) ---
+    $app->get('/api/admin/lti/platforms', function (Request $request, Response $response) {
+        $pdo = getDbConnection();
+        $stmt = $pdo->query("SELECT * FROM lti_platforms ORDER BY created_at DESC");
+        $platforms = $stmt->fetchAll();
+        $response->getBody()->write(json_encode($platforms));
+        return $response->withHeader('Content-Type', 'application/json');
+    })->add($jwtMiddleware);
+
+    $app->post('/api/admin/lti/platforms', function (Request $request, Response $response) {
+        $data = $request->getParsedBody();
+        $pdo = getDbConnection();
+        $stmt = $pdo->prepare("INSERT INTO lti_platforms (issuer, client_id, auth_login_url, auth_token_url, key_set_url, deployment_id) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->execute([
+            $data['issuer'],
+            $data['client_id'],
+            $data['auth_login_url'],
+            $data['auth_token_url'],
+            $data['key_set_url'],
+            $data['deployment_id'] ?? null
+        ]);
+        $response->getBody()->write(json_encode(['status' => 'success']));
+        return $response->withHeader('Content-Type', 'application/json');
+    })->add($jwtMiddleware);
+
+    // --- Admin: LTI Tools (External Tools) ---
+    $app->get('/api/admin/lti/tools', function (Request $request, Response $response) {
+        $pdo = getDbConnection();
+        $stmt = $pdo->query("SELECT * FROM lti_tools ORDER BY created_at DESC");
+        $tools = $stmt->fetchAll();
+        $response->getBody()->write(json_encode($tools));
+        return $response->withHeader('Content-Type', 'application/json');
+    })->add($jwtMiddleware);
+
+    $app->post('/api/admin/lti/tools', function (Request $request, Response $response) {
+        $data = $request->getParsedBody();
+        $pdo = getDbConnection();
+        $stmt = $pdo->prepare("INSERT INTO lti_tools (name, tool_url, lti_version, client_id, public_key, initiate_login_url, consumer_key, shared_secret) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([
+            $data['name'],
+            $data['tool_url'],
+            $data['lti_version'],
+            $data['client_id'] ?? null,
+            $data['public_key'] ?? null,
+            $data['initiate_login_url'] ?? null,
+            $data['consumer_key'] ?? null,
+            $data['shared_secret'] ?? null
+        ]);
+        $response->getBody()->write(json_encode(['status' => 'success']));
+        return $response->withHeader('Content-Type', 'application/json');
+    })->add($jwtMiddleware);
+
+
+    // --- LTI 1.3: OIDC Login ---
+    $app->post('/api/lti/login', function (Request $request, Response $response) {
+        try {
+            $pdo = getDbConnection();
+            $database = new LtiDatabase($pdo);
+            $cache = new LtiCache();
+            $cookie = new LtiCookie();
+
+            $login = LtiOidcLogin::new($database, $cache, $cookie);
+
+            // Get request parameters
+            $params = $request->getParsedBody() ?? [];
+            $queryParams = $request->getQueryParams() ?? [];
+            $allParams = array_merge($queryParams, $params);
+
+            // Get redirect URL
+            $launchUrl = 'http://localhost:8080/api/lti/launch';
+            $redirectUrl = $login->getRedirectUrl($launchUrl, $allParams);
+
+            return $response->withHeader('Location', $redirectUrl)->withStatus(302);
+        } catch (\Exception $e) {
+            error_log("LTI Login Error: " . $e->getMessage());
+            $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+        }
+    });
+
+    // --- LTI 1.3: Launch ---
+    $app->post('/api/lti/launch', function (Request $request, Response $response) {
+        try {
+            $pdo = getDbConnection();
+            $database = new LtiDatabase($pdo);
+            $cache = new LtiCache();
+            $cookie = new LtiCookie();
+            $serviceConnector = new LtiServiceConnector($cache);
+
+            $launch = LtiMessageLaunch::new($database, $cache, $cookie, $serviceConnector);
+
+            // Get request parameters
+            $params = $request->getParsedBody() ?? [];
+            $queryParams = $request->getQueryParams() ?? [];
+            $allParams = array_merge($queryParams, $params);
+
+            $launch->setRequest($allParams)->validate();
+
+            // Get launch data
+            $launchData = $launch->getLaunchData();
+
+            // Create or find user based on LTI claims
+            $email = $launchData['email'] ?? $launchData['sub'] . '@lti.local';
+            $name = $launchData['name'] ?? 'LTI User';
+
+            // Check if user exists
+            $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
+            $stmt->execute([$email]);
+            $user = $stmt->fetch();
+
+            if (!$user) {
+                // Create shadow user
+                $hashedPassword = password_hash(bin2hex(random_bytes(16)), PASSWORD_DEFAULT);
+                $stmt = $pdo->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)");
+                $stmt->execute([$name, $email, $hashedPassword, 'viewer']);
+                $userId = $pdo->lastInsertId();
+            } else {
+                $userId = $user['id'];
+            }
+
+            // Generate JWT for this user
+            $secretKey = getenv('JWT_SECRET') ?: 'your-secret-key-change-in-production';
+            $issuedAt = time();
+            $expirationTime = $issuedAt + 3600;
+            $payload = [
+                'iat' => $issuedAt,
+                'exp' => $expirationTime,
+                'iss' => 'gravlms',
+                'data' => [
+                    'id' => $userId,
+                    'username' => $name,
+                    'email' => $email,
+                    'role' => $user['role'] ?? 'viewer'
+                ]
+            ];
+
+            $jwt = \Firebase\JWT\JWT::encode($payload, $secretKey, 'HS256');
+
+            // Redirect to course if specified in custom parameters
+            $customParams = $launchData['https://purl.imsglobal.org/spec/lti/claim/custom'] ?? [];
+            $courseId = $customParams['course_id'] ?? null;
+
+            $redirectUrl = $courseId
+                ? "http://localhost:4200/learn/{$courseId}?token={$jwt}"
+                : "http://localhost:4200/dashboard?token={$jwt}";
+
+            return $response->withHeader('Location', $redirectUrl)->withStatus(302);
+
+        } catch (\Exception $e) {
+            error_log("LTI Launch Error: " . $e->getMessage());
+            $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+        }
+    });
+
+    // --- LTI 1.3: JWKS ---
+    $app->get('/api/lti/jwks', function (Request $request, Response $response) {
+        $pdo = getDbConnection();
+        $stmt = $pdo->query("SELECT kid, public_key FROM lti_keys");
+        $keys = $stmt->fetchAll();
+
+        $jwks = ['keys' => []];
+        foreach ($keys as $key) {
+            // Parse PEM public key to extract modulus and exponent
+            // This is a simplified version - in production you'd properly parse the key
+            $jwks['keys'][] = [
+                'kty' => 'RSA',
+                'alg' => 'RS256',
+                'use' => 'sig',
+                'kid' => $key['kid'],
+                // Note: Real JWKS requires extracting n and e from the public key
+                // For now, we'll just include the full key as x5c
+                'x5c' => [$key['public_key']]
+            ];
+        }
+
+        $response->getBody()->write(json_encode($jwks));
+        return $response->withHeader('Content-Type', 'application/json');
+    });
+
+    // --- LTI 1.1: Launch (OAuth 1.0a) ---
+    $app->post('/api/lti11/launch', function (Request $request, Response $response) {
+        // LTI 1.1 implementation would go here
+        // This requires OAuth 1.0a signature validation
+        $response->getBody()->write(json_encode(['status' => 'not_implemented_yet']));
+        return $response->withHeader('Content-Type', 'application/json');
+    });
+
+    // --- Consumer Mode: Generate LTI 1.1 Launch Parameters ---
+    $app->post('/api/lti/consumer/launch', function (Request $request, Response $response) {
+        try {
+            $data = $request->getParsedBody();
+            $toolId = $data['tool_id'] ?? null;
+            $courseId = $data['course_id'] ?? null;
+            $userId = $request->getAttribute('user')->id;
+
+            if (!$toolId) {
+                return jsonResponse($response, ['error' => 'tool_id required'], 400);
+            }
+
+            $pdo = getDbConnection();
+
+            // Get tool details
+            $stmt = $pdo->prepare("SELECT * FROM lti_tools WHERE id = ?");
+            $stmt->execute([$toolId]);
+            $tool = $stmt->fetch();
+
+            if (!$tool) {
+                return jsonResponse($response, ['error' => 'Tool not found'], 404);
+            }
+
+            // Get user details
+            $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+            $stmt->execute([$userId]);
+            $user = $stmt->fetch();
+
+            // Get course details if provided
+            $course = null;
+            if ($courseId) {
+                $stmt = $pdo->prepare("SELECT * FROM courses WHERE id = ?");
+                $stmt->execute([$courseId]);
+                $course = $stmt->fetch();
+            }
+
+            // Generate LTI 1.1 parameters
+            $params = [
+                'lti_message_type' => 'basic-lti-launch-request',
+                'lti_version' => 'LTI-1p0',
+                'resource_link_id' => $courseId ?? 'default',
+                'resource_link_title' => $course['title'] ?? 'Resource',
+                'user_id' => (string) $userId,
+                'lis_person_name_full' => $user['username'],
+                'lis_person_contact_email_primary' => $user['email'],
+                'roles' => 'Learner',
+                'context_id' => $courseId ?? 'default',
+                'context_title' => $course['title'] ?? 'Course',
+                'launch_presentation_return_url' => 'http://localhost:4200/dashboard',
+                'oauth_consumer_key' => $tool['consumer_key'],
+                'oauth_signature_method' => 'HMAC-SHA1',
+                'oauth_timestamp' => (string) time(),
+                'oauth_nonce' => bin2hex(random_bytes(16)),
+                'oauth_version' => '1.0',
+                'oauth_callback' => 'about:blank'
+            ];
+
+            // Generate OAuth 1.0a signature
+            $baseString = buildOAuthBaseString('POST', $tool['tool_url'], $params);
+            $signature = base64_encode(hash_hmac('sha1', $baseString, $tool['shared_secret'] . '&', true));
+            $params['oauth_signature'] = $signature;
+
+            $response->getBody()->write(json_encode([
+                'url' => $tool['tool_url'],
+                'params' => $params
+            ]));
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (\Exception $e) {
+            error_log("LTI Consumer Launch Error: " . $e->getMessage());
+            $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+        }
+    })->add($jwtMiddleware);
+
+}
+
+// Helper function to build OAuth base string
+function buildOAuthBaseString($method, $url, $params)
+{
+    ksort($params);
+    $pairs = [];
+    foreach ($params as $key => $value) {
+        if ($key !== 'oauth_signature') {
+            $pairs[] = rawurlencode($key) . '=' . rawurlencode($value);
+        }
+    }
+    $paramString = implode('&', $pairs);
+    return strtoupper($method) . '&' . rawurlencode($url) . '&' . rawurlencode($paramString);
+}

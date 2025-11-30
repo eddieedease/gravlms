@@ -11,9 +11,15 @@ use Firebase\JWT\Key;
 function jwtAuthMiddleware()
 {
     return function (Request $request, $handler) {
+        // Allow OPTIONS requests to bypass auth (for CORS preflight)
+        if ($request->getMethod() === 'OPTIONS') {
+            return $handler->handle($request);
+        }
+
         $authHeader = $request->getHeaderLine('Authorization');
 
         if (!$authHeader) {
+            error_log("Auth Debug: Missing Authorization header. URI: " . $request->getUri());
             $response = new \Slim\Psr7\Response();
             return jsonResponse($response, ['error' => 'Authorization header required'], 401);
         }
@@ -25,6 +31,7 @@ function jwtAuthMiddleware()
         }
 
         if (!$token) {
+            error_log("Auth Debug: Invalid header format. Header: " . $authHeader);
             $response = new \Slim\Psr7\Response();
             return jsonResponse($response, ['error' => 'Invalid authorization header format'], 401);
         }
@@ -38,9 +45,11 @@ function jwtAuthMiddleware()
 
             return $handler->handle($request);
         } catch (\Firebase\JWT\ExpiredException $e) {
+            error_log("Auth Debug: Token expired. " . $e->getMessage());
             $response = new \Slim\Psr7\Response();
             return jsonResponse($response, ['error' => 'Token expired'], 401);
         } catch (\Exception $e) {
+            error_log("Auth Debug: Invalid token. " . $e->getMessage());
             $response = new \Slim\Psr7\Response();
             return jsonResponse($response, ['error' => 'Invalid token'], 401);
         }

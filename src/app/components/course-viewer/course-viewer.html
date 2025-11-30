@@ -56,7 +56,8 @@
             <h1 class="text-3xl font-bold text-gray-900 mb-6">{{ page.title }}</h1>
 
             <div class="prose prose-indigo max-w-none mb-8">
-                <div class="markdown-content" [innerHTML]="page.content | marked"></div>
+                <div class="markdown-content" [innerHTML]="page.content | marked" (click)="handleContentClick($event)">
+                </div>
             </div>
 
             <div class="border-t border-gray-200 pt-6 flex justify-end">

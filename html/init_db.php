@@ -52,7 +52,10 @@ try {
         title VARCHAR(255) NOT NULL,
         description TEXT,
         display_order INT DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        is_lti BOOLEAN DEFAULT FALSE,
+        lti_tool_id INT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (lti_tool_id) REFERENCES lti_tools(id) ON DELETE SET NULL
     )";
     $pdo->exec($sqlCourses);
     echo "Table 'courses' created or already exists.<br>";
@@ -182,7 +185,54 @@ try {
     )";
     $pdo->exec($sqlTestQuestionOptions);
     echo "Table 'test_question_options' created or already exists.<br>";
+    // Create lti_platforms table (For when we are the Tool Provider - LTI 1.3)
+    $sqlLtiPlatforms = "CREATE TABLE IF NOT EXISTS lti_platforms (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        issuer VARCHAR(255) NOT NULL UNIQUE,
+        client_id VARCHAR(255) NOT NULL,
+        auth_login_url VARCHAR(255) NOT NULL,
+        auth_token_url VARCHAR(255) NOT NULL,
+        key_set_url VARCHAR(255) NOT NULL,
+        deployment_id VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )";
+    $pdo->exec($sqlLtiPlatforms);
+    echo "Table 'lti_platforms' created or already exists.<br>";
 
+    // Create lti_tools table (For when we are the Tool Consumer - LTI 1.1 & 1.3)
+    $sqlLtiTools = "CREATE TABLE IF NOT EXISTS lti_tools (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        tool_url VARCHAR(255) NOT NULL,
+        lti_version ENUM('1.1', '1.3') DEFAULT '1.3',
+        client_id VARCHAR(255), -- LTI 1.3
+        public_key TEXT, -- LTI 1.3
+        initiate_login_url VARCHAR(255), -- LTI 1.3
+        consumer_key VARCHAR(255), -- LTI 1.1
+        shared_secret VARCHAR(255), -- LTI 1.1
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )";
+    $pdo->exec($sqlLtiTools);
+    echo "Table 'lti_tools' created or already exists.<br>";
+
+    // Create lti_nonces table (Replay protection)
+    $sqlLtiNonces = "CREATE TABLE IF NOT EXISTS lti_nonces (
+        nonce VARCHAR(255) PRIMARY KEY,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )";
+    $pdo->exec($sqlLtiNonces);
+    echo "Table 'lti_nonces' created or already exists.<br>";
+
+    // Create lti_keys table (Our Key Pairs for LTI 1.3)
+    $sqlLtiKeys = "CREATE TABLE IF NOT EXISTS lti_keys (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        kid VARCHAR(255) NOT NULL UNIQUE,
+        private_key TEXT NOT NULL,
+        public_key TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )";
+    $pdo->exec($sqlLtiKeys);
+    echo "Table 'lti_keys' created or already exists.<br>";
 
     // --- Migrations for existing databases ---
 
@@ -222,6 +272,21 @@ try {
         }
     }
 
+    // Ensure 'is_lti' column exists in courses
+    $stmt = $pdo->query("SHOW COLUMNS FROM courses LIKE 'is_lti'");
+    if ($stmt->rowCount() == 0) {
+        $pdo->exec("ALTER TABLE courses ADD COLUMN is_lti BOOLEAN DEFAULT FALSE AFTER display_order");
+        echo "Migration: Added 'is_lti' column to courses.<br>";
+    }
+
+    // Ensure 'lti_tool_id' column exists in courses
+    $stmt = $pdo->query("SHOW COLUMNS FROM courses LIKE 'lti_tool_id'");
+    if ($stmt->rowCount() == 0) {
+        $pdo->exec("ALTER TABLE courses ADD COLUMN lti_tool_id INT NULL AFTER is_lti");
+        // Add foreign key constraint
+        $pdo->exec("ALTER TABLE courses ADD CONSTRAINT fk_courses_lti_tool FOREIGN KEY (lti_tool_id) REFERENCES lti_tools(id) ON DELETE SET NULL");
+        echo "Migration: Added 'lti_tool_id' column to courses.<br>";
+    }
 
 } catch (\PDOException $e) {
     throw new \PDOException($e->getMessage(), (int) $e->getCode());

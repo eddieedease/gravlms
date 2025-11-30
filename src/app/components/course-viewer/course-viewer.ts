@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { LearningService } from '../../services/learning.service';
 import { CourseService } from '../../services/course.service';
+import { ApiService } from '../../services/api.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { MarkedPipe } from '../../pipes/marked.pipe';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -22,6 +23,7 @@ export class CourseViewerComponent {
     private router = inject(Router);
     private learningService = inject(LearningService);
     private courseService = inject(CourseService);
+    private apiService = inject(ApiService);
 
     courseId = toSignal(this.route.paramMap.pipe(map(params => Number(params.get('courseId')))));
 
@@ -143,5 +145,30 @@ export class CourseViewerComponent {
 
     isCompleted(pageId: number) {
         return this.completedPageIds().includes(pageId);
+    }
+
+    handleContentClick(event: MouseEvent) {
+        const target = event.target as HTMLElement;
+        if (target.classList.contains('lti-launch-btn')) {
+            const toolId = target.getAttribute('data-tool-id');
+            if (toolId) {
+                this.launchLtiTool(Number(toolId));
+            }
+        }
+    }
+
+    launchLtiTool(toolId: number) {
+        // In a real implementation, we would call the backend to get the signed LTI parameters
+        // and then submit a form.
+        // For now, we'll simulate it or call a placeholder endpoint.
+
+        console.log('Launching LTI Tool:', toolId);
+
+        // Example flow:
+        // this.apiService.getLtiLaunchData(toolId).subscribe(data => {
+        //    this.submitLtiForm(data.url, data.params);
+        // });
+
+        alert('LTI Launch triggered for Tool ID: ' + toolId + '\n(Backend implementation pending)');
     }
 }

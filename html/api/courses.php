@@ -8,7 +8,7 @@ function registerCourseRoutes($app, $authMiddleware)
         $group->get('', function (Request $request, Response $response, $args) {
             try {
                 $pdo = getDbConnection();
-                $stmt = $pdo->query("SELECT * FROM courses ORDER BY display_order ASC, created_at DESC");
+                $stmt = $pdo->query("SELECT id, title, description, display_order, is_lti, lti_tool_id, created_at FROM courses ORDER BY display_order ASC, created_at DESC");
                 $courses = $stmt->fetchAll();
                 return jsonResponse($response, $courses);
             } catch (PDOException $e) {

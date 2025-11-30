@@ -1,0 +1,170 @@
+<div class="space-y-6">
+    <!-- Sub-Tabs -->
+    <div class="border-b border-gray-200">
+        <nav class="-mb-px flex space-x-8">
+            <button (click)="activeTab.set('platforms')" [class.border-algolia-primary]="activeTab() === 'platforms'"
+                [class.text-algolia-primary]="activeTab() === 'platforms'"
+                [class.border-transparent]="activeTab() !== 'platforms'"
+                [class.text-gray-500]="activeTab() !== 'platforms'"
+                class="border-b-2 py-4 px-1 text-sm font-medium transition-colors hover:text-gray-700 hover:border-gray-300">
+                External Platforms (LTI 1.3 Issuers)
+            </button>
+            <button (click)="activeTab.set('tools')" [class.border-algolia-primary]="activeTab() === 'tools'"
+                [class.text-algolia-primary]="activeTab() === 'tools'"
+                [class.border-transparent]="activeTab() !== 'tools'" [class.text-gray-500]="activeTab() !== 'tools'"
+                class="border-b-2 py-4 px-1 text-sm font-medium transition-colors hover:text-gray-700 hover:border-gray-300">
+                External Tools (LTI Consumers)
+            </button>
+        </nav>
+    </div>
+
+    <!-- Header Actions -->
+    <div class="flex justify-end">
+        <button (click)="startCreate()" class="btn-primary">
+            {{ activeTab() === 'platforms' ? 'Add Platform' : 'Add Tool' }}
+        </button>
+    </div>
+
+    <!-- Platforms Tab -->
+    @if (activeTab() === 'platforms') {
+    @if (showForm()) {
+    <div class="card p-6 mb-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Add Platform</h3>
+        <form [formGroup]="platformForm" (ngSubmit)="onSubmitPlatform()" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Issuer (iss)</label>
+                <input type="text" formControlName="issuer" class="input-field"
+                    placeholder="https://canvas.instructure.com">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Client ID</label>
+                <input type="text" formControlName="client_id" class="input-field">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Auth Login URL</label>
+                <input type="text" formControlName="auth_login_url" class="input-field">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Auth Token URL</label>
+                <input type="text" formControlName="auth_token_url" class="input-field">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Key Set URL (JWKS)</label>
+                <input type="text" formControlName="key_set_url" class="input-field">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Deployment ID (Optional)</label>
+                <input type="text" formControlName="deployment_id" class="input-field">
+            </div>
+            <div class="flex justify-end gap-3 pt-4">
+                <button type="button" (click)="cancel()" class="btn-secondary">Cancel</button>
+                <button type="submit" [disabled]="platformForm.invalid"
+                    class="btn-primary disabled:opacity-50">Save</button>
+            </div>
+        </form>
+    </div>
+    }
+
+    <div class="card overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Issuer</th>
+                    <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Client ID</th>
+                    <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Created</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 bg-white">
+                @for (platform of platforms(); track platform.id) {
+                <tr class="hover:bg-gray-50">
+                    <td class="px-3 py-4 text-sm text-gray-900">{{ platform.issuer }}</td>
+                    <td class="px-3 py-4 text-sm text-gray-500">{{ platform.client_id }}</td>
+                    <td class="px-3 py-4 text-sm text-gray-500">{{ platform.created_at | date }}</td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    }
+
+    <!-- Tools Tab -->
+    @if (activeTab() === 'tools') {
+    @if (showForm()) {
+    <div class="card p-6 mb-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Add External Tool</h3>
+        <form [formGroup]="toolForm" (ngSubmit)="onSubmitTool()" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Tool Name</label>
+                <input type="text" formControlName="name" class="input-field">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Tool URL (Launch URL)</label>
+                <input type="text" formControlName="tool_url" class="input-field">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">LTI Version</label>
+                <select formControlName="lti_version" class="input-field">
+                    <option value="1.3">LTI 1.3</option>
+                    <option value="1.1">LTI 1.1</option>
+                </select>
+            </div>
+
+            @if (toolForm.get('lti_version')?.value === '1.3') {
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Client ID</label>
+                <input type="text" formControlName="client_id" class="input-field">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Initiate Login URL</label>
+                <input type="text" formControlName="initiate_login_url" class="input-field">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Public Key (PEM)</label>
+                <textarea formControlName="public_key" rows="3" class="input-field"></textarea>
+            </div>
+            }
+
+            @if (toolForm.get('lti_version')?.value === '1.1') {
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Consumer Key</label>
+                <input type="text" formControlName="consumer_key" class="input-field">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Shared Secret</label>
+                <input type="text" formControlName="shared_secret" class="input-field">
+            </div>
+            }
+
+            <div class="flex justify-end gap-3 pt-4">
+                <button type="button" (click)="cancel()" class="btn-secondary">Cancel</button>
+                <button type="submit" [disabled]="toolForm.invalid"
+                    class="btn-primary disabled:opacity-50">Save</button>
+            </div>
+        </form>
+    </div>
+    }
+
+    <div class="card overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Name</th>
+                    <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">URL</th>
+                    <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Version</th>
+                    <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Created</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 bg-white">
+                @for (tool of tools(); track tool.id) {
+                <tr class="hover:bg-gray-50">
+                    <td class="px-3 py-4 text-sm text-gray-900">{{ tool.name }}</td>
+                    <td class="px-3 py-4 text-sm text-gray-500">{{ tool.tool_url }}</td>
+                    <td class="px-3 py-4 text-sm text-gray-500">{{ tool.lti_version }}</td>
+                    <td class="px-3 py-4 text-sm text-gray-500">{{ tool.created_at | date }}</td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    }
+</div>

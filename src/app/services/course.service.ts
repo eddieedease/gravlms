@@ -10,58 +10,51 @@ export class CourseService {
 
     constructor(private http: HttpClient, private authService: AuthService) { }
 
-    private getHeaders() {
-        const token = this.authService.getToken();
-        return new HttpHeaders({
-            'Authorization': `Bearer ${token}`
-        });
-    }
-
     // Courses
     getCourses() {
-        return this.http.get<any[]>('http://localhost:8080/api/courses', { headers: this.getHeaders() });
+        return this.http.get<any[]>('http://localhost:8080/api/courses');
     }
 
     createCourse(course: any) {
-        return this.http.post<any>('http://localhost:8080/api/courses', course, { headers: this.getHeaders() });
+        return this.http.post<any>('http://localhost:8080/api/courses', course);
     }
 
     updateCourse(id: number, course: any) {
-        return this.http.put<any>(`http://localhost:8080/api/courses/${id}`, course, { headers: this.getHeaders() });
+        return this.http.put<any>(`http://localhost:8080/api/courses/${id}`, course);
     }
 
     deleteCourse(id: number) {
-        return this.http.delete<any>(`http://localhost:8080/api/courses/${id}`, { headers: this.getHeaders() });
+        return this.http.delete<any>(`http://localhost:8080/api/courses/${id}`);
     }
 
     // Pages (Course Items)
     getPages() {
-        return this.http.get<any[]>(this.apiUrl, { headers: this.getHeaders() });
+        return this.http.get<any[]>(this.apiUrl);
     }
 
     createPage(page: any) {
-        return this.http.post<any>(this.apiUrl, page, { headers: this.getHeaders() });
+        return this.http.post<any>(this.apiUrl, page);
     }
 
     updatePage(id: number, page: any) {
-        return this.http.put<any>(`${this.apiUrl}/${id}`, page, { headers: this.getHeaders() });
+        return this.http.put<any>(`${this.apiUrl}/${id}`, page);
     }
 
     deletePage(id: number) {
-        return this.http.delete<any>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() });
+        return this.http.delete<any>(`${this.apiUrl}/${id}`);
     }
 
     // Tests (Linked to Page ID)
     getTestByPageId(pageId: number) {
-        return this.http.get<any>(`http://localhost:8080/api/pages/${pageId}/test`, { headers: this.getHeaders() });
+        return this.http.get<any>(`http://localhost:8080/api/pages/${pageId}/test`);
     }
 
     // Create/Update test for a page
     saveTest(test: any) {
-        return this.http.post<any>('http://localhost:8080/api/tests', test, { headers: this.getHeaders() });
+        return this.http.post<any>('http://localhost:8080/api/tests', test);
     }
 
     submitTest(testId: number, answers: any) {
-        return this.http.post<any>(`http://localhost:8080/api/tests/${testId}/submit`, { answers }, { headers: this.getHeaders() });
+        return this.http.post<any>(`http://localhost:8080/api/tests/${testId}/submit`, { answers });
     }
 }

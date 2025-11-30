@@ -20,6 +20,12 @@
                 class="border-b-2 py-4 px-1 text-sm font-medium transition-colors hover:text-gray-700 hover:border-gray-300">
                 Groups
             </button>
+            <button (click)="setTab('lti')" [class.border-algolia-primary]="activeTab() === 'lti'"
+                [class.text-algolia-primary]="activeTab() === 'lti'" [class.border-transparent]="activeTab() !== 'lti'"
+                [class.text-gray-500]="activeTab() !== 'lti'"
+                class="border-b-2 py-4 px-1 text-sm font-medium transition-colors hover:text-gray-700 hover:border-gray-300">
+                LTI Management
+            </button>
         </nav>
     </div>
 
@@ -303,5 +309,10 @@
         </div>
         }
     </div>
+    }
+
+    <!-- LTI Management Tab -->
+    @if (activeTab() === 'lti') {
+    <app-lti-management></app-lti-management>
     }
 </div>

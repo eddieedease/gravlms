@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, signal, computed, ElementRef, viewChild } from '@angular/core';
 import { CourseService } from '../../services/course.service';
 import { AuthService } from '../../services/auth.service';
+import { ApiService } from '../../services/api.service';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { marked } from 'marked';
@@ -16,6 +17,7 @@ export class Editor implements OnInit {
   private courseService = inject(CourseService);
   private authService = inject(AuthService);
   private http = inject(HttpClient);
+  private apiService = inject(ApiService);
   private fb = inject(FormBuilder);
 
   fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
@@ -36,6 +38,9 @@ export class Editor implements OnInit {
   selectedPage = signal<any>(null);
   previewHtml = signal<string>('');
 
+  ltiTools = signal<any[]>([]);
+  showLtiSelector = signal(false);
+
   form = this.fb.group({
     title: ['', Validators.required],
     content: [''],
@@ -46,6 +51,7 @@ export class Editor implements OnInit {
   ngOnInit() {
     this.loadCourses();
     this.loadPages();
+    this.loadLtiTools();
 
     // Update preview when content changes
     this.form.get('content')?.valueChanges.subscribe(val => {
@@ -243,5 +249,21 @@ export class Editor implements OnInit {
 
     this.form.patchValue({ content: newContent });
     this.updatePreview(newContent);
+  }
+
+  loadLtiTools() {
+    this.apiService.getLtiTools().subscribe(tools => {
+      this.ltiTools.set(tools);
+    });
+  }
+
+  insertLtiTool(tool: any) {
+    const markdown = `[lti-tool id="${tool.id}"]`;
+    const currentContent = this.form.get('content')?.value || '';
+    const newContent = currentContent + '\n\n' + markdown;
+
+    this.form.patchValue({ content: newContent });
+    this.updatePreview(newContent);
+    this.showLtiSelector.set(false);
   }
 }
