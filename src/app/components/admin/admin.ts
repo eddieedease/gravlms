@@ -6,6 +6,7 @@ import { GroupsService } from '../../services/groups.service';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { LtiManagementComponent } from './lti-management/lti-management';
+import { ApiService } from '../../services/api.service';
 
 @Component({
   selector: 'app-admin',
@@ -18,11 +19,13 @@ export class Admin implements OnInit {
   private courseService = inject(CourseService);
   private learningService = inject(LearningService);
   private groupsService = inject(GroupsService);
+  private apiService = inject(ApiService);
   private fb = inject(FormBuilder);
 
   users = signal<any[]>([]);
   courses = signal<any[]>([]);
   groups = signal<any[]>([]);
+  ltiTools = signal<any[]>([]);
 
   // Search State
   searchTerm = signal('');
@@ -44,7 +47,7 @@ export class Admin implements OnInit {
   });
 
   // Tab State
-  activeTab = signal<'users' | 'groups' | 'lti'>('users');
+  activeTab = signal<'users' | 'groups' | 'courses' | 'lti'>('users');
 
   // User Management State
   isEditing = signal(false);

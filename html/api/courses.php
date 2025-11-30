@@ -8,7 +8,7 @@ function registerCourseRoutes($app, $authMiddleware)
         $group->get('', function (Request $request, Response $response, $args) {
             try {
                 $pdo = getDbConnection();
-                $stmt = $pdo->query("SELECT id, title, description, display_order, is_lti, lti_tool_id, created_at FROM courses ORDER BY display_order ASC, created_at DESC");
+                $stmt = $pdo->query("SELECT id, title, description, display_order, is_lti, lti_tool_id, custom_launch_url, created_at FROM courses ORDER BY display_order ASC, created_at DESC");
                 $courses = $stmt->fetchAll();
                 return jsonResponse($response, $courses);
             } catch (PDOException $e) {
@@ -18,18 +18,37 @@ function registerCourseRoutes($app, $authMiddleware)
 
         $group->post('', function (Request $request, Response $response, $args) {
             $data = json_decode($request->getBody()->getContents(), true);
-            $title = $data['title'] ?? null;
-            $description = $data['description'] ?? '';
-
-            if (!$title) {
-                return jsonResponse($response, ['error' => 'Title is required'], 400);
-            }
-
             try {
                 $pdo = getDbConnection();
-                $stmt = $pdo->prepare("INSERT INTO courses (title, description) VALUES (?, ?)");
-                $stmt->execute([$title, $description]);
-                return jsonResponse($response, ['status' => 'success', 'message' => 'Course created'], 201);
+
+                // Properly handle LTI fields with type conversion
+                // Convert to proper types, handling null, empty string, and actual values
+                $isLti = 0; // Default to 0 (false)
+                if (isset($data['is_lti']) && $data['is_lti'] !== '' && $data['is_lti'] !== null) {
+                    $isLti = $data['is_lti'] ? 1 : 0;
+                }
+
+                $ltiToolId = null;
+                if (isset($data['lti_tool_id']) && $data['lti_tool_id'] !== '' && $data['lti_tool_id'] !== null) {
+                    $ltiToolId = (int) $data['lti_tool_id'];
+                }
+
+                $customLaunchUrl = null;
+                if (isset($data['custom_launch_url']) && $data['custom_launch_url'] !== '' && $data['custom_launch_url'] !== null) {
+                    $customLaunchUrl = $data['custom_launch_url'];
+                }
+
+                $stmt = $pdo->prepare("INSERT INTO courses (title, description, display_order, is_lti, lti_tool_id, custom_launch_url) VALUES (?, ?, ?, ?, ?, ?)");
+                $stmt->execute([
+                    $data['title'],
+                    $data['description'] ?? '',
+                    $data['display_order'] ?? 0,
+                    $isLti,
+                    $ltiToolId,
+                    $customLaunchUrl
+                ]);
+                $courseId = $pdo->lastInsertId();
+                return jsonResponse($response, ['id' => $courseId, 'message' => 'Course created'], 201);
             } catch (PDOException $e) {
                 return jsonResponse($response, ['error' => $e->getMessage()], 500);
             }
@@ -38,37 +57,37 @@ function registerCourseRoutes($app, $authMiddleware)
         $group->put('/{id}', function (Request $request, Response $response, $args) {
             $id = $args['id'];
             $data = json_decode($request->getBody()->getContents(), true);
-            $title = $data['title'] ?? null;
-            $description = $data['description'] ?? null;
-            $display_order = $data['display_order'] ?? null;
 
             try {
                 $pdo = getDbConnection();
-                $fields = [];
-                $values = [];
-                if ($title) {
-                    $fields[] = "title = ?";
-                    $values[] = $title;
-                }
-                if ($description !== null) {
-                    $fields[] = "description = ?";
-                    $values[] = $description;
-                }
-                if ($display_order !== null) {
-                    $fields[] = "display_order = ?";
-                    $values[] = $display_order;
+
+                // Properly handle LTI fields with type conversion
+                $isLti = 0;
+                if (isset($data['is_lti']) && $data['is_lti'] !== '' && $data['is_lti'] !== null) {
+                    $isLti = $data['is_lti'] ? 1 : 0;
                 }
 
-                if (empty($fields)) {
-                    return jsonResponse($response, ['message' => 'No changes provided']);
+                $ltiToolId = null;
+                if (isset($data['lti_tool_id']) && $data['lti_tool_id'] !== '' && $data['lti_tool_id'] !== null) {
+                    $ltiToolId = (int) $data['lti_tool_id'];
                 }
 
-                $values[] = $id;
-                $sql = "UPDATE courses SET " . implode(', ', $fields) . " WHERE id = ?";
-                $stmt = $pdo->prepare($sql);
-                $stmt->execute($values);
+                $customLaunchUrl = null;
+                if (isset($data['custom_launch_url']) && $data['custom_launch_url'] !== '' && $data['custom_launch_url'] !== null) {
+                    $customLaunchUrl = $data['custom_launch_url'];
+                }
 
-                return jsonResponse($response, ['status' => 'success', 'message' => 'Course updated']);
+                $stmt = $pdo->prepare("UPDATE courses SET title = ?, description = ?, display_order = ?, is_lti = ?, lti_tool_id = ?, custom_launch_url = ? WHERE id = ?");
+                $stmt->execute([
+                    $data['title'],
+                    $data['description'] ?? '',
+                    $data['display_order'] ?? 0,
+                    $isLti,
+                    $ltiToolId,
+                    $customLaunchUrl,
+                    $id
+                ]);
+                return jsonResponse($response, ['message' => 'Course updated']);
             } catch (PDOException $e) {
                 return jsonResponse($response, ['error' => $e->getMessage()], 500);
             }
