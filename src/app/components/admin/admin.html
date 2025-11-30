@@ -1,8 +1,8 @@
 <div class="min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-8 py-8">
     <!-- Header -->
     <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">Admin Panel</h1>
-        <p class="mt-2 text-gray-600">Manage users, groups, and course assignments</p>
+        <h1 class="text-3xl font-bold text-gray-900">{{ 'ADMIN_PANEL' | translate }}</h1>
+        <p class="mt-2 text-gray-600">{{ 'ADMIN_SUBTITLE' | translate }}</p>
     </div>
 
     <!-- Tab Navigation -->
@@ -12,19 +12,19 @@
                 [class.text-algolia-primary]="activeTab() === 'users'"
                 [class.border-transparent]="activeTab() !== 'users'" [class.text-gray-500]="activeTab() !== 'users'"
                 class="border-b-2 py-4 px-1 text-sm font-medium transition-colors hover:text-gray-700 hover:border-gray-300">
-                Users
+                {{ 'USERS' | translate }}
             </button>
             <button (click)="setTab('groups')" [class.border-algolia-primary]="activeTab() === 'groups'"
                 [class.text-algolia-primary]="activeTab() === 'groups'"
                 [class.border-transparent]="activeTab() !== 'groups'" [class.text-gray-500]="activeTab() !== 'groups'"
                 class="border-b-2 py-4 px-1 text-sm font-medium transition-colors hover:text-gray-700 hover:border-gray-300">
-                Groups
+                {{ 'GROUPS' | translate }}
             </button>
             <button (click)="setTab('lti')" [class.border-algolia-primary]="activeTab() === 'lti'"
                 [class.text-algolia-primary]="activeTab() === 'lti'" [class.border-transparent]="activeTab() !== 'lti'"
                 [class.text-gray-500]="activeTab() !== 'lti'"
                 class="border-b-2 py-4 px-1 text-sm font-medium transition-colors hover:text-gray-700 hover:border-gray-300">
-                LTI Management
+                {{ 'LTI_MANAGEMENT' | translate }}
             </button>
         </nav>
     </div>
@@ -35,56 +35,57 @@
         <!-- Users Header -->
         <div class="sm:flex sm:items-center mb-6 justify-between">
             <div class="sm:flex-auto">
-                <h2 class="text-xl font-semibold text-gray-900">Users</h2>
-                <p class="mt-1 text-sm text-gray-600">Manage user accounts and permissions</p>
+                <h2 class="text-xl font-semibold text-gray-900">{{ 'USERS' | translate }}</h2>
+                <p class="mt-1 text-sm text-gray-600">{{ 'MANAGE_USERS' | translate }}</p>
             </div>
             <div class="mt-4 sm:mt-0 sm:flex-none flex gap-4">
                 <div class="relative">
                     <input type="text" [value]="searchTerm()" (input)="searchTerm.set($any($event.target).value)"
-                        placeholder="Search users..." class="input-field w-64">
+                        placeholder="{{ 'SEARCH_USERS' | translate }}" class="input-field w-64">
                 </div>
                 <button type="button" (click)="startCreate()" class="btn-primary">
-                    Add User
+                    {{ 'ADD_USER' | translate }}
                 </button>
             </div>
         </div>
 
         <!-- Course Assignment Section -->
         <div class="card p-6 mb-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Assign Course to User</h3>
+            <h3 class="text-lg font-medium text-gray-900 mb-4">{{ 'ASSIGN_COURSE_TO_USER' | translate }}</h3>
             <form [formGroup]="assignForm" (ngSubmit)="onAssign()" class="flex gap-4 items-end flex-wrap">
                 <div class="flex-1 min-w-[200px]">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">User</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'USER' | translate }}</label>
                     <select formControlName="userId" class="input-field">
-                        <option value="">Select User</option>
+                        <option value="">{{ 'SELECT_USER' | translate }}</option>
                         @for (user of users(); track user.id) {
                         <option [value]="user.id">{{ user.username }}</option>
                         }
                     </select>
                 </div>
                 <div class="flex-1 min-w-[200px]">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Course</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'COURSE' | translate }}</label>
                     <select formControlName="courseId" class="input-field">
-                        <option value="">Select Course</option>
+                        <option value="">{{ 'SELECT_COURSE' | translate }}</option>
                         @for (course of courses(); track course.id) {
                         <option [value]="course.id">{{ course.title }}</option>
                         }
                     </select>
                 </div>
                 <button type="submit" [disabled]="assignForm.invalid" class="btn-primary disabled:opacity-50">
-                    Assign
+                    {{ 'ASSIGN' | translate }}
                 </button>
             </form>
 
             @if (assignedCourses().length > 0) {
             <div class="mt-6">
-                <h4 class="text-sm font-medium text-gray-700 mb-3">Assigned Courses</h4>
+                <h4 class="text-sm font-medium text-gray-700 mb-3">{{ 'ASSIGNED_COURSES' | translate }}</h4>
                 <ul class="divide-y divide-gray-200 border border-gray-200 rounded-lg">
                     @for (course of assignedCourses(); track course.id) {
                     <li class="flex items-center justify-between py-3 px-4">
                         <span class="text-gray-900">{{ course.title }}</span>
                         <button type="button" (click)="detachCourse(course.id)"
-                            class="text-red-600 hover:text-red-500 text-sm font-medium">Remove</button>
+                            class="text-red-600 hover:text-red-500 text-sm font-medium">{{ 'REMOVE' | translate
+                            }}</button>
                     </li>
                     }
                 </ul>
@@ -95,33 +96,34 @@
         <!-- User Form -->
         @if (showForm()) {
         <div class="card p-6 mb-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">{{ isEditing() ? 'Edit User' : 'Create User' }}</h3>
+            <h3 class="text-lg font-medium text-gray-900 mb-4">{{ (isEditing() ? 'EDIT_USER' : 'CREATE_USER') |
+                translate }}</h3>
             <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'USERNAME' | translate }}</label>
                     <input type="text" formControlName="username" class="input-field">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'EMAIL' | translate }}</label>
                     <input type="email" formControlName="email" class="input-field">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Password {{ isEditing() ? '(leave blank to keep)' : '' }}
+                        {{ 'PASSWORD' | translate }} {{ isEditing() ? ('PASSWORD_HINT' | translate) : '' }}
                     </label>
                     <input type="password" formControlName="password" class="input-field">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Role</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'ROLE' | translate }}</label>
                     <select formControlName="role" class="input-field">
-                        <option value="admin">Admin</option>
-                        <option value="editor">Editor</option>
+                        <option value="admin">{{ 'ADMIN' | translate }}</option>
+                        <option value="editor">{{ 'EDITOR' | translate }}</option>
                     </select>
                 </div>
                 <div class="flex justify-end gap-3 pt-4">
-                    <button type="button" (click)="cancel()" class="btn-secondary">Cancel</button>
-                    <button type="submit" [disabled]="form.invalid"
-                        class="btn-primary disabled:opacity-50">Save</button>
+                    <button type="button" (click)="cancel()" class="btn-secondary">{{ 'CANCEL' | translate }}</button>
+                    <button type="submit" [disabled]="form.invalid" class="btn-primary disabled:opacity-50">{{ 'SAVE' |
+                        translate }}</button>
                 </div>
             </form>
         </div>
@@ -133,13 +135,18 @@
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">ID</th>
-                            <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Username</th>
-                            <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Email</th>
-                            <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Role</th>
-                            <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Created</th>
+                            <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">{{ 'ID' |
+                                translate }}</th>
+                            <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ 'USERNAME' |
+                                translate }}</th>
+                            <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ 'EMAIL' | translate
+                                }}</th>
+                            <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ 'ROLE' | translate
+                                }}</th>
+                            <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ 'CREATED' |
+                                translate }}</th>
                             <th class="relative py-3.5 pl-3 pr-4 sm:pr-6">
-                                <span class="sr-only">Actions</span>
+                                <span class="sr-only">{{ 'ACTIONS' | translate }}</span>
                             </th>
                         </tr>
                     </thead>
@@ -155,9 +162,10 @@
                                 date:'short' }}</td>
                             <td class="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                 <button (click)="startEdit(user)"
-                                    class="text-algolia-primary hover:text-indigo-600 mr-4">Edit</button>
-                                <button (click)="deleteUser(user.id)"
-                                    class="text-red-600 hover:text-red-500">Delete</button>
+                                    class="text-algolia-primary hover:text-indigo-600 mr-4">{{ 'EDIT' | translate
+                                    }}</button>
+                                <button (click)="deleteUser(user.id)" class="text-red-600 hover:text-red-500">{{
+                                    'DELETE' | translate }}</button>
                             </td>
                         </tr>
                         }
@@ -174,16 +182,16 @@
         <!-- Groups Header -->
         <div class="sm:flex sm:items-center mb-6 justify-between">
             <div class="sm:flex-auto">
-                <h2 class="text-xl font-semibold text-gray-900">Groups</h2>
-                <p class="mt-1 text-sm text-gray-600">Manage user groups and course assignments</p>
+                <h2 class="text-xl font-semibold text-gray-900">{{ 'GROUPS' | translate }}</h2>
+                <p class="mt-1 text-sm text-gray-600">{{ 'MANAGE_GROUPS' | translate }}</p>
             </div>
             <div class="mt-4 sm:mt-0 sm:flex-none flex gap-4">
                 <div class="relative">
                     <input type="text" [value]="searchTerm()" (input)="searchTerm.set($any($event.target).value)"
-                        placeholder="Search groups..." class="input-field w-64">
+                        placeholder="{{ 'SEARCH_GROUPS' | translate }}" class="input-field w-64">
                 </div>
                 <button type="button" (click)="startCreateGroup()" class="btn-primary">
-                    Add Group
+                    {{ 'ADD_GROUP' | translate }}
                 </button>
             </div>
         </div>
@@ -191,21 +199,23 @@
         <!-- Group Form -->
         @if (showGroupForm()) {
         <div class="card p-6 mb-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">{{ isEditingGroup() ? 'Edit Group' : 'Create Group' }}
+            <h3 class="text-lg font-medium text-gray-900 mb-4">{{ (isEditingGroup() ? 'EDIT_GROUP' : 'CREATE_GROUP') |
+                translate }}
             </h3>
             <form [formGroup]="groupForm" (ngSubmit)="onSubmitGroup()" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'NAME' | translate }}</label>
                     <input type="text" formControlName="name" class="input-field">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'DESCRIPTION' | translate }}</label>
                     <textarea formControlName="description" rows="3" class="input-field"></textarea>
                 </div>
                 <div class="flex justify-end gap-3 pt-4">
-                    <button type="button" (click)="cancelGroup()" class="btn-secondary">Cancel</button>
-                    <button type="submit" [disabled]="groupForm.invalid"
-                        class="btn-primary disabled:opacity-50">Save</button>
+                    <button type="button" (click)="cancelGroup()" class="btn-secondary">{{ 'CANCEL' | translate
+                        }}</button>
+                    <button type="submit" [disabled]="groupForm.invalid" class="btn-primary disabled:opacity-50">{{
+                        'SAVE' | translate }}</button>
                 </div>
             </form>
         </div>
@@ -217,11 +227,14 @@
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">ID</th>
-                            <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Name</th>
-                            <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Description</th>
+                            <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">{{ 'ID' |
+                                translate }}</th>
+                            <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ 'NAME' | translate
+                                }}</th>
+                            <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ 'DESCRIPTION' |
+                                translate }}</th>
                             <th class="relative py-3.5 pl-3 pr-4 sm:pr-6">
-                                <span class="sr-only">Actions</span>
+                                <span class="sr-only">{{ 'ACTIONS' | translate }}</span>
                             </th>
                         </tr>
                     </thead>
@@ -235,9 +248,10 @@
                             <td class="px-3 py-4 text-sm text-gray-500">{{ group.description }}</td>
                             <td class="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                 <button (click)="$event.stopPropagation(); startEditGroup(group)"
-                                    class="text-algolia-primary hover:text-indigo-600 mr-4">Edit</button>
+                                    class="text-algolia-primary hover:text-indigo-600 mr-4">{{ 'EDIT' | translate
+                                    }}</button>
                                 <button (click)="$event.stopPropagation(); deleteGroup(group.id)"
-                                    class="text-red-600 hover:text-red-500">Delete</button>
+                                    class="text-red-600 hover:text-red-500">{{ 'DELETE' | translate }}</button>
                             </td>
                         </tr>
                         }
@@ -249,59 +263,60 @@
         <!-- Group Details -->
         @if (selectedGroup) {
         <div class="card p-6">
-            <h3 class="text-xl font-semibold text-gray-900 mb-6">Details for {{ selectedGroup.name }}</h3>
+            <h3 class="text-xl font-semibold text-gray-900 mb-6">{{ 'DETAILS_FOR' | translate }} {{ selectedGroup.name
+                }}</h3>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <!-- Group Users -->
                 <div>
-                    <h4 class="text-lg font-medium text-gray-900 mb-4">Users in Group</h4>
+                    <h4 class="text-lg font-medium text-gray-900 mb-4">{{ 'USERS_IN_GROUP' | translate }}</h4>
                     <form [formGroup]="assignGroupUserForm" (ngSubmit)="addUserToGroup()" class="flex gap-2 mb-4">
                         <select formControlName="userId" class="input-field flex-1">
-                            <option value="">Select User</option>
+                            <option value="">{{ 'SELECT_USER' | translate }}</option>
                             @for (user of users(); track user.id) {
                             <option [value]="user.id">{{ user.username }}</option>
                             }
                         </select>
                         <button type="submit" [disabled]="assignGroupUserForm.invalid"
-                            class="btn-primary disabled:opacity-50 whitespace-nowrap">Add</button>
+                            class="btn-primary disabled:opacity-50 whitespace-nowrap">{{ 'ADD' | translate }}</button>
                     </form>
                     <ul class="divide-y divide-gray-200 border border-gray-200 rounded-lg">
                         @for (user of groupUsers(); track user.id) {
                         <li class="flex items-center justify-between py-3 px-4">
                             <span class="text-gray-900">{{ user.username }}</span>
                             <button (click)="removeUserFromGroup(user.id)"
-                                class="text-red-600 hover:text-red-500 text-sm">Remove</button>
+                                class="text-red-600 hover:text-red-500 text-sm">{{ 'REMOVE' | translate }}</button>
                         </li>
                         }
                         @if (groupUsers().length === 0) {
-                        <li class="py-3 px-4 text-sm text-gray-500">No users in this group.</li>
+                        <li class="py-3 px-4 text-sm text-gray-500">{{ 'NO_USERS_IN_GROUP' | translate }}</li>
                         }
                     </ul>
                 </div>
 
                 <!-- Group Courses -->
                 <div>
-                    <h4 class="text-lg font-medium text-gray-900 mb-4">Courses in Group</h4>
+                    <h4 class="text-lg font-medium text-gray-900 mb-4">{{ 'COURSES_IN_GROUP' | translate }}</h4>
                     <form [formGroup]="assignGroupCourseForm" (ngSubmit)="addCourseToGroup()" class="flex gap-2 mb-4">
                         <select formControlName="courseId" class="input-field flex-1">
-                            <option value="">Select Course</option>
+                            <option value="">{{ 'SELECT_COURSE' | translate }}</option>
                             @for (course of courses(); track course.id) {
                             <option [value]="course.id">{{ course.title }}</option>
                             }
                         </select>
                         <button type="submit" [disabled]="assignGroupCourseForm.invalid"
-                            class="btn-primary disabled:opacity-50 whitespace-nowrap">Add</button>
+                            class="btn-primary disabled:opacity-50 whitespace-nowrap">{{ 'ADD' | translate }}</button>
                     </form>
                     <ul class="divide-y divide-gray-200 border border-gray-200 rounded-lg">
                         @for (course of groupCourses(); track course.id) {
                         <li class="flex items-center justify-between py-3 px-4">
                             <span class="text-gray-900">{{ course.title }}</span>
                             <button (click)="removeCourseFromGroup(course.id)"
-                                class="text-red-600 hover:text-red-500 text-sm">Remove</button>
+                                class="text-red-600 hover:text-red-500 text-sm">{{ 'REMOVE' | translate }}</button>
                         </li>
                         }
                         @if (groupCourses().length === 0) {
-                        <li class="py-3 px-4 text-sm text-gray-500">No courses in this group.</li>
+                        <li class="py-3 px-4 text-sm text-gray-500">{{ 'NO_COURSES_IN_GROUP' | translate }}</li>
                         }
                     </ul>
                 </div>

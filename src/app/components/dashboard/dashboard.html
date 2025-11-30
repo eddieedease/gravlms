@@ -19,10 +19,9 @@
             </svg>
         </div>
         <div class="relative mx-auto max-w-2xl lg:mx-0">
-            <h2 class="text-3xl font-bold tracking-tight text-white sm:text-4xl">Welcome back to your learning journey
+            <h2 class="text-3xl font-bold tracking-tight text-white sm:text-4xl">{{ 'WELCOME_BACK_TITLE' | translate }}
             </h2>
-            <p class="mt-6 text-lg leading-8 text-indigo-100">Pick up where you left off or start a new course today.
-                Your progress is tracked automatically.</p>
+            <p class="mt-6 text-lg leading-8 text-indigo-100">{{ 'WELCOME_BACK_SUBTITLE' | translate }}</p>
         </div>
     </div>
 
@@ -30,29 +29,29 @@
     <div>
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-xl font-semibold leading-7 text-gray-900">{{ 'COURSES' | translate }}</h3>
-            
+
             <!-- Tabs -->
             <div class="flex space-x-1 rounded-xl bg-gray-100 p-1">
-                <button (click)="activeTab.set('todo')"
-                    [class.bg-white]="activeTab() === 'todo'"
-                    [class.shadow]="activeTab() === 'todo'"
-                    [class.text-gray-900]="activeTab() === 'todo'"
+                <button (click)="activeTab.set('todo')" [class.bg-white]="activeTab() === 'todo'"
+                    [class.shadow]="activeTab() === 'todo'" [class.text-gray-900]="activeTab() === 'todo'"
                     [class.text-gray-500]="activeTab() !== 'todo'"
                     class="rounded-lg px-3 py-1.5 text-sm font-medium transition-all">
-                    Todo
+                    {{ 'TODO' | translate }}
                     @if (todoCourses().length > 0) {
-                        <span class="ml-1.5 inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10">{{ todoCourses().length }}</span>
+                    <span
+                        class="ml-1.5 inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10">{{
+                        todoCourses().length }}</span>
                     }
                 </button>
-                <button (click)="activeTab.set('library')"
-                    [class.bg-white]="activeTab() === 'library'"
-                    [class.shadow]="activeTab() === 'library'"
-                    [class.text-gray-900]="activeTab() === 'library'"
+                <button (click)="activeTab.set('library')" [class.bg-white]="activeTab() === 'library'"
+                    [class.shadow]="activeTab() === 'library'" [class.text-gray-900]="activeTab() === 'library'"
                     [class.text-gray-500]="activeTab() !== 'library'"
                     class="rounded-lg px-3 py-1.5 text-sm font-medium transition-all">
-                    Library
+                    {{ 'LIBRARY' | translate }}
                     @if (libraryCourses().length > 0) {
-                        <span class="ml-1.5 inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10">{{ libraryCourses().length }}</span>
+                    <span
+                        class="ml-1.5 inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10">{{
+                        libraryCourses().length }}</span>
                     }
                 </button>
             </div>
@@ -87,7 +86,7 @@
                 <div class="border-t border-gray-100 px-6 py-4 bg-gray-50 rounded-b-xl">
                     <a [routerLink]="['/learn', course.id]"
                         class="text-sm font-medium text-algolia-primary hover:text-indigo-500 transition-colors flex items-center gap-1">
-                        Continue Learning <span aria-hidden="true">&rarr;</span>
+                        {{ 'CONTINUE_LEARNING' | translate }} <span aria-hidden="true">&rarr;</span>
                     </a>
                 </div>
             </div>
@@ -102,10 +101,10 @@
                     d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
             </svg>
             <h3 class="mt-2 text-sm font-semibold text-gray-900">
-                {{ activeTab() === 'todo' ? 'No active courses' : 'No completed courses' }}
+                {{ (activeTab() === 'todo' ? 'NO_ACTIVE_COURSES' : 'NO_COMPLETED_COURSES') | translate }}
             </h3>
             <p class="mt-1 text-sm text-gray-500">
-                {{ activeTab() === 'todo' ? 'You have completed all your courses! Check the Library.' : 'Complete a course to see it here.' }}
+                {{ (activeTab() === 'todo' ? 'ALL_COURSES_COMPLETED' : 'COMPLETE_COURSE_TO_SEE') | translate }}
             </p>
         </div>
         }

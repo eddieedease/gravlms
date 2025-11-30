@@ -2,7 +2,7 @@
     <!-- Sidebar -->
     <div class="w-64 bg-white border-r border-gray-200 overflow-y-auto">
         <div class="p-4">
-            <h2 class="text-lg font-bold text-gray-900 mb-4">Course Content</h2>
+            <h2 class="text-lg font-bold text-gray-900 mb-4">{{ 'COURSE_CONTENT' | translate }}</h2>
             <nav class="space-y-1">
                 @if (pages$ | async; as pages) {
                 @for (page of pages; track page.id) {
@@ -64,12 +64,12 @@
                 @if (!isCompleted(page.id)) {
                 <button (click)="completeLesson(page.id)"
                     class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Mark as Complete
+                    {{ 'MARK_AS_COMPLETE' | translate }}
                 </button>
                 } @else {
                 <span
                     class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-green-700 bg-green-100">
-                    Completed
+                    {{ 'COMPLETED' | translate }}
                 </span>
                 }
             </div>
@@ -77,7 +77,7 @@
         }
         } @else {
         <div class="flex items-center justify-center h-full text-gray-500">
-            Select a lesson to start learning
+            {{ 'SELECT_LESSON' | translate }}
         </div>
         }
     </div>

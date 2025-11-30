@@ -8,9 +8,11 @@ import { DatePipe } from '@angular/common';
 import { LtiManagementComponent } from './lti-management/lti-management';
 import { ApiService } from '../../services/api.service';
 
+import { TranslateModule } from '@ngx-translate/core';
+
 @Component({
   selector: 'app-admin',
-  imports: [ReactiveFormsModule, DatePipe, LtiManagementComponent],
+  imports: [ReactiveFormsModule, DatePipe, LtiManagementComponent, TranslateModule],
   templateUrl: './admin.html',
   styleUrl: './admin.css',
 })

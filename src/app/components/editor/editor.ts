@@ -7,9 +7,11 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { marked } from 'marked';
 import { TestEditorComponent } from '../test-editor/test-editor';
 
+import { TranslateModule } from '@ngx-translate/core';
+
 @Component({
   selector: 'app-editor',
-  imports: [ReactiveFormsModule, TestEditorComponent],
+  imports: [ReactiveFormsModule, TestEditorComponent, TranslateModule],
   templateUrl: './editor.html',
   styleUrl: './editor.css',
 })

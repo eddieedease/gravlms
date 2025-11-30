@@ -7,14 +7,15 @@
 
     @if (submitted()) {
     <div class="mb-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
-        <h2 class="text-xl font-bold text-blue-900 mb-2">Test Results</h2>
+        <h2 class="text-xl font-bold text-blue-900 mb-2">{{ 'TEST_RESULTS' | translate }}</h2>
         <p class="text-lg text-blue-800">
-            You scored <span class="font-bold">{{ score() }}</span> out of <span class="font-bold">{{ totalQuestions()
+            {{ 'YOU_SCORED' | translate }} <span class="font-bold">{{ score() }}</span> {{ 'OUT_OF' | translate }} <span
+                class="font-bold">{{ totalQuestions()
                 }}</span>
         </p>
         <button (click)="retry()"
             class="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-colors">
-            Retry Test
+            {{ 'RETRY_TEST' | translate }}
         </button>
     </div>
     }
@@ -72,7 +73,7 @@
     <div class="mt-8 flex justify-end">
         <button (click)="submit()"
             class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-md transition-colors">
-            Submit Answers
+            {{ 'SUBMIT_ANSWERS' | translate }}
         </button>
     </div>
     }
