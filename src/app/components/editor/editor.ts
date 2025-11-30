@@ -41,11 +41,19 @@ export class Editor implements OnInit {
   ltiTools = signal<any[]>([]);
   showLtiSelector = signal(false);
 
-  form = this.fb.group({
+  pageForm = this.fb.group({
     title: ['', Validators.required],
     content: [''],
     type: ['page'],
     course_id: [null as number | null]
+  });
+
+  courseForm = this.fb.group({
+    title: ['', Validators.required],
+    description: [''],
+    is_lti: [false],
+    lti_tool_id: [null as number | null],
+    custom_launch_url: ['']
   });
 
   ngOnInit() {
@@ -54,7 +62,7 @@ export class Editor implements OnInit {
     this.loadLtiTools();
 
     // Update preview when content changes
-    this.form.get('content')?.valueChanges.subscribe(val => {
+    this.pageForm.get('content')?.valueChanges.subscribe(val => {
       this.updatePreview(val || '');
     });
   }
@@ -92,6 +100,15 @@ export class Editor implements OnInit {
   selectCourse(course: any) {
     this.selectedCourse.set(course);
     this.selectedPage.set(null);
+
+    // Patch course form
+    this.courseForm.patchValue({
+      title: course.title,
+      description: course.description,
+      is_lti: !!course.is_lti,
+      lti_tool_id: course.lti_tool_id,
+      custom_launch_url: course.custom_launch_url
+    });
   }
 
   createCourse() {
@@ -99,6 +116,26 @@ export class Editor implements OnInit {
     if (title) {
       this.courseService.createCourse({ title }).subscribe(() => {
         this.loadCourses();
+      });
+    }
+  }
+
+  saveCourse() {
+    if (this.selectedCourse() && this.courseForm.valid) {
+      const updatedCourse = {
+        ...this.selectedCourse(),
+        ...this.courseForm.value
+      };
+
+      // Ensure types are correct for backend
+      if (!updatedCourse.is_lti) {
+        updatedCourse.lti_tool_id = null;
+        updatedCourse.custom_launch_url = null;
+      }
+
+      this.courseService.updateCourse(this.selectedCourse().id, updatedCourse).subscribe(() => {
+        this.loadCourses();
+        alert('Course saved!');
       });
     }
   }
@@ -115,7 +152,7 @@ export class Editor implements OnInit {
 
   selectPage(page: any) {
     this.selectedPage.set(page);
-    this.form.patchValue({
+    this.pageForm.patchValue({
       title: page.title,
       content: page.content,
       type: page.type || 'page',
@@ -138,8 +175,8 @@ export class Editor implements OnInit {
   }
 
   savePage() {
-    if (this.selectedPage() && this.form.valid) {
-      const updatedPage = { ...this.form.value, course_id: this.selectedCourse().id };
+    if (this.selectedPage() && this.pageForm.valid) {
+      const updatedPage = { ...this.pageForm.value, course_id: this.selectedCourse().id };
       this.courseService.updatePage(this.selectedPage().id, updatedPage).subscribe(() => {
         this.loadPages();
         alert('Saved!');
@@ -244,10 +281,10 @@ export class Editor implements OnInit {
     const imageUrl = `http://localhost:8080/api/uploads/${filename}`;
     const markdown = `![Image](${imageUrl})`;
 
-    const currentContent = this.form.get('content')?.value || '';
+    const currentContent = this.pageForm.get('content')?.value || '';
     const newContent = currentContent + '\n\n' + markdown;
 
-    this.form.patchValue({ content: newContent });
+    this.pageForm.patchValue({ content: newContent });
     this.updatePreview(newContent);
   }
 
@@ -259,10 +296,10 @@ export class Editor implements OnInit {
 
   insertLtiTool(tool: any) {
     const markdown = `[lti-tool id="${tool.id}"]`;
-    const currentContent = this.form.get('content')?.value || '';
+    const currentContent = this.pageForm.get('content')?.value || '';
     const newContent = currentContent + '\n\n' + markdown;
 
-    this.form.patchValue({ content: newContent });
+    this.pageForm.patchValue({ content: newContent });
     this.updatePreview(newContent);
     this.showLtiSelector.set(false);
   }

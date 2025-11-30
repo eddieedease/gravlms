@@ -1,14 +1,14 @@
-<div class="max-w-3xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+<div class="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-sm">
     @if (test(); as t) {
-    <div class="mb-8 border-b border-gray-200 dark:border-gray-700 pb-6">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">{{ t.title }}</h1>
-        <p class="text-gray-600 dark:text-gray-300">{{ t.description }}</p>
+    <div class="mb-8 border-b border-gray-200 pb-6">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ t.title }}</h1>
+        <p class="text-gray-600">{{ t.description }}</p>
     </div>
 
     @if (submitted()) {
-    <div class="mb-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-        <h2 class="text-xl font-bold text-blue-900 dark:text-blue-100 mb-2">Test Results</h2>
-        <p class="text-lg text-blue-800 dark:text-blue-200">
+    <div class="mb-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <h2 class="text-xl font-bold text-blue-900 mb-2">Test Results</h2>
+        <p class="text-lg text-blue-800">
             You scored <span class="font-bold">{{ score() }}</span> out of <span class="font-bold">{{ totalQuestions()
                 }}</span>
         </p>
@@ -21,16 +21,15 @@
 
     <div class="space-y-8">
         @for (question of t.questions; track question.id; let i = $index) {
-        <div class="p-4 rounded-lg" [class.bg-gray-50]="!submitted()" [class.dark:bg-gray-750]="!submitted()">
-            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+        <div class="p-4 rounded-lg" [class.bg-gray-50]="!submitted()">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">
                 {{ i + 1 }}. {{ question.question_text }}
             </h3>
 
             <div class="space-y-3">
                 @for (option of question.options; track option.id) {
-                <div class="flex items-center p-3 rounded-md border transition-colors cursor-pointer"
-                    [class.border-gray-200]="!submitted()" [class.dark:border-gray-700]="!submitted()"
-                    [class.hover:bg-gray-100]="!submitted()" [class.dark:hover:bg-gray-700]="!submitted()"
+                <div class="flex items-center p-3 rounded-md border transition-colors cursor-pointer bg-white"
+                    [class.border-gray-200]="!submitted()" [class.hover:bg-gray-50]="!submitted()"
                     [class.bg-green-50]="submitted() && option.is_correct"
                     [class.border-green-200]="submitted() && option.is_correct"
                     [class.bg-red-50]="submitted() && !option.is_correct && userAnswers()[question.id]?.includes(option.id)"
@@ -42,7 +41,7 @@
                             class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300">
                     </div>
                     <div class="ml-3 text-sm">
-                        <label class="font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+                        <label class="font-medium text-gray-700 cursor-pointer">
                             {{ option.option_text }}
                         </label>
                     </div>

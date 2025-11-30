@@ -8,4 +8,4 @@
 - run the init_db in the html folder (backend)
 - Run 'docker compose up -d' in terminal window
 - Run 'ng serve' in another terminal windows
-- default login data: (admin/password) 
+- default login data: (admin@example.com/password) 
