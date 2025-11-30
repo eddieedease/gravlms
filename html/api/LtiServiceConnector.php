@@ -9,6 +9,7 @@ use Packback\Lti1p3\Interfaces\IServiceRequest;
 use Packback\Lti1p3\Interfaces\ICache;
 use Packback\Lti1p3\LtiServiceConnector as BaseLtiServiceConnector;
 use Psr\Http\Message\ResponseInterface;
+use GuzzleHttp\Client;
 
 /**
  * Service connector for making HTTP requests to LTI services.
@@ -20,7 +21,9 @@ class LtiServiceConnector implements ILtiServiceConnector
 
     public function __construct(ICache $cache)
     {
-        $this->connector = new BaseLtiServiceConnector($cache);
+        // Create a Guzzle HTTP client for the service connector
+        $httpClient = new Client();
+        $this->connector = new BaseLtiServiceConnector($cache, $httpClient);
     }
 
     public function getAccessToken(ILtiRegistration $registration, array $scopes): string

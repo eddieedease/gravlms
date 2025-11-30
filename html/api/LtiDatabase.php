@@ -95,7 +95,6 @@ class LtiDatabase implements IDatabase
         }
 
         // Create LtiDeployment object
-        return LtiDeployment::new()
-            ->setDeploymentId($deploymentId);
+        return LtiDeployment::new($deploymentId);
     }
 }
