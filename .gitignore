@@ -43,7 +43,7 @@ __screenshots__/
 Thumbs.db
 
 # Configuration files with sensitive data
-html/config.php
+# html/config.php
 
 # Uploads - ignore all files but keep the folder
 html/uploads/*
