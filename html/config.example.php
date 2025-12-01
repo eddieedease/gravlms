@@ -11,8 +11,8 @@ return [
     'database' => [
         'host' => 'db',              // Database host (use 'db' for Docker, or IP/domain for production)
         'name' => 'my_app_db',       // Database name
-        'user' => 'admin',           // Database username
-        'password' => 'admin',       // Database password
+        'user' => 'root',           // Database username
+        'password' => 'root',       // Database password
         'charset' => 'utf8mb4'       // Character set
     ],
 

@@ -18,31 +18,27 @@ try {
     $pdo = new PDO($dsn, $user, $pass, $options);
     echo "Connected to database successfully.<br>";
 
-    // Create users table
-    $sqlUsers = "CREATE TABLE IF NOT EXISTS users (
+   $sqlUsers = "CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
         username VARCHAR(50) NOT NULL UNIQUE,
+        email VARCHAR(255) UNIQUE,
         password VARCHAR(255) NOT NULL,
-        role ENUM('admin', 'editor') DEFAULT 'editor',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        role ENUM('admin', 'editor', 'viewer') DEFAULT 'viewer',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     )";
     $pdo->exec($sqlUsers);
     echo "Table 'users' created or already exists.<br>";
 
     // Create default admin user if not exists
-    $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ?");
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
     $stmt->execute(['admin']);
-    if ($stmt->rowCount() == 0) {
-        // In a real app, use password_hash()
-        // For this mockup, we'll store plain text or simple hash as per previous steps
-        // But let's stick to what we had. The login endpoint uses password_verify if hashed, 
-        // or simple comparison if we implemented it that way. 
-        // Let's check index.php login logic... 
-        // Actually, let's just insert 'admin'/'password' as a placeholder.
-        // The previous login implementation likely used password_verify.
-        $hashedPassword = password_hash('password', PASSWORD_DEFAULT);
-        $stmt = $pdo->prepare("INSERT INTO users (username, password, role) VALUES (?, ?, ?)");
-        $stmt->execute(['admin', $hashedPassword, 'admin']);
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE username = ?");
+    $stmt->execute(['admin']);
+    if ($stmt->fetchColumn() == 0) {
+        $password = password_hash('password', PASSWORD_DEFAULT);
+        $stmt = $pdo->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)");
+        $stmt->execute(['admin', 'admin@example.com', $password, 'admin']);
         echo "Default admin user created.<br>";
     }
 
