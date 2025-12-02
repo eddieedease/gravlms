@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CourseService } from '../../services/course.service';
@@ -43,7 +43,8 @@ export class TestEditorComponent implements OnInit, OnChanges {
 
   loading = false;
 
-  constructor(private courseService: CourseService) { }
+  private courseService = inject(CourseService);
+  private cdr = inject(ChangeDetectorRef);
 
   ngOnInit() {
     if (this.pageId) {
@@ -64,6 +65,7 @@ export class TestEditorComponent implements OnInit, OnChanges {
       description: '',
       questions: []
     };
+    this.cdr.markForCheck();
 
     this.courseService.getTestByPageId(this.pageId).subscribe({
       next: (data) => {
@@ -75,10 +77,12 @@ export class TestEditorComponent implements OnInit, OnChanges {
           });
         }
         this.loading = false;
+        this.cdr.markForCheck();
       },
       error: (err) => {
         // 404 is expected if no test created yet
         this.loading = false;
+        this.cdr.markForCheck();
       }
     });
   }

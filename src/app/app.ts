@@ -4,10 +4,11 @@ import { AuthService } from './services/auth.service';
 import { ApiService } from './services/api.service';
 import { AsyncPipe } from '@angular/common';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { LoadingSpinnerComponent } from './components/loading-spinner/loading-spinner.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, AsyncPipe, TranslateModule],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, AsyncPipe, TranslateModule, LoadingSpinnerComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

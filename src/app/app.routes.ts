@@ -8,9 +8,14 @@ import { CourseViewerComponent } from './components/course-viewer/course-viewer'
 
 import { authGuard } from './guards/auth.guard';
 
+import { ForgotPasswordComponent } from './components/forgot-password/forgot-password.component';
+import { ResetPasswordComponent } from './components/reset-password/reset-password.component';
+
 export const routes: Routes = [
     { path: '', component: Landing },
     { path: 'login', component: Login },
+    { path: 'forgot-password', component: ForgotPasswordComponent },
+    { path: 'reset-password', component: ResetPasswordComponent },
     { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
     { path: 'learn/:courseId', component: CourseViewerComponent, canActivate: [authGuard] },
     { path: 'admin', component: Admin, canActivate: [authGuard] },
