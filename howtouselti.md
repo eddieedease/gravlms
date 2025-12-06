@@ -476,3 +476,17 @@ GravLMS supports comprehensive LTI integration:
 4. Configure HTTPS and proper domain names for production use
 
 For additional support, consult the IMS Global LTI specification: https://www.imsglobal.org/activity/learning-tools-interoperability
+
+
+Here is how it works based on the codebase analysis:
+
+Storage of External Users & Scores:
+Provider Mode (LTI 1.3): When an external user (e.g., from Canvas) launches GravLMS, we automatically provision a "shadow user" in our users table using their email/sub claim.
+Their progress and scores are stored in our standard tables (completed_lessons, tests, etc.) linked to this shadow user's ID, just like a regular user.
+This approach ensures all our internal logic for tracking completion works seamlessly without needing separate "external" tables.
+LTI Tables & Launches:
+lti_keys: Stores our public/private key pairs for signing LTI 1.3 messages (Provider mode).
+lti_platforms: Stores details of the external LMSs authorized to launch us (Provider mode).
+lti_tools: Stores external tools we want to launch (Consumer mode).
+Do we need 'launches'?: No, we don't have an lti_launches table. The library uses lti_nonces (which you have) for replay protection and cookies/cache to validate the OIDC login state. This is standard and sufficient for secure launches.
+In summary, we treat external users as local users created on-the-fly, which simplifies data management significantly.
