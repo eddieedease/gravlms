@@ -48,6 +48,7 @@ export class CourseViewerComponent {
     completedPageIds = signal<number[]>([]);
     showCompletionModal = signal<boolean>(false);
     courseTitle = signal<string>('');
+    sidebarOpen = signal<boolean>(true);
 
     constructor() {
         // Set course title
@@ -82,8 +83,16 @@ export class CourseViewerComponent {
         });
     }
 
+    toggleSidebar() {
+        this.sidebarOpen.update(v => !v);
+    }
+
     selectPage(page: any) {
         this.selectedPage.set(page);
+        // On mobile, auto-close sidebar when selecting a page
+        if (window.innerWidth < 640) { // sm breakpoint
+            this.sidebarOpen.set(false);
+        }
     }
 
     completeLesson(pageId: number) {
@@ -170,5 +179,17 @@ export class CourseViewerComponent {
         // });
 
         alert('LTI Launch triggered for Tool ID: ' + toolId + '\n(Backend implementation pending)');
+    }
+
+    getPreviousPage(pages: any[], currentPage: any): any | null {
+        if (!pages || !currentPage) return null;
+        const index = pages.findIndex(p => p.id === currentPage.id);
+        return index > 0 ? pages[index - 1] : null;
+    }
+
+    getNextPage(pages: any[], currentPage: any): any | null {
+        if (!pages || !currentPage) return null;
+        const index = pages.findIndex(p => p.id === currentPage.id);
+        return index !== -1 && index < pages.length - 1 ? pages[index + 1] : null;
     }
 }

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from './services/auth.service';
 import { ApiService } from './services/api.service';
@@ -23,6 +23,17 @@ export class App {
     this.translate.addLangs(['en', 'nl']);
     this.translate.setDefaultLang('nl');
     this.translate.use('nl');
+    this.translate.use('nl');
+  }
+
+  mobileMenuOpen = signal(false);
+
+  toggleMobileMenu() {
+    this.mobileMenuOpen.update(v => !v);
+  }
+
+  closeMobileMenu() {
+    this.mobileMenuOpen.set(false);
   }
 
   changeLanguage(lang: string) {

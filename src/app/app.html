@@ -38,7 +38,26 @@
           </div>
         </div>
         <div class="flex items-center">
-          <div class="flex items-center gap-2 mr-4">
+          <!-- Mobile menu button -->
+          <div class="flex items-center sm:hidden mr-2">
+            <button (click)="toggleMobileMenu()" type="button"
+              class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+              aria-controls="mobile-menu" aria-expanded="false">
+              <span class="sr-only">Open main menu</span>
+              <!-- Icon when menu is closed. -->
+              <svg [class.hidden]="mobileMenuOpen()" class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg"
+                fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+              </svg>
+              <!-- Icon when menu is open. -->
+              <svg [class.hidden]="!mobileMenuOpen()" class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg"
+                fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <div class="hidden sm:flex items-center gap-2 mr-4">
             <button (click)="changeLanguage('en')"
               class="text-sm text-gray-400 hover:text-white font-medium transition-colors">EN</button>
             <span class="text-gray-600">|</span>
@@ -46,19 +65,78 @@
               class="text-sm text-gray-400 hover:text-white font-medium transition-colors">NL</button>
           </div>
           @if (auth.currentUser()) {
-          <div class="flex items-center gap-4">
+          <div class="hidden sm:flex items-center gap-4">
             <span class="text-sm text-gray-300">{{ 'WELCOME' | translate }}, {{ auth.currentUser()?.name }}</span>
             <button (click)="auth.logout()" class="text-sm text-red-400 hover:text-red-300 transition-colors">{{
               'LOGOUT' | translate
               }}</button>
           </div>
           } @else {
-          <a routerLink="/login" class="text-sm text-algolia-primary hover:text-indigo-400 transition-colors">{{ 'LOGIN'
+          <a routerLink="/login"
+            class="hidden sm:block text-sm text-algolia-primary hover:text-indigo-400 transition-colors">{{ 'LOGIN'
             | translate }}</a>
           }
         </div>
       </div>
     </div>
+
+    <!-- Mobile menu, show/hide based on menu state. -->
+    @if (mobileMenuOpen()) {
+    <div class="sm:hidden glass-panel-dark absolute w-full z-50 transition-all duration-300 ease-in-out"
+      id="mobile-menu">
+      <div class="px-2 pt-2 pb-3 space-y-1">
+        @if (!auth.currentUser()) {
+        <a routerLink="/" (click)="closeMobileMenu()" routerLinkActive="bg-gray-900 text-white"
+          [routerLinkActiveOptions]="{exact: true}"
+          class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">{{
+          'HOME' | translate }}</a>
+        <a routerLink="/login" (click)="closeMobileMenu()" routerLinkActive="bg-gray-900 text-white"
+          class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">{{
+          'LOGIN' | translate }}</a>
+        }
+        @if (auth.currentUser()) {
+        <a routerLink="/dashboard" (click)="closeMobileMenu()" routerLinkActive="bg-gray-900 text-white"
+          class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">{{
+          'DASHBOARD' | translate }}</a>
+        <a routerLink="/editor" (click)="closeMobileMenu()" routerLinkActive="bg-gray-900 text-white"
+          class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Editor</a>
+        <a routerLink="/admin" (click)="closeMobileMenu()" routerLinkActive="bg-gray-900 text-white"
+          class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Admin</a>
+        }
+      </div>
+      <div class="pt-4 pb-4 border-t border-gray-700">
+        <div class="flex items-center px-5">
+          @if (auth.currentUser()) {
+          <div class="flex-shrink-0">
+            <!-- User Avatar Placeholder -->
+            <div class="h-10 w-10 rounded-full bg-gray-500 flex items-center justify-center text-white font-bold">
+              {{ auth.currentUser()?.name?.charAt(0) }}
+            </div>
+          </div>
+          <div class="ml-3">
+            <div class="text-base font-medium leading-none text-white">{{ auth.currentUser()?.name }}</div>
+            <div class="text-sm font-medium leading-none text-gray-400 mt-1">{{ auth.currentUser()?.email }}</div>
+          </div>
+          }
+          <div class="ml-auto flex items-center gap-4">
+            <button (click)="changeLanguage('en')" class="text-gray-400 hover:text-white">EN</button>
+            <button (click)="changeLanguage('nl')" class="text-gray-400 hover:text-white">NL</button>
+            @if (auth.currentUser()) {
+            <button (click)="auth.logout()"
+              class="ml-auto bg-gray-800 flex-shrink-0 p-1 rounded-full text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
+              <span class="sr-only">{{ 'LOGOUT' | translate }}</span>
+              <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+              </svg>
+            </button>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+    }
   </nav>
 
   <main class="py-10">

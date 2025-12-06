@@ -41,6 +41,12 @@ export class Editor implements OnInit {
 
   selectedPage = signal<any>(null);
   previewHtml = signal<string>('');
+  viewMode = signal<'editor' | 'split' | 'preview'>('editor');
+  sidebarOpen = signal<boolean>(true);
+
+  toggleSidebar() {
+    this.sidebarOpen.update(v => !v);
+  }
 
   ltiTools = signal<any[]>([]);
 
@@ -155,6 +161,10 @@ export class Editor implements OnInit {
 
   selectPage(page: any) {
     this.selectedPage.set(page);
+    // On mobile, auto-close sidebar when selecting a page
+    if (window.innerWidth < 640) { // sm breakpoint
+      this.sidebarOpen.set(false);
+    }
     this.pageForm.patchValue({
       title: page.title,
       content: page.content,

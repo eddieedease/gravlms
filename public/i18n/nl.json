@@ -108,5 +108,8 @@
     "TEST_EMAIL_CONFIGURATION": "Test E-mailconfiguratie",
     "TEST_EMAIL_DESC": "Stuur een test-e-mail om te verifiëren of uw SMTP-instellingen correct zijn.",
     "RECIPIENT_EMAIL": "Ontvanger E-mail",
-    "SEND_TEST_EMAIL": "Stuur Test E-mail"
+    "SEND_TEST_EMAIL": "Stuur Test E-mail",
+    "EDITOR_ONLY": "Alleen Editor",
+    "SPLIT_VIEW": "Gesplitste Weergave",
+    "PREVIEW_ONLY": "Alleen Voorbeeld"
 }

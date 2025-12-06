@@ -108,5 +108,8 @@
     "TEST_EMAIL_CONFIGURATION": "Test Email Configuration",
     "TEST_EMAIL_DESC": "Send a test email to verify your SMTP settings are correct.",
     "RECIPIENT_EMAIL": "Recipient Email",
-    "SEND_TEST_EMAIL": "Send Test Email"
+    "SEND_TEST_EMAIL": "Send Test Email",
+    "EDITOR_ONLY": "Editor Only",
+    "SPLIT_VIEW": "Split View",
+    "PREVIEW_ONLY": "Preview Only"
 }

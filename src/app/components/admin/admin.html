@@ -6,8 +6,8 @@
     </div>
 
     <!-- Tab Navigation -->
-    <div class="border-b border-gray-200 mb-8">
-        <nav class="-mb-px flex space-x-8">
+    <div class="border-b border-gray-200 mb-8 overflow-x-auto">
+        <nav class="-mb-px flex space-x-8 min-w-max">
             <button (click)="setTab('users')" [class.border-algolia-primary]="activeTab() === 'users'"
                 [class.text-algolia-primary]="activeTab() === 'users'"
                 [class.border-transparent]="activeTab() !== 'users'" [class.text-gray-500]="activeTab() !== 'users'"
@@ -39,17 +39,17 @@
     @if (activeTab() === 'users') {
     <div>
         <!-- Users Header -->
-        <div class="sm:flex sm:items-center mb-6 justify-between">
+        <div class="flex flex-col sm:flex-row sm:items-center mb-6 justify-between gap-4">
             <div class="sm:flex-auto">
                 <h2 class="text-xl font-semibold text-gray-900">{{ 'USERS' | translate }}</h2>
                 <p class="mt-1 text-sm text-gray-600">{{ 'MANAGE_USERS' | translate }}</p>
             </div>
-            <div class="mt-4 sm:mt-0 sm:flex-none flex gap-4">
+            <div class="mt-4 sm:mt-0 sm:flex-none flex flex-col sm:flex-row gap-4">
                 <div class="relative">
                     <input type="text" [value]="searchTerm()" (input)="searchTerm.set($any($event.target).value)"
-                        placeholder="{{ 'SEARCH_USERS' | translate }}" class="input-field w-64">
+                        placeholder="{{ 'SEARCH_USERS' | translate }}" class="input-field w-full sm:w-64">
                 </div>
-                <button type="button" (click)="startCreate()" class="btn-primary">
+                <button type="button" (click)="startCreate()" class="btn-primary w-full sm:w-auto justify-center">
                     {{ 'ADD_USER' | translate }}
                 </button>
             </div>
@@ -186,17 +186,17 @@
     @if (activeTab() === 'groups') {
     <div>
         <!-- Groups Header -->
-        <div class="sm:flex sm:items-center mb-6 justify-between">
+        <div class="flex flex-col sm:flex-row sm:items-center mb-6 justify-between gap-4">
             <div class="sm:flex-auto">
                 <h2 class="text-xl font-semibold text-gray-900">{{ 'GROUPS' | translate }}</h2>
                 <p class="mt-1 text-sm text-gray-600">{{ 'MANAGE_GROUPS' | translate }}</p>
             </div>
-            <div class="mt-4 sm:mt-0 sm:flex-none flex gap-4">
+            <div class="mt-4 sm:mt-0 sm:flex-none flex flex-col sm:flex-row gap-4">
                 <div class="relative">
                     <input type="text" [value]="searchTerm()" (input)="searchTerm.set($any($event.target).value)"
-                        placeholder="{{ 'SEARCH_GROUPS' | translate }}" class="input-field w-64">
+                        placeholder="{{ 'SEARCH_GROUPS' | translate }}" class="input-field w-full sm:w-64">
                 </div>
-                <button type="button" (click)="startCreateGroup()" class="btn-primary">
+                <button type="button" (click)="startCreateGroup()" class="btn-primary w-full sm:w-auto justify-center">
                     {{ 'ADD_GROUP' | translate }}
                 </button>
             </div>
@@ -349,15 +349,15 @@
             <h3 class="text-lg font-medium text-gray-900 mb-4">{{ 'TEST_EMAIL_CONFIGURATION' | translate }}</h3>
             <p class="text-sm text-gray-500 mb-4">{{ 'TEST_EMAIL_DESC' | translate }}</p>
 
-            <div class="flex gap-4 items-end">
-                <div class="flex-1">
+            <div class="flex flex-col sm:flex-row gap-4 items-end">
+                <div class="flex-1 w-full">
                     <label for="testEmail" class="block text-sm font-medium text-gray-700 mb-2">{{ 'RECIPIENT_EMAIL' |
                         translate }}</label>
                     <input type="email" id="testEmail" [formControl]="testEmailControl" placeholder="your@email.com"
-                        class="input-field">
+                        class="input-field w-full">
                 </div>
                 <button (click)="sendTestEmail()" [disabled]="testEmailControl.invalid || isSendingEmail()"
-                    class="btn-primary disabled:opacity-50 flex items-center gap-2">
+                    class="btn-primary disabled:opacity-50 flex items-center gap-2 w-full sm:w-auto justify-center">
                     @if (isSendingEmail()) {
                     <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
                         viewBox="0 0 24 24">
