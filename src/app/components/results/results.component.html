@@ -41,9 +41,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{
                             'USER' | translate }}</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{
-                            'COURSE' | translate }} / {{ 'TEST' | translate }}</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{
-                            'SCORE' | translate }}</th>
+                            'COURSE' | translate }}</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{
                             'COMPLETED_AT' | translate }}</th>
                     </tr>
@@ -64,16 +62,6 @@
                         </td>
                         <td class="px-6 py-4">
                             <div class="text-sm text-gray-900 font-medium">{{ result.course_title }}</div>
-                            <div class="text-sm text-gray-500">{{ result.test_description }}</div>
-                            <div class="text-xs text-gray-400">{{ result.page_title }}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ result.score }} / {{ result.max_score }}</div>
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                                [class.bg-green-100]="result.passed" [class.text-green-800]="result.passed"
-                                [class.bg-red-100]="!result.passed" [class.text-red-800]="!result.passed">
-                                {{ (result.passed ? 'PASSED' : 'FAILED') | translate }}
-                            </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {{ result.completed_at | date:'medium' }}
@@ -82,14 +70,14 @@
                     }
                     @if (results().length === 0 && !isLoading()) {
                     <tr>
-                        <td colspan="4" class="px-6 py-10 text-center text-gray-500">
+                        <td colspan="3" class="px-6 py-10 text-center text-gray-500">
                             {{ 'NO_RESULTS' | translate }}
                         </td>
                     </tr>
                     }
                     @if (isLoading()) {
                     <tr>
-                        <td colspan="4" class="px-6 py-10 text-center text-gray-500">
+                        <td colspan="3" class="px-6 py-10 text-center text-gray-500">
                             Loading...
                         </td>
                     </tr>

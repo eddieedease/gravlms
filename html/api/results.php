@@ -36,18 +36,15 @@ function registerResultsRoutes($app, $authMiddleware)
             }
 
             // Build Query
-            $sql = "SELECT tr.*, 
+            $sql = "SELECT cc.id,
                            u.username, u.email, 
-                           t.description as test_description,
-                           cp.title as page_title,
                            c.title as course_title,
-                           g.name as group_name
-                    FROM test_results tr
-                    JOIN users u ON tr.user_id = u.id
-                    JOIN tests t ON tr.test_id = t.id
-                    JOIN course_pages cp ON t.page_id = cp.id
-                    LEFT JOIN courses c ON cp.course_id = c.id
-                    LEFT JOIN group_users gu ON u.id = gu.user_id
+                           g.name as group_name,
+                           cc.completed_at
+                    FROM completed_courses cc
+                    JOIN users u ON cc.user_id = u.id
+                    JOIN courses c ON cc.course_id = c.id
+                    LEFT JOIN group_users gu ON u.id = gu.user_id 
                     LEFT JOIN `groups` g ON gu.group_id = g.id
                     WHERE 1=1";
 
@@ -56,12 +53,6 @@ function registerResultsRoutes($app, $authMiddleware)
             // Access Control Filter
             if (!$isAdmin) {
                 // Monitor can only see results for users in their monitored groups
-                // AND/OR results that belong to the groups they monitor (if filtering by group)
-
-                // Let's filter by users who are in the monitored groups
-                // Note: A user can be in multiple groups. If I monitor Group A, and User X is in Group A and B, I see User X's results.
-                // This seems acceptable.
-
                 $placeholders = implode(',', array_fill(0, count($monitorGroupIds), '?'));
                 $sql .= " AND gu.group_id IN ($placeholders)";
                 $params = array_merge($params, $monitorGroupIds);
@@ -69,7 +60,6 @@ function registerResultsRoutes($app, $authMiddleware)
 
             // Apply Filters
             if ($groupId) {
-                // If monitor, ensure groupId is in their allowed list
                 if (!$isAdmin && !in_array($groupId, $monitorGroupIds)) {
                     return jsonResponse($response, ['error' => 'Access denied for this group'], 403);
                 }
@@ -91,23 +81,17 @@ function registerResultsRoutes($app, $authMiddleware)
             }
 
             // Order by latest
-            $sql .= " ORDER BY tr.completed_at DESC LIMIT 500";
+            $sql .= " ORDER BY cc.completed_at DESC LIMIT 500";
 
             try {
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute($params);
-                $results = $stmt->fetchAll();
+                $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-                // Deduping might be needed if user is in multiple groups causing cartesian product with group join
-                // But we want to show group name? 
-                // If a user is in 2 groups, and we join on group_users, we get 2 rows per result.
-                // Let's settle for showing one group or comma separated?
-                // For simplicity, let's fetch distinct by result id and maybe aggregate groups strings if strictness needed.
-                // Or just standard fetch unique by test_result id in code.
-
+                // Deduping - same logic as before, user might appear multiple times if in multiple groups
                 $uniqueResults = [];
                 foreach ($results as $r) {
-                    $uniqueResults[$r['id']] = $r; // Overwrite duplicates
+                    $uniqueResults[$r['id']] = $r;
                 }
 
                 return jsonResponse($response, array_values($uniqueResults));
@@ -143,14 +127,11 @@ function registerResultsRoutes($app, $authMiddleware)
 
             $sql = "SELECT u.username, u.email, 
                            c.title as course_title,
-                           cp.title as test_title,
-                           tr.score, tr.max_score, tr.passed, tr.completed_at,
+                           cc.completed_at,
                            g.name as group_name
-                    FROM test_results tr
-                    JOIN users u ON tr.user_id = u.id
-                    JOIN tests t ON tr.test_id = t.id
-                    JOIN course_pages cp ON t.page_id = cp.id
-                    LEFT JOIN courses c ON cp.course_id = c.id
+                    FROM completed_courses cc
+                    JOIN users u ON cc.user_id = u.id
+                    JOIN courses c ON cc.course_id = c.id
                     LEFT JOIN group_users gu ON u.id = gu.user_id
                     LEFT JOIN `groups` g ON gu.group_id = g.id
                     WHERE 1=1";
@@ -179,7 +160,7 @@ function registerResultsRoutes($app, $authMiddleware)
                 $params[] = $term;
             }
 
-            $sql .= " ORDER BY tr.completed_at DESC";
+            $sql .= " ORDER BY cc.completed_at DESC";
 
             try {
                 $stmt = $pdo->prepare($sql);
@@ -187,17 +168,16 @@ function registerResultsRoutes($app, $authMiddleware)
                 $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                 $stream = fopen('php://memory', 'w+');
-                fputcsv($stream, ['Username', 'Email', 'Course', 'Test', 'Score', 'Max Score', 'Passed', 'Date', 'Group']);
+                fputcsv($stream, ['Username', 'Email', 'Course', 'Completed At', 'Group']);
 
                 $seenIds = []; // Handle duplicates from joins
                 foreach ($results as $row) {
-                    // We don't have unique ID in select, use combination
-                    $key = $row['username'] . $row['test_title'] . $row['completed_at'];
+                    // Unique key
+                    $key = $row['username'] . $row['course_title'] . $row['completed_at'];
                     if (isset($seenIds[$key]))
                         continue;
                     $seenIds[$key] = true;
 
-                    $row['passed'] = $row['passed'] ? 'Yes' : 'No';
                     fputcsv($stream, $row);
                 }
 
