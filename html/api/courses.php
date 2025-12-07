@@ -45,7 +45,6 @@ function registerCourseRoutes($app, $authMiddleware)
                     $data['display_order'] ?? 0,
                     $isLti,
                     $ltiToolId,
-                    $ltiToolId,
                     $customLaunchUrl,
                     $data['image_url'] ?? null
                 ]);
