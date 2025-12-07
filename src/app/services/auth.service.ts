@@ -47,6 +47,32 @@ export class AuthService {
         return !!this.getToken();
     }
 
+    isAdmin() {
+        const user = this.currentUser();
+        return user && user.role === 'admin';
+    }
+
+    isEditor() {
+        const user = this.currentUser();
+        return user && (user.role === 'admin' || user.role === 'editor');
+    }
+
+    // Note: Monitor capability is dynamic (group assignment), but this checks the explicit role
+    // For checking access to "Results" page, we might need a more permissive check or just let backend 403.
+    // However, we want to show the specific nav item. The backend says if you are a monitor for ANY group you can see results.
+    // We don't have that info in the minimal user object in localstorage unless we fetch it.
+    // For now, let's assume 'monitor' role users AND admins have explicit access.
+    // The "capability" monitors (editors who are monitors) might not see the "Results" link unless we update the profile data to include "is_monitor" flag?
+    // Let's stick to simple Role checks for main nav, and maybe a separate API call or expanded token to know if they have monitor access.
+    // Or just "Results" is visible to everyone but 403s? No, annoying.
+    // Let's rely on the user.role for now, and dealing with 'Hybrid' monitors (Editors assigned as monitors) is a bit tricky without extra data.
+    // Let's assume if you are an Editor you MIGHT be a monitor, so we might show it?
+    // Or simpler: Anyone who is NOT just a 'viewer' can try to click Results?
+    hasPrivilegedAccess() {
+        const user = this.currentUser();
+        return user && ['admin', 'editor', 'monitor'].includes(user.role);
+    }
+
     forgotPassword(email: string) {
         return this.http.post(`${this.apiUrl}/forgot-password`, { email });
     }

@@ -13,6 +13,69 @@ export class ApiService {
     this.apiUrl = this.config.apiUrl;
   }
 
+  // Groups
+  getGroups(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/groups`);
+  }
+
+  createGroup(group: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/groups`, group);
+  }
+
+  updateGroup(id: number, group: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/groups/${id}`, group);
+  }
+
+  deleteGroup(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/groups/${id}`);
+  }
+
+  getGroupUsers(groupId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/groups/${groupId}/users`);
+  }
+
+  addUserToGroup(groupId: number, userId: number): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/groups/${groupId}/users`, { user_id: userId });
+  }
+
+  removeUserFromGroup(groupId: number, userId: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/groups/${groupId}/users/${userId}`);
+  }
+
+  getGroupCourses(groupId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/groups/${groupId}/courses`);
+  }
+
+  addCourseToGroup(groupId: number, courseId: number): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/groups/${groupId}/courses`, { course_id: courseId });
+  }
+
+  removeCourseFromGroup(groupId: number, courseId: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/groups/${groupId}/courses/${courseId}`);
+  }
+
+  // Group Monitors
+  getGroupMonitors(groupId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/groups/${groupId}/monitors`);
+  }
+
+  addMonitorToGroup(groupId: number, userId: number): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/groups/${groupId}/monitors`, { user_id: userId });
+  }
+
+  removeMonitorFromGroup(groupId: number, userId: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/groups/${groupId}/monitors/${userId}`);
+  }
+
+  // Results
+  getResults(params: any = {}): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/results`, { params });
+  }
+
+  exportResults(params: any = {}): Observable<any> {
+    return this.http.get(`${this.apiUrl}/results/export`, { params, responseType: 'text' });
+  }
+
   // Email
   sendTestEmail(email: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/admin/test-email`, { email });

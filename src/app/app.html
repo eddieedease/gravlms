@@ -30,6 +30,12 @@
               class="border-transparent text-gray-400 hover:border-gray-300 hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors">
               Editor
             </a>
+            @if (auth.hasPrivilegedAccess()) {
+            <a routerLink="/results" routerLinkActive="border-algolia-primary text-white"
+              class="border-transparent text-gray-400 hover:border-gray-300 hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors">
+              {{ 'RESULTS' | translate }}
+            </a>
+            }
             <a routerLink="/admin" routerLinkActive="border-algolia-primary text-white"
               class="border-transparent text-gray-400 hover:border-gray-300 hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors">
               Admin
@@ -100,6 +106,11 @@
           'DASHBOARD' | translate }}</a>
         <a routerLink="/editor" (click)="closeMobileMenu()" routerLinkActive="bg-gray-900 text-white"
           class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Editor</a>
+        @if (auth.hasPrivilegedAccess()) {
+        <a routerLink="/results" (click)="closeMobileMenu()" routerLinkActive="bg-gray-900 text-white"
+          class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">{{
+          'RESULTS' | translate }}</a>
+        }
         <a routerLink="/admin" (click)="closeMobileMenu()" routerLinkActive="bg-gray-900 text-white"
           class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Admin</a>
         }

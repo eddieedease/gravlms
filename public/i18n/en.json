@@ -111,5 +111,19 @@
     "SEND_TEST_EMAIL": "Send Test Email",
     "EDITOR_ONLY": "Editor Only",
     "SPLIT_VIEW": "Split View",
-    "PREVIEW_ONLY": "Preview Only"
+    "PREVIEW_ONLY": "Preview Only",
+    "MONITORS_IN_GROUP": "Group Monitors",
+    "MONITORS_HINT": "Users who can view results for this group.",
+    "SELECT_MONITOR": "Select Monitor",
+    "NO_MONITORS_IN_GROUP": "No monitors assigned",
+    "RESULTS": "Results",
+    "VIEW_RESULTS": "View Results",
+    "EXPORT_CSV": "Export CSV",
+    "SCORE": "Score",
+    "PASSED": "Passed",
+    "FAILED": "Failed",
+    "COMPLETED_AT": "Completed At",
+    "SEARCH_PLACEHOLDER": "Search...",
+    "ALL_GROUPS": "All Groups",
+    "NO_RESULTS": "No results found"
 }

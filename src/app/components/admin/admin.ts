@@ -63,6 +63,7 @@ export class Admin implements OnInit {
   selectedGroup: any = null;
   groupUsers = signal<any[]>([]);
   groupCourses = signal<any[]>([]);
+  groupMonitors = signal<any[]>([]);
 
   // Email State
   testEmailControl = this.fb.control('', [Validators.required, Validators.email]);
@@ -87,6 +88,10 @@ export class Admin implements OnInit {
   });
 
   assignGroupUserForm = this.fb.group({
+    userId: ['', Validators.required]
+  });
+
+  assignGroupMonitorForm = this.fb.group({
     userId: ['', Validators.required]
   });
 
@@ -287,6 +292,9 @@ export class Admin implements OnInit {
     this.groupsService.getGroupCourses(groupId).subscribe(courses => {
       this.groupCourses.set(courses);
     });
+    this.apiService.getGroupMonitors(groupId).subscribe(monitors => {
+      this.groupMonitors.set(monitors);
+    });
   }
 
   addUserToGroup() {
@@ -312,7 +320,31 @@ export class Admin implements OnInit {
     }
   }
 
+  addMonitorToGroup() {
+    if (this.assignGroupMonitorForm.valid && this.selectedGroup) {
+      const userId = this.assignGroupMonitorForm.value.userId;
+      this.apiService.addMonitorToGroup(this.selectedGroup.id, Number(userId)).subscribe({
+        next: () => {
+          this.loadGroupDetails(this.selectedGroup.id);
+          this.assignGroupMonitorForm.reset();
+        },
+        error: (err) => {
+          alert(err.error?.error || 'Failed to add monitor to group');
+        }
+      });
+    }
+  }
+
+  removeMonitorFromGroup(userId: number) {
+    if (this.selectedGroup && confirm('Remove monitor from group?')) {
+      this.apiService.removeMonitorFromGroup(this.selectedGroup.id, userId).subscribe(() => {
+        this.loadGroupDetails(this.selectedGroup.id);
+      });
+    }
+  }
+
   addCourseToGroup() {
+
     if (this.assignGroupCourseForm.valid && this.selectedGroup) {
       const courseId = this.assignGroupCourseForm.value.courseId;
       this.groupsService.addCourseToGroup(this.selectedGroup.id, Number(courseId)).subscribe({

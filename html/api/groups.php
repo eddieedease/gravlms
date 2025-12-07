@@ -202,5 +202,63 @@ function registerGroupRoutes($app, $authMiddleware)
             }
         });
 
+
+        // Add monitor to group
+        $group->post('/{groupId}/monitors', function (Request $request, Response $response, $args) {
+            $groupId = $args['groupId'];
+            $data = json_decode($request->getBody()->getContents(), true);
+            $userId = $data['user_id'] ?? null;
+
+            if (!$userId) {
+                return jsonResponse($response, ['error' => 'User ID is required'], 400);
+            }
+
+            try {
+                $pdo = getDbConnection();
+                $stmt = $pdo->prepare("INSERT INTO group_monitors (group_id, user_id) VALUES (?, ?)");
+                $stmt->execute([$groupId, $userId]);
+                return jsonResponse($response, ['status' => 'success', 'message' => 'Monitor added to group']);
+            } catch (PDOException $e) {
+                if ($e->getCode() == 23000) {
+                    return jsonResponse($response, ['error' => 'User is already a monitor for this group'], 409);
+                }
+                return jsonResponse($response, ['error' => $e->getMessage()], 500);
+            }
+        });
+
+        // Remove monitor from group
+        $group->delete('/{groupId}/monitors/{userId}', function (Request $request, Response $response, $args) {
+            $groupId = $args['groupId'];
+            $userId = $args['userId'];
+
+            try {
+                $pdo = getDbConnection();
+                $stmt = $pdo->prepare("DELETE FROM group_monitors WHERE group_id = ? AND user_id = ?");
+                $stmt->execute([$groupId, $userId]);
+                return jsonResponse($response, ['status' => 'success', 'message' => 'Monitor removed from group']);
+            } catch (PDOException $e) {
+                return jsonResponse($response, ['error' => $e->getMessage()], 500);
+            }
+        });
+
+        // Get monitors of group
+        $group->get('/{groupId}/monitors', function (Request $request, Response $response, $args) {
+            $groupId = $args['groupId'];
+            try {
+                $pdo = getDbConnection();
+                $stmt = $pdo->prepare("
+                    SELECT u.id, u.username, u.email, u.role 
+                    FROM users u 
+                    JOIN group_monitors gm ON u.id = gm.user_id 
+                    WHERE gm.group_id = ?
+                ");
+                $stmt->execute([$groupId]);
+                $monitors = $stmt->fetchAll();
+                return jsonResponse($response, $monitors);
+            } catch (PDOException $e) {
+                return jsonResponse($response, ['error' => $e->getMessage()], 500);
+            }
+        });
+
     })->add($authMiddleware);
 }

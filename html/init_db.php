@@ -18,12 +18,12 @@ try {
     $pdo = new PDO($dsn, $user, $pass, $options);
     echo "Connected to database successfully.<br>";
 
-   $sqlUsers = "CREATE TABLE IF NOT EXISTS users (
+    $sqlUsers = "CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
         username VARCHAR(50) NOT NULL UNIQUE,
         email VARCHAR(255) UNIQUE,
         password VARCHAR(255) NOT NULL,
-        role ENUM('admin', 'editor', 'viewer') DEFAULT 'viewer',
+        role ENUM('admin', 'editor', 'viewer', 'monitor') DEFAULT 'viewer',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     )";
@@ -245,6 +245,34 @@ try {
     $pdo->exec($sqlLtiKeys);
     echo "Table 'lti_keys' created or already exists.<br>";
 
+    // Create group_monitors table
+    $sqlGroupMonitors = "CREATE TABLE IF NOT EXISTS group_monitors (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        group_id INT NOT NULL,
+        user_id INT NOT NULL,
+        assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (group_id) REFERENCES `groups`(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        UNIQUE(group_id, user_id)
+    )";
+    $pdo->exec($sqlGroupMonitors);
+    echo "Table 'group_monitors' created or already exists.<br>";
+
+    // Create test_results table
+    $sqlTestResults = "CREATE TABLE IF NOT EXISTS test_results (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        test_id INT NOT NULL,
+        score INT NOT NULL,
+        max_score INT NOT NULL,
+        passed BOOLEAN DEFAULT FALSE,
+        completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (test_id) REFERENCES tests(id) ON DELETE CASCADE
+    )";
+    $pdo->exec($sqlTestResults);
+    echo "Table 'test_results' created or already exists.<br>";
+
     // --- Migrations for existing databases ---
 
     // Ensure 'type' column exists in course_pages
@@ -305,6 +333,13 @@ try {
         $pdo->exec("ALTER TABLE courses ADD COLUMN custom_launch_url VARCHAR(500) NULL AFTER lti_tool_id");
         echo "Migration: Added 'custom_launch_url' column to courses.<br>";
     }
+
+    // Ensure 'monitor' role exists in users enum
+    // This is tricky with MySQL/MariaDB enums.
+    // We can try to modify the column blindly or check if it contains 'monitor'.
+    // A safe way is to just modify it to include the superset.
+    $pdo->exec("ALTER TABLE users MODIFY COLUMN role ENUM('admin', 'editor', 'viewer', 'monitor') DEFAULT 'viewer'");
+    echo "Migration: Updated users role enum to include 'monitor'.<br>";
 
 } catch (\PDOException $e) {
     throw new \PDOException($e->getMessage(), (int) $e->getCode());

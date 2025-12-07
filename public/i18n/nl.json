@@ -111,5 +111,19 @@
     "SEND_TEST_EMAIL": "Stuur Test E-mail",
     "EDITOR_ONLY": "Alleen Editor",
     "SPLIT_VIEW": "Gesplitste Weergave",
-    "PREVIEW_ONLY": "Alleen Voorbeeld"
+    "PREVIEW_ONLY": "Alleen Voorbeeld",
+    "MONITORS_IN_GROUP": "Groepsmonitors",
+    "MONITORS_HINT": "Gebruikers die resultaten voor deze groep kunnen bekijken.",
+    "SELECT_MONITOR": "Selecteer Monitor",
+    "NO_MONITORS_IN_GROUP": "Geen monitors toegewezen",
+    "RESULTS": "Resultaten",
+    "VIEW_RESULTS": "Bekijk Resultaten",
+    "EXPORT_CSV": "Exporteer CSV",
+    "SCORE": "Score",
+    "PASSED": "Geslaagd",
+    "FAILED": "Gezakt",
+    "COMPLETED_AT": "Voltooid op",
+    "SEARCH_PLACEHOLDER": "Zoeken...",
+    "ALL_GROUPS": "Alle Groepen",
+    "NO_RESULTS": "Geen resultaten gevonden"
 }

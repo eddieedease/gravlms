@@ -298,6 +298,33 @@
                         <li class="py-3 px-4 text-sm text-gray-500">{{ 'NO_USERS_IN_GROUP' | translate }}</li>
                         }
                     </ul>
+
+                    <!-- Group Monitors -->
+                    <h4 class="text-lg font-medium text-gray-900 mb-4 mt-6">{{ 'MONITORS_IN_GROUP' | translate }}</h4>
+                    <p class="text-sm text-gray-600 mb-2">{{ 'MONITORS_HINT' | translate }}</p>
+                    <form [formGroup]="assignGroupMonitorForm" (ngSubmit)="addMonitorToGroup()" class="flex gap-2 mb-4">
+                        <select formControlName="userId" class="input-field flex-1">
+                            <option value="">{{ 'SELECT_MONITOR' | translate }}</option>
+                            @for (user of users(); track user.id) {
+                            <option [value]="user.id">{{ user.username }} ({{ user.role }})</option>
+                            }
+                        </select>
+                        <button type="submit" [disabled]="assignGroupMonitorForm.invalid"
+                            class="btn-primary disabled:opacity-50 whitespace-nowrap">{{ 'ADD' | translate }}</button>
+                    </form>
+                    <ul class="divide-y divide-gray-200 border border-gray-200 rounded-lg">
+                        @for (monitor of groupMonitors(); track monitor.id) {
+                        <li class="flex items-center justify-between py-3 px-4">
+                            <span class="text-gray-900">{{ monitor.username }} <span
+                                    class="text-xs text-gray-500">({{monitor.role}})</span></span>
+                            <button (click)="removeMonitorFromGroup(monitor.id)"
+                                class="text-red-600 hover:text-red-500 text-sm">{{ 'REMOVE' | translate }}</button>
+                        </li>
+                        }
+                        @if (groupMonitors().length === 0) {
+                        <li class="py-3 px-4 text-sm text-gray-500">{{ 'NO_MONITORS_IN_GROUP' | translate }}</li>
+                        }
+                    </ul>
                 </div>
 
                 <!-- Group Courses -->

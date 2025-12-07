@@ -11,6 +11,8 @@ import { authGuard } from './guards/auth.guard';
 import { ForgotPasswordComponent } from './components/forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './components/reset-password/reset-password.component';
 
+import { ResultsComponent } from './components/results/results.component';
+
 export const routes: Routes = [
     { path: '', component: Landing },
     { path: 'login', component: Login },
@@ -20,5 +22,6 @@ export const routes: Routes = [
     { path: 'learn/:courseId', component: CourseViewerComponent, canActivate: [authGuard] },
     { path: 'admin', component: Admin, canActivate: [authGuard] },
     { path: 'editor', component: Editor, canActivate: [authGuard] },
+    { path: 'results', component: ResultsComponent, canActivate: [authGuard] },
     { path: '**', redirectTo: '' }
 ];

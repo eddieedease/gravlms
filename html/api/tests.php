@@ -150,6 +150,16 @@ function registerTestRoutes($app, $jwtMiddleware)
 
             $passed = $correctCount == $totalQuestions; // Strict passing for now
 
+            // Save result to test_results table
+            try {
+                $stmtResult = $pdo->prepare("INSERT INTO test_results (user_id, test_id, score, max_score, passed) VALUES (?, ?, ?, ?, ?)");
+                $stmtResult->execute([$userId, $testId, $correctCount, $totalQuestions, $passed ? 1 : 0]);
+            } catch (Exception $e) {
+                // Log error but don't fail the request if possible, or fail?
+                // Better to fail so we don't define completion without record
+                error_log("Failed to save test result: " . $e->getMessage());
+            }
+
             $courseCompleted = false;
 
             if ($passed) {
