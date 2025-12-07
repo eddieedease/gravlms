@@ -25,7 +25,10 @@ export class Editor implements OnInit {
   private fb = inject(FormBuilder);
 
   fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
+  courseThumbnailInput = viewChild<ElementRef<HTMLInputElement>>('courseThumbnailInput');
   uploadStatus = signal<string>('');
+  courseImageFile = signal<File | null>(null);
+  courseImagePreview = signal<string>('');
 
   courses = signal<any[]>([]);
   selectedCourse = signal<any>(null);
@@ -62,7 +65,8 @@ export class Editor implements OnInit {
     description: [''],
     is_lti: [false],
     lti_tool_id: [null as number | null],
-    custom_launch_url: ['']
+    custom_launch_url: [''],
+    image_url: ['']
   });
 
   ngOnInit() {
@@ -116,8 +120,17 @@ export class Editor implements OnInit {
       description: course.description,
       is_lti: !!course.is_lti,
       lti_tool_id: course.lti_tool_id,
-      custom_launch_url: course.custom_launch_url
+      custom_launch_url: course.custom_launch_url,
+      image_url: course.image_url || ''
     });
+
+    // Set preview if image exists
+    if (course.image_url) {
+      this.courseImagePreview.set(`${this.config.apiUrl}/uploads/${course.image_url}`);
+    } else {
+      this.courseImagePreview.set('');
+    }
+    this.courseImageFile.set(null);
   }
 
   createCourse() {
@@ -131,22 +144,31 @@ export class Editor implements OnInit {
 
   saveCourse() {
     if (this.selectedCourse() && this.courseForm.valid) {
-      const updatedCourse = {
-        ...this.selectedCourse(),
-        ...this.courseForm.value
-      };
-
-      // Ensure types are correct for backend
-      if (!updatedCourse.is_lti) {
-        updatedCourse.lti_tool_id = null;
-        updatedCourse.custom_launch_url = null;
+      // If there's a new image file, upload it first
+      if (this.courseImageFile()) {
+        this.uploadCourseImage();
+      } else {
+        this.updateCourseData();
       }
-
-      this.courseService.updateCourse(this.selectedCourse().id, updatedCourse).subscribe(() => {
-        this.loadCourses();
-        alert('Course saved!');
-      });
     }
+  }
+
+  updateCourseData() {
+    const updatedCourse = {
+      ...this.selectedCourse(),
+      ...this.courseForm.value
+    };
+
+    // Ensure types are correct for backend
+    if (!updatedCourse.is_lti) {
+      updatedCourse.lti_tool_id = null;
+      updatedCourse.custom_launch_url = null;
+    }
+
+    this.courseService.updateCourse(this.selectedCourse().id, updatedCourse).subscribe(() => {
+      this.loadCourses();
+      alert('Course saved!');
+    });
   }
 
   deleteCourse(course: any) {
@@ -305,5 +327,59 @@ export class Editor implements OnInit {
     this.apiService.getLtiTools().subscribe(tools => {
       this.ltiTools.set(tools);
     });
+  }
+
+  triggerCourseThumbnailInput() {
+    this.courseThumbnailInput()?.nativeElement.click();
+  }
+
+  onCourseThumbnailSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+
+      // Validate file type
+      if (!['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) {
+        alert('Only JPG and PNG images are allowed');
+        return;
+      }
+
+      // Validate file size (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File size must not exceed 5MB');
+        return;
+      }
+
+      this.courseImageFile.set(file);
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.courseImagePreview.set(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  uploadCourseImage() {
+    const file = this.courseImageFile();
+    if (!file || !this.selectedCourse()) return;
+
+    this.courseService.uploadCourseImage(file, this.selectedCourse().id, 'thumbnail').subscribe({
+      next: (response) => {
+        // Update form with new image URL
+        this.courseForm.patchValue({ image_url: response.filename });
+        this.updateCourseData();
+      },
+      error: (error) => {
+        alert('Image upload failed: ' + (error.error?.error || 'Unknown error'));
+      }
+    });
+  }
+
+  removeCourseThumbnail() {
+    this.courseImageFile.set(null);
+    this.courseImagePreview.set('');
+    this.courseForm.patchValue({ image_url: null });
   }
 }

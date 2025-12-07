@@ -28,11 +28,6 @@
                 "glob": "**/*",
                 "input": "html",
                 "output": "backend"
-              },
-              {
-                "glob": "**/*",
-                "input": "html/uploads",
-                "output": "uploads"
               }
             ],
             "styles": [

@@ -60,4 +60,14 @@ export class CourseService {
     submitTest(testId: number, answers: any) {
         return this.http.post<any>(`${this.apiUrl}/tests/${testId}/submit`, { answers });
     }
+
+    uploadCourseImage(file: File, courseId?: number, type: 'thumbnail' | 'content' | 'misc' = 'thumbnail') {
+        const formData = new FormData();
+        formData.append('image', file);
+        if (courseId) {
+            formData.append('course_id', courseId.toString());
+        }
+        formData.append('type', type);
+        return this.http.post<any>(`${this.apiUrl}/uploads`, formData);
+    }
 }

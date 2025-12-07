@@ -8,7 +8,7 @@ function registerCourseRoutes($app, $authMiddleware)
         $group->get('', function (Request $request, Response $response, $args) {
             try {
                 $pdo = getDbConnection();
-                $stmt = $pdo->query("SELECT id, title, description, display_order, is_lti, lti_tool_id, custom_launch_url, created_at FROM courses ORDER BY display_order ASC, created_at DESC");
+                $stmt = $pdo->query("SELECT id, title, description, display_order, is_lti, lti_tool_id, custom_launch_url, image_url, created_at FROM courses ORDER BY display_order ASC, created_at DESC");
                 $courses = $stmt->fetchAll();
                 return jsonResponse($response, $courses);
             } catch (PDOException $e) {
@@ -38,14 +38,16 @@ function registerCourseRoutes($app, $authMiddleware)
                     $customLaunchUrl = $data['custom_launch_url'];
                 }
 
-                $stmt = $pdo->prepare("INSERT INTO courses (title, description, display_order, is_lti, lti_tool_id, custom_launch_url) VALUES (?, ?, ?, ?, ?, ?)");
+                $stmt = $pdo->prepare("INSERT INTO courses (title, description, display_order, is_lti, lti_tool_id, custom_launch_url, image_url) VALUES (?, ?, ?, ?, ?, ?, ?)");
                 $stmt->execute([
                     $data['title'],
                     $data['description'] ?? '',
                     $data['display_order'] ?? 0,
                     $isLti,
                     $ltiToolId,
-                    $customLaunchUrl
+                    $ltiToolId,
+                    $customLaunchUrl,
+                    $data['image_url'] ?? null
                 ]);
                 $courseId = $pdo->lastInsertId();
                 return jsonResponse($response, ['id' => $courseId, 'message' => 'Course created'], 201);
@@ -77,7 +79,7 @@ function registerCourseRoutes($app, $authMiddleware)
                     $customLaunchUrl = $data['custom_launch_url'];
                 }
 
-                $stmt = $pdo->prepare("UPDATE courses SET title = ?, description = ?, display_order = ?, is_lti = ?, lti_tool_id = ?, custom_launch_url = ? WHERE id = ?");
+                $stmt = $pdo->prepare("UPDATE courses SET title = ?, description = ?, display_order = ?, is_lti = ?, lti_tool_id = ?, custom_launch_url = ?, image_url = ? WHERE id = ?");
                 $stmt->execute([
                     $data['title'],
                     $data['description'] ?? '',
@@ -85,6 +87,7 @@ function registerCourseRoutes($app, $authMiddleware)
                     $isLti,
                     $ltiToolId,
                     $customLaunchUrl,
+                    $data['image_url'] ?? null,
                     $id
                 ]);
                 return jsonResponse($response, ['message' => 'Course updated']);

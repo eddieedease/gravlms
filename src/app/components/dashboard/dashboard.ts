@@ -6,6 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
+import { ConfigService } from '../../services/config.service';
 
 @Component({
     selector: 'app-dashboard',
@@ -17,6 +18,7 @@ export class DashboardComponent {
     private router = inject(Router);
     private authService = inject(AuthService);
     private apiService = inject(ApiService);
+    private config = inject(ConfigService);
 
     activeTab = signal<'todo' | 'library'>('todo');
 
@@ -109,5 +111,9 @@ export class DashboardComponent {
                 alert('Failed to launch LTI tool: ' + (err.error?.error || 'Unknown error'));
             }
         });
+    }
+
+    getImageUrl(imageUrl: string): string {
+        return `${this.config.apiUrl}/uploads/${imageUrl}`;
     }
 }

@@ -67,6 +67,7 @@ try {
         is_lti BOOLEAN DEFAULT FALSE,
         lti_tool_id INT NULL,
         custom_launch_url VARCHAR(500) NULL,
+        image_url VARCHAR(255) NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (lti_tool_id) REFERENCES lti_tools(id) ON DELETE SET NULL
     )";
@@ -332,6 +333,13 @@ try {
     if ($stmt->rowCount() == 0) {
         $pdo->exec("ALTER TABLE courses ADD COLUMN custom_launch_url VARCHAR(500) NULL AFTER lti_tool_id");
         echo "Migration: Added 'custom_launch_url' column to courses.<br>";
+    }
+
+    // Ensure 'image_url' column exists in courses
+    $stmt = $pdo->query("SHOW COLUMNS FROM courses LIKE 'image_url'");
+    if ($stmt->rowCount() == 0) {
+        $pdo->exec("ALTER TABLE courses ADD COLUMN image_url VARCHAR(255) NULL DEFAULT NULL AFTER custom_launch_url");
+        echo "Migration: Added 'image_url' column to courses.<br>";
     }
 
     // Ensure 'monitor' role exists in users enum
