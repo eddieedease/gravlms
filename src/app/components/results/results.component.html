@@ -15,6 +15,17 @@
     <!-- Filters -->
     <div class="bg-white p-4 rounded-lg shadow mb-6 flex flex-wrap gap-4 items-end">
         <div class="flex-1 min-w-[200px]">
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ 'COURSE' | translate }}</label>
+            <select [(ngModel)]="selectedCourseId" (ngModelChange)="onFilterChange()"
+                class="w-full border rounded-md py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">{{ 'ALL_COURSES' | translate }}</option>
+                @for (course of courses(); track course.id) {
+                <option [value]="course.id">{{ course.title }}</option>
+                }
+            </select>
+        </div>
+
+        <div class="flex-1 min-w-[200px]">
             <label class="block text-sm font-medium text-gray-700 mb-1">{{ 'GROUPS' | translate }}</label>
             <select [(ngModel)]="selectedGroupId" (ngModelChange)="onFilterChange()"
                 class="w-full border rounded-md py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -24,6 +35,20 @@
                 }
             </select>
         </div>
+
+        @if (selectedCourseId()) {
+        <div class="flex-1 min-w-[200px]">
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ 'STATUS' | translate }}</label>
+            <select [(ngModel)]="statusFilter" (ngModelChange)="onFilterChange()"
+                class="w-full border rounded-md py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="all">{{ 'ALL_STATUS' | translate }}</option>
+                <option value="completed">{{ 'COMPLETED' | translate }}</option>
+                <option value="busy">{{ 'BUSY' | translate }}</option>
+                <option value="not_started">{{ 'NOT_STARTED' | translate }}</option>
+            </select>
+        </div>
+        }
+
         <div class="flex-1 min-w-[200px]">
             <label class="block text-sm font-medium text-gray-700 mb-1">{{ 'SEARCH_USERS' | translate }}</label>
             <input type="text" [(ngModel)]="search" (ngModelChange)="onFilterChange()"
@@ -40,10 +65,19 @@
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{
                             'USER' | translate }}</th>
+                        @if (selectedCourseId()) {
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">
+                            {{
+                            'PROGRESS' | translate }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{
+                            'STATUS' | translate }}</th>
+                        } @else {
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{
                             'COURSE' | translate }}</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{
                             'COMPLETED_AT' | translate }}</th>
+                        }
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -54,18 +88,54 @@
                                 <div>
                                     <div class="text-sm font-medium text-gray-900">{{ result.username }}</div>
                                     <div class="text-sm text-gray-500">{{ result.email }}</div>
-                                    @if(result.group_name) {
-                                    <div class="text-xs text-indigo-600 mt-1">{{ result.group_name }}</div>
+                                    @if(result.group_names || result.group_name) {
+                                    <div class="text-xs text-indigo-600 mt-1">{{ result.group_names || result.group_name
+                                        }}</div>
                                     }
                                 </div>
                             </div>
                         </td>
+
+                        @if (selectedCourseId()) {
+                        <td class="px-6 py-4 align-middle">
+                            <div class="w-full max-w-xs">
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span class="font-medium">{{ result.progress_percent }}%</span>
+                                    <span class="text-gray-500">{{ result.completed_count }}/{{ result.total_pages
+                                        }}</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div class="bg-blue-600 h-2.5 rounded-full transition-all duration-500"
+                                        [style.width.%]="result.progress_percent"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            @if (result.status === 'completed') {
+                            <span
+                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                {{ 'COMPLETED' | translate }}
+                            </span>
+                            } @else if (result.status === 'busy') {
+                            <span
+                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                {{ 'BUSY' | translate }}
+                            </span>
+                            } @else {
+                            <span
+                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                {{ 'NOT_STARTED' | translate }}
+                            </span>
+                            }
+                        </td>
+                        } @else {
                         <td class="px-6 py-4">
                             <div class="text-sm text-gray-900 font-medium">{{ result.course_title }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {{ result.completed_at | date:'medium' }}
                         </td>
+                        }
                     </tr>
                     }
                     @if (results().length === 0 && !isLoading()) {

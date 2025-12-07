@@ -125,5 +125,11 @@
     "COMPLETED_AT": "Completed At",
     "SEARCH_PLACEHOLDER": "Search...",
     "ALL_GROUPS": "All Groups",
-    "NO_RESULTS": "No results found"
+    "NO_RESULTS": "No results found",
+    "ALL_COURSES": "All Courses",
+    "BUSY": "Busy",
+    "NOT_STARTED": "Not Started",
+    "PROGRESS": "Progress",
+    "STATUS": "Status",
+    "ALL_STATUS": "All Statuses"
 }

@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
+import { CourseService } from '../../services/course.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../services/auth.service';
 
@@ -14,19 +15,24 @@ import { AuthService } from '../../services/auth.service';
 })
 export class ResultsComponent implements OnInit {
     private apiService = inject(ApiService);
+    private courseService = inject(CourseService);
     private authService = inject(AuthService);
 
     results = signal<any[]>([]);
     groups = signal<any[]>([]);
+    courses = signal<any[]>([]);
 
     // Filter state
     search = signal('');
     selectedGroupId = signal<string>('');
+    selectedCourseId = signal<string>('');
+    statusFilter = signal<string>('all');
 
     isLoading = signal(false);
 
     ngOnInit() {
         this.loadGroups();
+        this.loadCourses();
         this.loadResults();
     }
 
@@ -47,11 +53,30 @@ export class ResultsComponent implements OnInit {
         });
     }
 
+    loadCourses() {
+        this.courseService.getCourses().subscribe({
+            next: (courses) => this.courses.set(courses),
+            error: () => { }
+        });
+    }
+
     loadResults() {
         this.isLoading.set(true);
         const params: any = {};
+
         if (this.selectedGroupId()) params.group_id = this.selectedGroupId();
         if (this.search()) params.search = this.search();
+
+        // Switch mode based on Course Selection
+        if (this.selectedCourseId()) {
+            params.view = 'course_progress';
+            params.course_id = this.selectedCourseId();
+            if (this.statusFilter() !== 'all') {
+                params.status = this.statusFilter();
+            }
+        } else {
+            params.view = 'recent';
+        }
 
         this.apiService.getResults(params).subscribe({
             next: (data) => {
@@ -73,6 +98,16 @@ export class ResultsComponent implements OnInit {
         const params: any = {};
         if (this.selectedGroupId()) params.group_id = this.selectedGroupId();
         if (this.search()) params.search = this.search();
+
+        if (this.selectedCourseId()) {
+            params.view = 'course_progress';
+            params.course_id = this.selectedCourseId();
+            if (this.statusFilter() !== 'all') {
+                params.status = this.statusFilter();
+            }
+        } else {
+            params.view = 'recent';
+        }
 
         this.apiService.exportResults(params).subscribe({
             next: (data) => {
