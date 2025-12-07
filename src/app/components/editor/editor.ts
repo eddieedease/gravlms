@@ -289,10 +289,17 @@ export class Editor implements OnInit {
       return;
     }
 
+    if (!this.selectedCourse()) {
+      this.uploadStatus.set('Error: Please select a course first');
+      return;
+    }
+
     this.uploadStatus.set('Uploading...');
 
     const formData = new FormData();
     formData.append('image', file);
+    formData.append('course_id', this.selectedCourse().id.toString());
+    formData.append('type', 'content');
 
     const token = this.authService.getToken();
     const headers = new HttpHeaders({
