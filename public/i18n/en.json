@@ -133,5 +133,21 @@
     "STATUS": "Status",
     "ALL_STATUS": "All Statuses",
     "COURSE_IMAGE": "Course Image",
-    "REMOVE_IMAGE": "Remove Image"
+    "REMOVE_IMAGE": "Remove Image",
+    "PORTFOLIO": {
+        "TITLE": "My Portfolio",
+        "COMPLETED_COURSES": "Completed Courses",
+        "NO_COURSES": "You haven't completed any courses yet.",
+        "COMPLETED_ON": "Completed on",
+        "DOWNLOAD_CERTIFICATE": "Download Certificate",
+        "MARKSHEET": "Marksheet",
+        "COURSE": "Course",
+        "TEST": "Test",
+        "SCORE": "Score",
+        "DATE": "Date",
+        "STATUS": "Status",
+        "PASSED": "Passed",
+        "FAILED": "Failed",
+        "NO_RESULTS": "No test results available."
+    }
 }

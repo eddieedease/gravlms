@@ -23,5 +23,10 @@ export const routes: Routes = [
     { path: 'admin', component: Admin, canActivate: [authGuard] },
     { path: 'editor', component: Editor, canActivate: [authGuard] },
     { path: 'results', component: ResultsComponent, canActivate: [authGuard] },
+    {
+        path: 'portfolio',
+        loadComponent: () => import('./components/portfolio/portfolio').then(m => m.PortfolioComponent),
+        canActivate: [authGuard]
+    },
     { path: '**', redirectTo: '' }
 ];

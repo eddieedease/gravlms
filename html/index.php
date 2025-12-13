@@ -45,6 +45,7 @@ require_once __DIR__ . '/api/tests.php';
 require_once __DIR__ . '/api/lti_routes.php';
 require_once __DIR__ . '/api/email_routes.php';
 require_once __DIR__ . '/api/results.php';
+require_once __DIR__ . '/api/portfolio.php';
 
 // Create JWT middleware instance
 $jwtMiddleware = jwtAuthMiddleware();
@@ -58,6 +59,7 @@ registerLearningRoutes($app, $jwtMiddleware);
 registerUploadRoutes($app, $jwtMiddleware);
 registerGroupRoutes($app, $jwtMiddleware);
 registerTestRoutes($app, $jwtMiddleware);
+registerPortfolioRoutes($app, $jwtMiddleware);
 registerLtiRoutes($app, $jwtMiddleware);
 registerEmailRoutes($app, $jwtMiddleware);
 registerResultsRoutes($app, $jwtMiddleware);

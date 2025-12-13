@@ -125,5 +125,21 @@
     "COMPLETED_AT": "Voltooid op",
     "SEARCH_PLACEHOLDER": "Zoeken...",
     "ALL_GROUPS": "Alle Groepen",
-    "NO_RESULTS": "Geen resultaten gevonden"
+    "NO_RESULTS": "Geen resultaten gevonden",
+    "PORTFOLIO": {
+        "TITLE": "Mijn Portfolio",
+        "COMPLETED_COURSES": "Voltooide Cursussen",
+        "NO_COURSES": "Je hebt nog geen cursussen voltooid.",
+        "COMPLETED_ON": "Voltooid op",
+        "DOWNLOAD_CERTIFICATE": "Certificaat Downloaden",
+        "MARKSHEET": "Cijferlijst",
+        "COURSE": "Cursus",
+        "TEST": "Test",
+        "SCORE": "Score",
+        "DATE": "Datum",
+        "STATUS": "Status",
+        "PASSED": "Geslaagd",
+        "FAILED": "Gezakt",
+        "NO_RESULTS": "Geen testresultaten beschikbaar."
+    }
 }

@@ -26,6 +26,10 @@
               class="border-transparent text-gray-400 hover:border-gray-300 hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors">
               {{ 'DASHBOARD' | translate }}
             </a>
+            <a routerLink="/portfolio" routerLinkActive="border-algolia-primary text-white"
+              class="border-transparent text-gray-400 hover:border-gray-300 hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors">
+              Portfolio
+            </a>
             <a routerLink="/editor" routerLinkActive="border-algolia-primary text-white"
               class="border-transparent text-gray-400 hover:border-gray-300 hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors">
               Editor
@@ -104,6 +108,8 @@
         <a routerLink="/dashboard" (click)="closeMobileMenu()" routerLinkActive="bg-gray-900 text-white"
           class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">{{
           'DASHBOARD' | translate }}</a>
+        <a routerLink="/portfolio" (click)="closeMobileMenu()" routerLinkActive="bg-gray-900 text-white"
+          class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Portfolio</a>
         <a routerLink="/editor" (click)="closeMobileMenu()" routerLinkActive="bg-gray-900 text-white"
           class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Editor</a>
         @if (auth.hasPrivilegedAccess()) {
