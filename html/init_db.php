@@ -121,8 +121,7 @@ try {
         course_id INT NOT NULL,
         completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
-        UNIQUE(user_id, course_id)
+        FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
     )";
     $pdo->exec($sqlCompletedCourses);
     echo "Table 'completed_courses' created or already exists.<br>";
@@ -156,6 +155,7 @@ try {
         id INT AUTO_INCREMENT PRIMARY KEY,
         group_id INT NOT NULL,
         course_id INT NOT NULL,
+        validity_days INT NULL,
         assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (group_id) REFERENCES `groups`(id) ON DELETE CASCADE,
         FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
@@ -348,6 +348,52 @@ try {
     // A safe way is to just modify it to include the superset.
     $pdo->exec("ALTER TABLE users MODIFY COLUMN role ENUM('admin', 'editor', 'viewer', 'monitor') DEFAULT 'viewer'");
     echo "Migration: Updated users role enum to include 'monitor'.<br>";
+
+    // Ensure 'validity_days' column exists in group_courses
+    $stmt = $pdo->query("SHOW COLUMNS FROM group_courses LIKE 'validity_days'");
+    if ($stmt->rowCount() == 0) {
+        $pdo->exec("ALTER TABLE group_courses ADD COLUMN validity_days INT NULL AFTER course_id");
+        echo "Migration: Added 'validity_days' column to group_courses.<br>";
+    }
+
+    // Drop UNIQUE constraint on completed_courses (user_id, course_id) to allow history
+    // We need to find the index name first. It is usually 'user_id' or a composite name.
+    $sqlIndex = "SHOW INDEX FROM completed_courses WHERE Key_name != 'PRIMARY' AND Non_unique = 0";
+    $stmtIndex = $pdo->query($sqlIndex);
+    $indexes = $stmtIndex->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($indexes as $index) {
+        if ($index['Key_name'] === 'user_id') {
+            // 1. Create a non-unique index to support the Foreign Key on user_id
+            // Check if it already exists to avoid dupes (optional but good)
+            $stmtCheck = $pdo->query("SHOW INDEX FROM completed_courses WHERE Key_name = 'idx_user_id_fk'");
+            if ($stmtCheck->rowCount() == 0) {
+                $pdo->exec("CREATE INDEX idx_user_id_fk ON completed_courses(user_id)");
+                echo "Migration: Created index 'idx_user_id_fk' to support FK.<br>";
+            }
+
+            // 2. Drop the UNIQUE index 'user_id'
+            $pdo->exec("ALTER TABLE completed_courses DROP INDEX user_id");
+            echo "Migration: Dropped UNIQUE index 'user_id' from completed_courses.<br>";
+            break;
+        }
+
+        // Handle case where index might be auto-named differently but covers the unique constraint we want to remove
+        if ($index['Key_name'] !== 'PRIMARY' && $index['Column_name'] === 'user_id') {
+            try {
+                // Same logic: Ensure backup index exists first if we are about to drop the one FK relies on
+                $stmtCheck = $pdo->query("SHOW INDEX FROM completed_courses WHERE Key_name = 'idx_user_id_fk'");
+                if ($stmtCheck->rowCount() == 0) {
+                    $pdo->exec("CREATE INDEX idx_user_id_fk ON completed_courses(user_id)");
+                    echo "Migration: Created index 'idx_user_id_fk' to support FK.<br>";
+                }
+
+                $pdo->exec("ALTER TABLE completed_courses DROP INDEX " . $index['Key_name']);
+                echo "Migration: Dropped UNIQUE index '" . $index['Key_name'] . "' from completed_courses.<br>";
+            } catch (Exception $e) {
+                // Ignore
+            }
+        }
+    }
 
 } catch (\PDOException $e) {
     throw new \PDOException($e->getMessage(), (int) $e->getCode());

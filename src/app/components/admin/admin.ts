@@ -96,7 +96,8 @@ export class Admin implements OnInit {
   });
 
   assignGroupCourseForm = this.fb.group({
-    courseId: ['', Validators.required]
+    courseId: ['', Validators.required],
+    validityDays: ['']
   });
 
   assignedCourses = signal<any[]>([]);
@@ -344,10 +345,11 @@ export class Admin implements OnInit {
   }
 
   addCourseToGroup() {
-
     if (this.assignGroupCourseForm.valid && this.selectedGroup) {
-      const courseId = this.assignGroupCourseForm.value.courseId;
-      this.groupsService.addCourseToGroup(this.selectedGroup.id, Number(courseId)).subscribe({
+      const { courseId, validityDays } = this.assignGroupCourseForm.value;
+      const days = validityDays ? Number(validityDays) : undefined;
+
+      this.groupsService.addCourseToGroup(this.selectedGroup.id, Number(courseId), days).subscribe({
         next: () => {
           this.loadGroupDetails(this.selectedGroup.id);
           this.assignGroupCourseForm.reset();

@@ -11,7 +11,3 @@ We have:
 - users and groups can be connected to a course
 - We have LTI implemented. Ver 1.1 and 1.3. As well for own consuming of external systems, as being able to launch our coursecontent in their LMS
 
-
-Now for the task at hand:
-I want to create a new component for users of the system. A portfolio component and page which displays which courses are completed and optionally a marksheet. It would also be good that they can download a certificate in pdf format of a commpleted course.
-

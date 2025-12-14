@@ -150,6 +150,7 @@ function registerGroupRoutes($app, $authMiddleware)
             $groupId = $args['groupId'];
             $data = json_decode($request->getBody()->getContents(), true);
             $courseId = $data['course_id'] ?? null;
+            $validityDays = $data['validity_days'] ?? null;
 
             if (!$courseId) {
                 return jsonResponse($response, ['error' => 'Course ID is required'], 400);
@@ -157,8 +158,8 @@ function registerGroupRoutes($app, $authMiddleware)
 
             try {
                 $pdo = getDbConnection();
-                $stmt = $pdo->prepare("INSERT INTO group_courses (group_id, course_id) VALUES (?, ?)");
-                $stmt->execute([$groupId, $courseId]);
+                $stmt = $pdo->prepare("INSERT INTO group_courses (group_id, course_id, validity_days) VALUES (?, ?, ?)");
+                $stmt->execute([$groupId, $courseId, $validityDays]);
                 return jsonResponse($response, ['status' => 'success', 'message' => 'Course added to group']);
             } catch (PDOException $e) {
                 if ($e->getCode() == 23000) {
@@ -189,7 +190,7 @@ function registerGroupRoutes($app, $authMiddleware)
             try {
                 $pdo = getDbConnection();
                 $stmt = $pdo->prepare("
-                    SELECT c.* 
+                    SELECT c.*, gc.validity_days 
                     FROM courses c 
                     JOIN group_courses gc ON c.id = gc.course_id 
                     WHERE gc.group_id = ?

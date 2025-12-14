@@ -1,19 +1,18 @@
-import { Component, inject, signal, computed, effect } from '@angular/core';
+import { Component, inject, signal, computed, effect, OnInit } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { DatePipe } from '@angular/common';
 import { LearningService } from '../../services/learning.service';
 import { TranslateModule } from '@ngx-translate/core';
-import { RouterLink, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
 import { ConfigService } from '../../services/config.service';
 
 @Component({
     selector: 'app-dashboard',
-    imports: [DatePipe, TranslateModule, RouterLink],
+    imports: [TranslateModule],
     templateUrl: './dashboard.html'
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
     private learningService = inject(LearningService);
     private router = inject(Router);
     private authService = inject(AuthService);
@@ -22,11 +21,10 @@ export class DashboardComponent {
 
     activeTab = signal<'todo' | 'library'>('todo');
 
-    // We'll use a signal for courses to make filtering easier and reactive
-    courses = toSignal(this.learningService.getMyCourses(), { initialValue: [] });
+    courses = signal<any[]>([]);
 
-    todoCourses = computed(() => this.courses().filter((c: any) => !c.is_completed));
-    libraryCourses = computed(() => this.courses().filter((c: any) => c.is_completed));
+    todoCourses = computed(() => this.courses().filter((c: any) => c.status === 'todo' || c.status === 'expired'));
+    libraryCourses = computed(() => this.courses().filter((c: any) => c.status === 'completed'));
 
     constructor() {
         // Auto-navigate to library if todo is empty but library has items
@@ -42,17 +40,55 @@ export class DashboardComponent {
         });
     }
 
+    ngOnInit() {
+        this.loadCourses();
+    }
+
+    loadCourses() {
+        this.learningService.getMyCourses().subscribe(courses => {
+            this.courses.set(courses);
+        });
+    }
+
     openCourse(courseId: number) {
         // Check if this is an LTI course
         const course = [...this.todoCourses(), ...this.libraryCourses()].find((c: any) => c.id === courseId);
 
-        if (course && course.is_lti && course.lti_tool_id) {
+        if (!course) return;
+
+        if (course.status === 'expired') {
+            if (confirm('This course has expired. Do you want to retake it? (Previous progress will be reset, but history is saved)')) {
+                this.resetAndLaunch(course);
+            }
+            return;
+        }
+
+        if (course.is_lti && course.lti_tool_id) {
             // Launch LTI tool
             this.launchLtiCourse(course);
         } else {
             // Navigate to regular course viewer
             this.router.navigate(['/learn', courseId]);
         }
+    }
+
+    resetCourse(course: any) {
+        if (confirm('Do you want to retake this course? Your current progress will be reset, but your completion history is saved.')) {
+            this.resetAndLaunch(course);
+        }
+    }
+
+    resetAndLaunch(course: any) {
+        this.learningService.resetCourse(course.id).subscribe(() => {
+            // Reload courses to update status
+            this.loadCourses();
+            // Then launch
+            if (course.is_lti && course.lti_tool_id) {
+                this.launchLtiCourse(course);
+            } else {
+                this.router.navigate(['/learn', course.id]);
+            }
+        });
     }
 
     launchLtiCourse(course: any) {

@@ -57,11 +57,20 @@ function registerLearningRoutes($app, $authMiddleware)
 
             try {
                 $pdo = getDbConnection();
-                // Get courses assigned to user, include completion status if needed
-                // For now just get the courses
-                // Get courses assigned to user directly OR via groups
+                // Get courses assigned to user, include completion status, validity, and progress counts
+                // Fetch last_completed_at and max validity_days (if in multiple groups)
                 $sql = "SELECT DISTINCT c.*, 
-                        (SELECT COUNT(*) FROM completed_courses cc WHERE cc.course_id = c.id AND cc.user_id = ?) as is_completed
+                        (SELECT completed_at FROM completed_courses cc WHERE cc.course_id = c.id AND cc.user_id = ? ORDER BY completed_at DESC LIMIT 1) as last_completed_at,
+                        (
+                           SELECT MAX(gc.validity_days)
+                           FROM group_courses gc
+                           JOIN group_users gu ON gc.group_id = gu.group_id
+                           WHERE gc.course_id = c.id AND gu.user_id = ?
+                        ) as validity_days,
+                        (SELECT COUNT(*) FROM course_pages WHERE course_id = c.id) as total_lessons,
+                        (SELECT COUNT(*) FROM completed_lessons cl 
+                           JOIN course_pages cp ON cl.page_id = cp.id 
+                           WHERE cp.course_id = c.id AND cl.user_id = ?) as completed_lessons_count
                         FROM courses c
                         WHERE c.id IN (
                             SELECT course_id FROM user_courses WHERE user_id = ?
@@ -73,8 +82,51 @@ function registerLearningRoutes($app, $authMiddleware)
                         ORDER BY c.display_order ASC";
 
                 $stmt = $pdo->prepare($sql);
-                $stmt->execute([$userId, $userId, $userId]);
+                $stmt->execute([$userId, $userId, $userId, $userId, $userId]);
                 $courses = $stmt->fetchAll();
+
+                // Process expiry and reset status
+                foreach ($courses as &$course) {
+                    $course['status'] = 'todo'; // default
+
+                    // If course thinks it has history, check if it's actually fully completed right now
+                    // If it was reset (progress deleted), completed_lessons_count will be 0 (or less than total)
+                    $isProgressComplete = ($course['total_lessons'] > 0 && $course['completed_lessons_count'] == $course['total_lessons']);
+
+                    if ($course['last_completed_at']) {
+                        // It has been completed before
+
+                        // BUT, if the user reset it (cleared progress), we should treat it as 'todo' 
+                        // UNLESS they finished it again? 
+                        // Actually, if I reset, I want it in 'todo'.
+                        // So if progress is NOT complete, force 'todo' even if history exists.
+
+                        if (!$isProgressComplete && $course['total_lessons'] > 0) {
+                            $course['status'] = 'todo';
+                        } else {
+                            // Progress is complete (or 0 lessons), so check validity
+                            $completedAt = new DateTime($course['last_completed_at']);
+                            $validityDays = $course['validity_days']; // integer or null
+
+                            if ($validityDays !== null) {
+                                $expiresAt = clone $completedAt;
+                                $expiresAt->modify("+$validityDays days");
+                                $now = new DateTime();
+                                if ($now > $expiresAt) {
+                                    $course['status'] = 'expired';
+                                    $course['expires_at'] = $expiresAt->format('Y-m-d H:i:s');
+                                } else {
+                                    $course['status'] = 'completed';
+                                }
+                            } else {
+                                $course['status'] = 'completed';
+                            }
+                        }
+                    }
+
+                    // If it was never completed, it remains 'todo'
+                }
+
                 return jsonResponse($response, $courses);
             } catch (PDOException $e) {
                 return jsonResponse($response, ['error' => $e->getMessage()], 500);
@@ -131,6 +183,32 @@ function registerLearningRoutes($app, $authMiddleware)
             }
         });
 
+
+        // Reset course (Student Retake)
+        $group->post('/reset/{courseId}', function (Request $request, Response $response, $args) {
+            $user = $request->getAttribute('user');
+            $userId = $user->id;
+            $courseId = $args['courseId'];
+
+            try {
+                $pdo = getDbConnection();
+                // Delete completed lessons for this user/course to reset progress
+                // But keep completed_courses history!
+
+                // We need to delete from completed_lessons where page_id belongs to course_id
+                $sql = "DELETE cl FROM completed_lessons cl
+                        JOIN course_pages cp ON cl.page_id = cp.id
+                        WHERE cl.user_id = ? AND cp.course_id = ?";
+
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([$userId, $courseId]);
+
+                return jsonResponse($response, ['status' => 'success', 'message' => 'Course reset successfully']);
+            } catch (PDOException $e) {
+                return jsonResponse($response, ['error' => $e->getMessage()], 500);
+            }
+        });
+
         // Complete a lesson
         $group->post('/complete-lesson', function (Request $request, Response $response, $args) {
             $user = $request->getAttribute('user');
@@ -166,7 +244,7 @@ function registerLearningRoutes($app, $authMiddleware)
                 $courseCompleted = false;
                 if ($totalLessons > 0 && $completedCount == $totalLessons) {
                     // Mark course as complete
-                    $stmtCourse = $pdo->prepare("INSERT IGNORE INTO completed_courses (user_id, course_id) VALUES (?, ?)");
+                    $stmtCourse = $pdo->prepare("INSERT INTO completed_courses (user_id, course_id) VALUES (?, ?)");
                     $stmtCourse->execute([$userId, $courseId]);
                     $courseCompleted = true;
                 }

@@ -70,29 +70,50 @@
                 }
                 <div class="p-6 flex-1">
                     <div class="flex items-center justify-between mb-4">
+                        @if (course.status === 'completed') {
                         <span
-                            class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset"
-                            [class.bg-green-50]="course.is_completed" [class.text-green-700]="course.is_completed"
-                            [class.ring-green-600/20]="course.is_completed" [class.bg-yellow-50]="!course.is_completed"
-                            [class.text-yellow-800]="!course.is_completed"
-                            [class.ring-yellow-600/20]="!course.is_completed">
-                            {{ (course.is_completed ? 'COMPLETED' : 'IN_PROGRESS') | translate }}
+                            class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset bg-green-50 text-green-700 ring-green-600/20">
+                            {{ 'COMPLETED' | translate }}
                         </span>
-                        <time [dateTime]="course.created_at" class="text-xs text-gray-500">{{ course.created_at | date
-                            }}</time>
+                        } @else if (course.status === 'expired') {
+                        <span
+                            class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset bg-red-50 text-red-700 ring-red-600/20">
+                            {{ 'EXPIRED' | translate }}
+                        </span>
+                        } @else {
+                        <span
+                            class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset bg-yellow-50 text-yellow-800 ring-yellow-600/20">
+                            {{ 'IN_PROGRESS' | translate }}
+                        </span>
+                        }
                     </div>
                     <h4 class="text-lg font-semibold text-gray-900 mb-2">
-                        <a [routerLink]="['/learn', course.id]" class="hover:text-algolia-primary transition-colors">
+                        <a (click)="openCourse(course.id)"
+                            class="hover:text-algolia-primary transition-colors cursor-pointer">
                             {{ course.title }}
                         </a>
                     </h4>
                     <p class="text-sm text-gray-600 line-clamp-3">{{ course.description }}</p>
                 </div>
-                <div class="border-t border-gray-100 px-6 py-4 bg-gray-50 rounded-b-xl">
-                    <a [routerLink]="['/learn', course.id]"
-                        class="text-sm font-medium text-algolia-primary hover:text-indigo-500 transition-colors flex items-center gap-1">
-                        {{ 'CONTINUE_LEARNING' | translate }} <span aria-hidden="true">&rarr;</span>
-                    </a>
+                <div
+                    class="border-t border-gray-100 px-6 py-4 bg-gray-50 rounded-b-xl flex items-center justify-between gap-3">
+                    <button (click)="openCourse(course.id)"
+                        class="flex-1 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 flex items-center justify-center gap-2 transition-all">
+                        @if (course.status === 'expired') {
+                        <span>{{ 'RETAKE' | translate }}</span> <span aria-hidden="true">&#x21ba;</span>
+                        } @else {
+                        <span>{{ (course.status === 'completed' ? 'REVIEW' : 'CONTINUE') | translate }}</span> <span
+                            aria-hidden="true">&rarr;</span>
+                        }
+                    </button>
+
+                    @if (course.status === 'completed') {
+                    <button (click)="resetCourse(course)"
+                        class="rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-100 flex items-center justify-center gap-2 transition-all"
+                        title="{{ 'RETAKE_HINT' | translate }}">
+                        <span aria-hidden="true">&#x21ba;</span>
+                    </button>
+                    }
                 </div>
             </div>
             }

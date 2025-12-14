@@ -29,8 +29,8 @@
 
         <!-- Completed Courses Grid Removed -->
 
-        <!-- Marksheet / Test Results -->
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">{{ 'PORTFOLIO.MARKSHEET' | translate }}</h2>
+        <!-- Completed Courses -->
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">{{ 'PORTFOLIO.COMPLETED_COURSES' | translate }}</h2>
 
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <div class="overflow-x-auto">
@@ -40,12 +40,6 @@
                             <th scope="col"
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 {{ 'PORTFOLIO.COURSE' | translate }}</th>
-                            <th scope="col"
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                {{ 'PORTFOLIO.TEST' | translate }}</th>
-                            <th scope="col"
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                {{ 'PORTFOLIO.SCORE' | translate }}</th>
                             <th scope="col"
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 {{ 'PORTFOLIO.DATE' | translate }}</th>
@@ -58,31 +52,34 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        <tr *ngFor="let result of portfolioData.test_results">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{
-                                result.course_title || '-' }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ result.test_title }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-bold">
-                                {{ result.score }} / {{ result.max_score }}
-                                <span class="text-xs text-gray-400 font-normal ml-1">({{ (result.score /
-                                    result.max_score | percent) }})</span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ result.completed_at | date:
-                                'short' }}</td>
+                        <tr *ngFor="let course of portfolioData.completed_courses">
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span *ngIf="result.passed"
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-10 w-10" *ngIf="course.image_url">
+                                        <img class="h-10 w-10 rounded-full object-cover"
+                                            [src]="getImageUrl(course.image_url)" alt="">
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900">{{ course.title }}</div>
+                                        <div class="text-sm text-gray-500 truncate max-w-xs">{{ course.description }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div *ngIf="!course.image_url" class="text-sm font-medium text-gray-900">
+                                    {{ course.title }}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ course.completed_at | date: 'short' }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span
                                     class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                    {{ 'PORTFOLIO.PASSED' | translate }}
-                                </span>
-                                <span *ngIf="!result.passed"
-                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                    {{ 'PORTFOLIO.FAILED' | translate }}
+                                    {{ 'COMPLETED' | translate }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                @let completedCourse = getCompletedCourse(result.course_id);
-                                @if (completedCourse) {
-                                <button (click)="downloadCertificate(completedCourse)"
+                                <button (click)="downloadCertificate(course)"
                                     class="text-teal-600 hover:text-teal-900 flex items-center space-x-1"
                                     title="{{ 'PORTFOLIO.DOWNLOAD_CERTIFICATE' | translate }}">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -93,12 +90,12 @@
                                     <span class="hidden sm:inline">{{ 'PORTFOLIO.DOWNLOAD_CERTIFICATE' | translate
                                         }}</span>
                                 </button>
-                                }
                             </td>
                         </tr>
-                        <tr *ngIf="portfolioData.test_results.length === 0">
-                            <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">{{
-                                'PORTFOLIO.NO_RESULTS' | translate }}</td>
+                        <tr *ngIf="portfolioData.completed_courses.length === 0">
+                            <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
+                                {{ 'PORTFOLIO.NO_COURSES' | translate }}
+                            </td>
                         </tr>
                     </tbody>
                 </table>

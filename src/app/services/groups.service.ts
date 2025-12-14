@@ -48,8 +48,8 @@ export class GroupsService {
         return this.http.get<any[]>(`${this.apiUrl}/${groupId}/users`, { headers: this.getHeaders() });
     }
 
-    addCourseToGroup(groupId: number, courseId: number) {
-        return this.http.post<any>(`${this.apiUrl}/${groupId}/courses`, { course_id: courseId }, { headers: this.getHeaders() });
+    addCourseToGroup(groupId: number, courseId: number, validityDays?: number) {
+        return this.http.post<any>(`${this.apiUrl}/${groupId}/courses`, { course_id: courseId, validity_days: validityDays }, { headers: this.getHeaders() });
     }
 
     removeCourseFromGroup(groupId: number, courseId: number) {

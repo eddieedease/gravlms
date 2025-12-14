@@ -46,4 +46,8 @@ export class LearningService {
     completeLesson(courseId: number, pageId: number) {
         return this.http.post<any>(`${this.apiUrl}/complete-lesson`, { course_id: courseId, page_id: pageId }, { headers: this.getHeaders() });
     }
+
+    resetCourse(courseId: number) {
+        return this.http.post<any>(`${this.apiUrl}/reset/${courseId}`, {}, { headers: this.getHeaders() });
+    }
 }

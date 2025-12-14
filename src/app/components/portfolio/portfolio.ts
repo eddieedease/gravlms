@@ -119,4 +119,10 @@ export class PortfolioComponent implements OnInit {
 
     doc.save(`certificate-${course.title.replace(/\s+/g, '-').toLowerCase()}.pdf`);
   }
+
+  getImageUrl(url: string | null): string {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    return `${this.config.apiUrl}/uploads/${url}`;
+  }
 }
