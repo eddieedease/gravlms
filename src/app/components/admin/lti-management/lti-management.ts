@@ -2,10 +2,11 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ApiService } from '../../../services/api.service';
 import { DatePipe } from '@angular/common';
+import { ModalComponent } from '../../modal/modal';
 
 @Component({
     selector: 'app-lti-management',
-    imports: [ReactiveFormsModule, DatePipe],
+    imports: [ReactiveFormsModule, DatePipe, ModalComponent],
     templateUrl: './lti-management.html'
 })
 export class LtiManagementComponent implements OnInit {

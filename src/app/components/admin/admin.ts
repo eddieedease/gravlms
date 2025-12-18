@@ -6,13 +6,14 @@ import { GroupsService } from '../../services/groups.service';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { LtiManagementComponent } from './lti-management/lti-management';
+import { ModalComponent } from '../modal/modal';
 import { ApiService } from '../../services/api.service';
 
 import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-admin',
-  imports: [ReactiveFormsModule, DatePipe, LtiManagementComponent, TranslateModule],
+  imports: [ReactiveFormsModule, DatePipe, LtiManagementComponent, TranslateModule, ModalComponent],
   templateUrl: './admin.html',
   styleUrl: './admin.css',
 })
