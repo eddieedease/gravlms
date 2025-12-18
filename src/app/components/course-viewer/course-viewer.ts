@@ -149,7 +149,7 @@ export class CourseViewerComponent {
 
     navigateToDashboard() {
         this.showCompletionModal.set(false);
-        this.router.navigate(['/landing']);
+        this.router.navigate(['/dashboard']);
     }
 
     isCompleted(pageId: number) {

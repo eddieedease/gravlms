@@ -2,6 +2,7 @@
     "HELLO": "Hello",
     "HOME": "Home",
     "DASHBOARD": "Dashboard",
+    "BACK_TO_DASHBOARD": "Back to Dashboard",
     "LOGIN": "Login",
     "LOGOUT": "Logout",
     "COURSES": "Courses",

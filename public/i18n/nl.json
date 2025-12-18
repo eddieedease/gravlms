@@ -2,6 +2,7 @@
     "HELLO": "Hallo",
     "HOME": "Home",
     "DASHBOARD": "Dashboard",
+    "BACK_TO_DASHBOARD": "Terug naar Dashboard",
     "LOGIN": "Inloggen",
     "LOGOUT": "Uitloggen",
     "COURSES": "Cursussen",
