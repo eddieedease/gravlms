@@ -299,9 +299,24 @@ JWKS URL:            http://localhost:8080/api/lti/jwks
 1. In the external LMS, add GravLMS as an external tool to a course
 2. Students click on the GravLMS link within the external LMS
 3. The external LMS sends an LTI launch request to GravLMS
-4. GravLMS validates the request and displays the appropriate course content
-5. Students can complete lessons and tests within GravLMS
-6. Completion data can be sent back to the external LMS (if configured)
+4. GravLMS validates the request
+5. **If the "course_id" custom parameter is present**: GravLMS redirects the user directly to that course
+6. **If no "course_id" is present**: GravLMS redirects the user to the Dashboard
+7. Students can complete lessons and tests within GravLMS
+8. Completion data can be sent back to the external LMS (if configured)
+
+### Selecting a Specific Course to Serve
+To link to a specific GravLMS course from the external LMS, you must pass a **Custom Parameter** named `course_id`.
+
+**In Canvas:**
+1. When editing the External Tool settings (or adding to a module key).
+2. Find the **Custom Fields** textbox.
+3. Enter: `course_id=[ID]` (e.g., `course_id=5`).
+   * You can find the Course ID in the GravLMS Admin > Courses table.
+
+**In Moodle:**
+1. In the External Tool settings, go to "Show more..."
+2. Under **Custom parameters**, enter: `course_id=[ID]` (e.g., `course_id=5`).
 
 ### What Happens During Provider Mode Launch
 
@@ -326,10 +341,11 @@ JWKS URL:            http://localhost:8080/api/lti/jwks
    - OIDC Login URL: `http://localhost:8080/api/lti/login`
    - Launch URL: `http://localhost:8080/api/lti/launch`
    - JWKS URL: `http://localhost:8080/api/lti/jwks`
+   - Custom Fields: `course_id=1` (Replace `1` with the ID of the GravLMS course you want to serve)
 
 4. In GravLMS Admin, register Canvas as a platform using Canvas's issuer and URLs
 5. In Canvas, add GravLMS to a course module
-6. Students click the GravLMS link and are launched into your GravLMS course
+6. Students click the GravLMS link and are launched into your specific GravLMS course
 
 ---
 

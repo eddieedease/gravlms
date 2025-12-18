@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { LearningService } from '../../services/learning.service';
 import { CourseService } from '../../services/course.service';
 import { ApiService } from '../../services/api.service';
+import { AuthService } from '../../services/auth.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { MarkedPipe } from '../../pipes/marked.pipe';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -24,6 +25,9 @@ export class CourseViewerComponent {
     private learningService = inject(LearningService);
     private courseService = inject(CourseService);
     private apiService = inject(ApiService);
+    private authService = inject(AuthService);
+
+    isLtiMode = this.authService.isLtiMode;
 
     courseId = toSignal(this.route.paramMap.pipe(map(params => Number(params.get('courseId')))));
 
@@ -149,7 +153,10 @@ export class CourseViewerComponent {
 
     navigateToDashboard() {
         this.showCompletionModal.set(false);
-        this.router.navigate(['/dashboard']);
+        // Don't allow navigation to dashboard if in LTI mode
+        if (!this.isLtiMode()) {
+            this.router.navigate(['/dashboard']);
+        }
     }
 
     isCompleted(pageId: number) {

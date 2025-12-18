@@ -10,13 +10,18 @@ import { ConfigService } from './config.service';
 export class AuthService {
     private apiUrl: string;
     currentUser = signal<any>(null);
+    isLtiMode = signal<boolean>(false);
+    ltiCourseId = signal<number | null>(null);
 
     constructor(private http: HttpClient, private router: Router, private config: ConfigService) {
         this.apiUrl = this.config.apiUrl;
         const token = localStorage.getItem('token');
         const user = localStorage.getItem('user');
         if (token && user) {
-            this.currentUser.set(JSON.parse(user));
+            const userData = JSON.parse(user);
+            this.currentUser.set(userData);
+            this.isLtiMode.set(userData.lti_mode || false);
+            this.ltiCourseId.set(userData.lti_course_id || null);
         }
     }
 
@@ -27,6 +32,8 @@ export class AuthService {
                     localStorage.setItem('token', response.token);
                     localStorage.setItem('user', JSON.stringify(response.user));
                     this.currentUser.set(response.user);
+                    this.isLtiMode.set(response.user.lti_mode || false);
+                    this.ltiCourseId.set(response.user.lti_course_id || null);
                 }
             })
         );
@@ -36,6 +43,8 @@ export class AuthService {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         this.currentUser.set(null);
+        this.isLtiMode.set(false);
+        this.ltiCourseId.set(null);
         this.router.navigate(['/login']);
     }
 

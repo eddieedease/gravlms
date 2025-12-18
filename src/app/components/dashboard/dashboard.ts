@@ -41,6 +41,11 @@ export class DashboardComponent implements OnInit {
     }
 
     ngOnInit() {
+        // If user is in LTI mode, redirect them to their course
+        if (this.authService.isLtiMode() && this.authService.ltiCourseId()) {
+            this.router.navigate(['/learn', this.authService.ltiCourseId()]);
+            return;
+        }
         this.loadCourses();
     }
 

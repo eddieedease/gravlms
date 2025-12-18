@@ -304,6 +304,10 @@ function registerLtiRoutes($app, $jwtMiddleware)
             // Get launch data
             $launchData = $launch->getLaunchData();
 
+            // Extract course ID from custom parameters first
+            $customParams = $launchData['https://purl.imsglobal.org/spec/lti/claim/custom'] ?? [];
+            $courseId = $customParams['course_id'] ?? null;
+
             // Create or find user based on LTI claims
             $email = $launchData['email'] ?? $launchData['sub'] . '@lti.local';
             $name = $launchData['name'] ?? 'LTI User';
@@ -335,16 +339,15 @@ function registerLtiRoutes($app, $jwtMiddleware)
                     'id' => $userId,
                     'username' => $name,
                     'email' => $email,
-                    'role' => $user['role'] ?? 'viewer'
+                    'role' => $user['role'] ?? 'viewer',
+                    'lti_mode' => true,
+                    'lti_course_id' => $courseId
                 ]
             ];
 
             $jwt = \Firebase\JWT\JWT::encode($payload, $secretKey, 'HS256');
 
-            // Redirect to course if specified in custom parameters
-            $customParams = $launchData['https://purl.imsglobal.org/spec/lti/claim/custom'] ?? [];
-            $courseId = $customParams['course_id'] ?? null;
-
+            // Redirect to course if specified, otherwise dashboard
             $redirectUrl = $courseId
                 ? "http://localhost:4200/learn/{$courseId}?token={$jwt}"
                 : "http://localhost:4200/dashboard?token={$jwt}";
