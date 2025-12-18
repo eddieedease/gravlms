@@ -59,6 +59,7 @@ export class Admin implements OnInit {
 
   // Group Management State
   showGroupForm = signal(false);
+  showGroupDetails = signal(false);
   isEditingGroup = signal(false);
   currentGroupId: number | null = null;
   selectedGroup: any = null;
@@ -284,7 +285,13 @@ export class Admin implements OnInit {
 
   selectGroup(group: any) {
     this.selectedGroup = group;
+    this.showGroupDetails.set(true);
     this.loadGroupDetails(group.id);
+  }
+
+  closeGroupDetails() {
+    this.showGroupDetails.set(false);
+    this.selectedGroup = null;
   }
 
   loadGroupDetails(groupId: number) {

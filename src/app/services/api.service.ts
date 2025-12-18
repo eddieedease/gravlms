@@ -94,12 +94,28 @@ export class ApiService {
     return this.http.post<any>(`${this.apiUrl}/admin/lti/platforms`, platform);
   }
 
+  updateLtiPlatform(id: number, platform: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/admin/lti/platforms/${id}`, platform);
+  }
+
+  deleteLtiPlatform(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/admin/lti/platforms/${id}`);
+  }
+
   getLtiTools(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/admin/lti/tools`);
   }
 
   createLtiTool(tool: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/admin/lti/tools`, tool);
+  }
+
+  updateLtiTool(id: number, tool: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/admin/lti/tools/${id}`, tool);
+  }
+
+  deleteLtiTool(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/admin/lti/tools/${id}`);
   }
 
   getLtiConsumerLaunchParams(toolId: number, courseId?: number): Observable<any> {

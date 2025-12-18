@@ -18,6 +18,8 @@ export class LtiManagementComponent implements OnInit {
 
     activeTab = signal<'platforms' | 'tools'>('platforms');
     showForm = signal(false);
+    isEditing = signal(false);
+    editingId = signal<number | null>(null);
 
     // Platform Form (LTI 1.3 Issuer)
     platformForm = this.fb.group({
@@ -60,8 +62,38 @@ export class LtiManagementComponent implements OnInit {
 
     startCreate() {
         this.showForm.set(true);
+        this.isEditing.set(false);
+        this.editingId.set(null);
         this.platformForm.reset();
         this.toolForm.reset({ lti_version: '1.3' });
+    }
+
+    startEdit(item: any) {
+        this.showForm.set(true);
+        this.isEditing.set(true);
+        this.editingId.set(item.id);
+
+        if (this.activeTab() === 'platforms') {
+            this.platformForm.patchValue(item);
+        } else {
+            this.toolForm.patchValue(item);
+        }
+    }
+
+    deletePlatform(id: number) {
+        if (confirm('Are you sure you want to delete this platform?')) {
+            this.apiService.deleteLtiPlatform(id).subscribe(() => {
+                this.loadPlatforms();
+            });
+        }
+    }
+
+    deleteTool(id: number) {
+        if (confirm('Are you sure you want to delete this tool?')) {
+            this.apiService.deleteLtiTool(id).subscribe(() => {
+                this.loadTools();
+            });
+        }
     }
 
     cancel() {
@@ -70,19 +102,33 @@ export class LtiManagementComponent implements OnInit {
 
     onSubmitPlatform() {
         if (this.platformForm.valid) {
-            this.apiService.createLtiPlatform(this.platformForm.value).subscribe(() => {
-                this.loadPlatforms();
-                this.cancel();
-            });
+            if (this.isEditing() && this.editingId()) {
+                this.apiService.updateLtiPlatform(this.editingId()!, this.platformForm.value).subscribe(() => {
+                    this.loadPlatforms();
+                    this.cancel();
+                });
+            } else {
+                this.apiService.createLtiPlatform(this.platformForm.value).subscribe(() => {
+                    this.loadPlatforms();
+                    this.cancel();
+                });
+            }
         }
     }
 
     onSubmitTool() {
         if (this.toolForm.valid) {
-            this.apiService.createLtiTool(this.toolForm.value).subscribe(() => {
-                this.loadTools();
-                this.cancel();
-            });
+            if (this.isEditing() && this.editingId()) {
+                this.apiService.updateLtiTool(this.editingId()!, this.toolForm.value).subscribe(() => {
+                    this.loadTools();
+                    this.cancel();
+                });
+            } else {
+                this.apiService.createLtiTool(this.toolForm.value).subscribe(() => {
+                    this.loadTools();
+                    this.cancel();
+                });
+            }
         }
     }
 }

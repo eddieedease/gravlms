@@ -17,55 +17,240 @@ function registerLtiRoutes($app, $jwtMiddleware)
 {
 
     // --- Admin: LTI Platforms (Issuers) ---
+    // --- Admin: LTI Platforms (Issuers) ---
     $app->get('/api/admin/lti/platforms', function (Request $request, Response $response) {
-        $pdo = getDbConnection();
-        $stmt = $pdo->query("SELECT * FROM lti_platforms ORDER BY created_at DESC");
-        $platforms = $stmt->fetchAll();
-        $response->getBody()->write(json_encode($platforms));
-        return $response->withHeader('Content-Type', 'application/json');
+        try {
+            $pdo = getDbConnection();
+            $stmt = $pdo->query("SELECT * FROM lti_platforms ORDER BY created_at DESC");
+            $platforms = $stmt->fetchAll();
+            $response->getBody()->write(json_encode($platforms));
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withHeader('Access-Control-Allow-Origin', 'http://localhost:4200')
+                ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
+                ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+        } catch (\Throwable $e) {
+            error_log("LTI Platforms GET Error: " . $e->getMessage());
+            $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
+            return $response
+                ->withStatus(500)
+                ->withHeader('Content-Type', 'application/json')
+                ->withHeader('Access-Control-Allow-Origin', 'http://localhost:4200')
+                ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
+                ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+        }
     })->add($jwtMiddleware);
 
     $app->post('/api/admin/lti/platforms', function (Request $request, Response $response) {
-        $data = $request->getParsedBody();
-        $pdo = getDbConnection();
-        $stmt = $pdo->prepare("INSERT INTO lti_platforms (issuer, client_id, auth_login_url, auth_token_url, key_set_url, deployment_id) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->execute([
-            $data['issuer'],
-            $data['client_id'],
-            $data['auth_login_url'],
-            $data['auth_token_url'],
-            $data['key_set_url'],
-            $data['deployment_id'] ?? null
-        ]);
-        $response->getBody()->write(json_encode(['status' => 'success']));
-        return $response->withHeader('Content-Type', 'application/json');
+        try {
+            $data = json_decode($request->getBody()->getContents(), true);
+            $pdo = getDbConnection();
+            $stmt = $pdo->prepare("INSERT INTO lti_platforms (issuer, client_id, auth_login_url, auth_token_url, key_set_url, deployment_id) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->execute([
+                $data['issuer'],
+                $data['client_id'],
+                $data['auth_login_url'],
+                $data['auth_token_url'],
+                $data['key_set_url'],
+                $data['deployment_id'] ?? null
+            ]);
+            $response->getBody()->write(json_encode(['status' => 'success']));
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withHeader('Access-Control-Allow-Origin', 'http://localhost:4200')
+                ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
+                ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+        } catch (\Throwable $e) {
+            error_log("LTI Platforms POST Error: " . $e->getMessage());
+            $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
+            return $response
+                ->withStatus(500)
+                ->withHeader('Content-Type', 'application/json')
+                ->withHeader('Access-Control-Allow-Origin', 'http://localhost:4200')
+                ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
+                ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+        }
+    })->add($jwtMiddleware);
+
+    $app->put('/api/admin/lti/platforms/{id}', function (Request $request, Response $response, $args) {
+        try {
+            $id = $args['id'];
+            $data = json_decode($request->getBody()->getContents(), true);
+            $pdo = getDbConnection();
+
+            $sql = "UPDATE lti_platforms SET issuer = ?, client_id = ?, auth_login_url = ?, auth_token_url = ?, key_set_url = ?, deployment_id = ? WHERE id = ?";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([
+                $data['issuer'],
+                $data['client_id'],
+                $data['auth_login_url'],
+                $data['auth_token_url'],
+                $data['key_set_url'],
+                $data['deployment_id'] ?? null,
+                $id
+            ]);
+
+            $response->getBody()->write(json_encode(['status' => 'success']));
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withHeader('Access-Control-Allow-Origin', 'http://localhost:4200')
+                ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
+                ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+        } catch (\Throwable $e) {
+            error_log("LTI Platforms PUT Error: " . $e->getMessage());
+            $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
+            return $response
+                ->withStatus(500)
+                ->withHeader('Content-Type', 'application/json')
+                ->withHeader('Access-Control-Allow-Origin', 'http://localhost:4200')
+                ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
+                ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+        }
+    })->add($jwtMiddleware);
+
+    $app->delete('/api/admin/lti/platforms/{id}', function (Request $request, Response $response, $args) {
+        try {
+            $id = $args['id'];
+            $pdo = getDbConnection();
+            $stmt = $pdo->prepare("DELETE FROM lti_platforms WHERE id = ?");
+            $stmt->execute([$id]);
+
+            $response->getBody()->write(json_encode(['status' => 'success']));
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withHeader('Access-Control-Allow-Origin', 'http://localhost:4200')
+                ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
+                ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+        } catch (\Throwable $e) {
+            error_log("LTI Platforms DELETE Error: " . $e->getMessage());
+            $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
+            return $response
+                ->withStatus(500)
+                ->withHeader('Content-Type', 'application/json')
+                ->withHeader('Access-Control-Allow-Origin', 'http://localhost:4200')
+                ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
+                ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+        }
     })->add($jwtMiddleware);
 
     // --- Admin: LTI Tools (External Tools) ---
     $app->get('/api/admin/lti/tools', function (Request $request, Response $response) {
-        $pdo = getDbConnection();
-        $stmt = $pdo->query("SELECT * FROM lti_tools ORDER BY created_at DESC");
-        $tools = $stmt->fetchAll();
-        $response->getBody()->write(json_encode($tools));
-        return $response->withHeader('Content-Type', 'application/json');
+        try {
+            $pdo = getDbConnection();
+            $stmt = $pdo->query("SELECT * FROM lti_tools ORDER BY created_at DESC");
+            $tools = $stmt->fetchAll();
+            $response->getBody()->write(json_encode($tools));
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withHeader('Access-Control-Allow-Origin', 'http://localhost:4200')
+                ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
+                ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+        } catch (\Throwable $e) {
+            error_log("LTI Tools GET Error: " . $e->getMessage());
+            $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
+            return $response
+                ->withStatus(500)
+                ->withHeader('Content-Type', 'application/json')
+                ->withHeader('Access-Control-Allow-Origin', 'http://localhost:4200')
+                ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
+                ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+        }
     })->add($jwtMiddleware);
 
     $app->post('/api/admin/lti/tools', function (Request $request, Response $response) {
-        $data = $request->getParsedBody();
-        $pdo = getDbConnection();
-        $stmt = $pdo->prepare("INSERT INTO lti_tools (name, tool_url, lti_version, client_id, public_key, initiate_login_url, consumer_key, shared_secret) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([
-            $data['name'],
-            $data['tool_url'],
-            $data['lti_version'],
-            $data['client_id'] ?? null,
-            $data['public_key'] ?? null,
-            $data['initiate_login_url'] ?? null,
-            $data['consumer_key'] ?? null,
-            $data['shared_secret'] ?? null
-        ]);
-        $response->getBody()->write(json_encode(['status' => 'success']));
-        return $response->withHeader('Content-Type', 'application/json');
+        try {
+            $data = json_decode($request->getBody()->getContents(), true);
+            $pdo = getDbConnection();
+            $stmt = $pdo->prepare("INSERT INTO lti_tools (name, tool_url, lti_version, client_id, public_key, initiate_login_url, consumer_key, shared_secret) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([
+                $data['name'],
+                $data['tool_url'],
+                $data['lti_version'],
+                $data['client_id'] ?? null,
+                $data['public_key'] ?? null,
+                $data['initiate_login_url'] ?? null,
+                $data['consumer_key'] ?? null,
+                $data['shared_secret'] ?? null
+            ]);
+            $response->getBody()->write(json_encode(['status' => 'success']));
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withHeader('Access-Control-Allow-Origin', 'http://localhost:4200')
+                ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
+                ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+        } catch (\Exception $e) {
+            error_log("LTI Tools POST Error: " . $e->getMessage());
+            $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
+            return $response
+                ->withStatus(500)
+                ->withHeader('Content-Type', 'application/json')
+                ->withHeader('Access-Control-Allow-Origin', 'http://localhost:4200')
+                ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
+                ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+        }
+    })->add($jwtMiddleware);
+
+    $app->put('/api/admin/lti/tools/{id}', function (Request $request, Response $response, $args) {
+        try {
+            $id = $args['id'];
+            $data = json_decode($request->getBody()->getContents(), true);
+            $pdo = getDbConnection();
+
+            $sql = "UPDATE lti_tools SET name = ?, tool_url = ?, lti_version = ?, client_id = ?, public_key = ?, initiate_login_url = ?, consumer_key = ?, shared_secret = ? WHERE id = ?";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([
+                $data['name'],
+                $data['tool_url'],
+                $data['lti_version'],
+                $data['client_id'] ?? null,
+                $data['public_key'] ?? null,
+                $data['initiate_login_url'] ?? null,
+                $data['consumer_key'] ?? null,
+                $data['shared_secret'] ?? null,
+                $id
+            ]);
+
+            $response->getBody()->write(json_encode(['status' => 'success']));
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withHeader('Access-Control-Allow-Origin', 'http://localhost:4200')
+                ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
+                ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+        } catch (\Throwable $e) {
+            error_log("LTI Tools PUT Error: " . $e->getMessage());
+            $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
+            return $response
+                ->withStatus(500)
+                ->withHeader('Content-Type', 'application/json')
+                ->withHeader('Access-Control-Allow-Origin', 'http://localhost:4200')
+                ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
+                ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+        }
+    })->add($jwtMiddleware);
+
+    $app->delete('/api/admin/lti/tools/{id}', function (Request $request, Response $response, $args) {
+        try {
+            $id = $args['id'];
+            $pdo = getDbConnection();
+            $stmt = $pdo->prepare("DELETE FROM lti_tools WHERE id = ?");
+            $stmt->execute([$id]);
+
+            $response->getBody()->write(json_encode(['status' => 'success']));
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withHeader('Access-Control-Allow-Origin', 'http://localhost:4200')
+                ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
+                ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+        } catch (\Throwable $e) {
+            error_log("LTI Tools DELETE Error: " . $e->getMessage());
+            $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
+            return $response
+                ->withStatus(500)
+                ->withHeader('Content-Type', 'application/json')
+                ->withHeader('Access-Control-Allow-Origin', 'http://localhost:4200')
+                ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
+                ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+        }
     })->add($jwtMiddleware);
 
 
@@ -80,7 +265,8 @@ function registerLtiRoutes($app, $jwtMiddleware)
             $login = LtiOidcLogin::new($database, $cache, $cookie);
 
             // Get request parameters
-            $params = $request->getParsedBody() ?? [];
+            $data = json_decode($request->getBody()->getContents(), true);
+            $params = $data ?? [];
             $queryParams = $request->getQueryParams() ?? [];
             $allParams = array_merge($queryParams, $params);
 
@@ -108,7 +294,8 @@ function registerLtiRoutes($app, $jwtMiddleware)
             $launch = LtiMessageLaunch::new($database, $cache, $cookie, $serviceConnector);
 
             // Get request parameters
-            $params = $request->getParsedBody() ?? [];
+            $data = json_decode($request->getBody()->getContents(), true);
+            $params = $data ?? [];
             $queryParams = $request->getQueryParams() ?? [];
             $allParams = array_merge($queryParams, $params);
 
@@ -207,7 +394,7 @@ function registerLtiRoutes($app, $jwtMiddleware)
     // --- Consumer Mode: Generate LTI 1.1 Launch Parameters ---
     $app->post('/api/lti/consumer/launch', function (Request $request, Response $response) {
         try {
-            $data = $request->getParsedBody();
+            $data = json_decode($request->getBody()->getContents(), true);
             $toolId = $data['tool_id'] ?? null;
             $courseId = $data['course_id'] ?? null;
             $userId = $request->getAttribute('user')->id;

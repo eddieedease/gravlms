@@ -5,8 +5,15 @@
 
     <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
         <!-- Modal Panel -->
-        <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg"
-            (click)="onContentClick($event)">
+        <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full"
+            [ngClass]="{
+                'sm:max-w-sm': maxWidth === 'sm',
+                'sm:max-w-lg': maxWidth === 'md',
+                'sm:max-w-2xl': maxWidth === 'lg',
+                'sm:max-w-4xl': maxWidth === 'xl',
+                'sm:max-w-6xl': maxWidth === '2xl',
+                'sm:max-w-full sm:m-4': maxWidth === 'full'
+            }" (click)="onContentClick($event)">
 
             <!-- Header -->
             <div class="bg-gray-50 px-4 py-3 sm:px-6 flex justify-between items-center border-b border-gray-200">

@@ -10,6 +10,7 @@ import { CommonModule } from '@angular/common';
 export class ModalComponent {
     @Input() isOpen = false;
     @Input() title = '';
+    @Input() maxWidth: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full' = 'md';
     @Output() close = new EventEmitter<void>();
 
     onClose() {
