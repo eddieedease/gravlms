@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, computed, ElementRef, viewChild } from '@angular/core';
+import { Component, inject, OnInit, signal, computed, ElementRef, viewChild, HostListener } from '@angular/core';
 import { CourseService } from '../../services/course.service';
 import { AuthService } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
@@ -26,6 +26,7 @@ export class Editor implements OnInit {
 
   fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
   courseThumbnailInput = viewChild<ElementRef<HTMLInputElement>>('courseThumbnailInput');
+  markdownTextarea = viewChild<ElementRef<HTMLTextAreaElement>>('markdownTextarea');
   uploadStatus = signal<string>('');
   courseImageFile = signal<File | null>(null);
   courseImagePreview = signal<string>('');
@@ -46,9 +47,25 @@ export class Editor implements OnInit {
   previewHtml = signal<string>('');
   viewMode = signal<'editor' | 'split' | 'preview'>('editor');
   sidebarOpen = signal<boolean>(true);
+  createItemDropdownOpen = signal<boolean>(false);
 
   toggleSidebar() {
     this.sidebarOpen.update(v => !v);
+  }
+
+  toggleCreateItemDropdown() {
+    this.createItemDropdownOpen.update(v => !v);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    const dropdown = target.closest('.create-item-dropdown');
+
+    // Close dropdown if clicking outside of it
+    if (!dropdown && this.createItemDropdownOpen()) {
+      this.createItemDropdownOpen.set(false);
+    }
   }
 
   ltiTools = signal<any[]>([]);
@@ -388,5 +405,81 @@ export class Editor implements OnInit {
     this.courseImageFile.set(null);
     this.courseImagePreview.set('');
     this.courseForm.patchValue({ image_url: null });
+  }
+
+  insertMarkdown(type: string) {
+    const textarea = this.markdownTextarea()?.nativeElement;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
+    const beforeText = textarea.value.substring(0, start);
+    const afterText = textarea.value.substring(end);
+
+    let insertText = '';
+    let cursorOffset = 0;
+
+    switch (type) {
+      case 'bold':
+        insertText = `**${selectedText || 'bold text'}**`;
+        cursorOffset = selectedText ? insertText.length : 2;
+        break;
+      case 'italic':
+        insertText = `*${selectedText || 'italic text'}*`;
+        cursorOffset = selectedText ? insertText.length : 1;
+        break;
+      case 'h1':
+        insertText = `# ${selectedText || 'Heading 1'}`;
+        cursorOffset = selectedText ? insertText.length : 2;
+        break;
+      case 'h2':
+        insertText = `## ${selectedText || 'Heading 2'}`;
+        cursorOffset = selectedText ? insertText.length : 3;
+        break;
+      case 'h3':
+        insertText = `### ${selectedText || 'Heading 3'}`;
+        cursorOffset = selectedText ? insertText.length : 4;
+        break;
+      case 'ul':
+        insertText = selectedText
+          ? selectedText.split('\n').map(line => `- ${line}`).join('\n')
+          : '- List item';
+        cursorOffset = selectedText ? insertText.length : 2;
+        break;
+      case 'ol':
+        insertText = selectedText
+          ? selectedText.split('\n').map((line, i) => `${i + 1}. ${line}`).join('\n')
+          : '1. List item';
+        cursorOffset = selectedText ? insertText.length : 3;
+        break;
+      case 'link':
+        insertText = `[${selectedText || 'link text'}](url)`;
+        cursorOffset = selectedText ? insertText.length - 4 : 1;
+        break;
+      case 'code':
+        insertText = selectedText
+          ? `\`\`\`\n${selectedText}\n\`\`\``
+          : '```\ncode\n```';
+        cursorOffset = selectedText ? insertText.length - 4 : 4;
+        break;
+      case 'quote':
+        insertText = selectedText
+          ? selectedText.split('\n').map(line => `> ${line}`).join('\n')
+          : '> Quote';
+        cursorOffset = selectedText ? insertText.length : 2;
+        break;
+    }
+
+    const newContent = beforeText + insertText + afterText;
+    this.pageForm.patchValue({ content: newContent });
+    this.updatePreview(newContent);
+
+    // Set cursor position after update
+    setTimeout(() => {
+      textarea.focus();
+      const newPosition = start + cursorOffset;
+      textarea.setSelectionRange(newPosition, newPosition);
+    }, 0);
   }
 }
