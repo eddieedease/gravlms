@@ -30,6 +30,7 @@ export class CourseViewerComponent {
     isLtiMode = this.authService.isLtiMode;
 
     courseId = toSignal(this.route.paramMap.pipe(map(params => Number(params.get('courseId')))));
+    pageId = toSignal(this.route.queryParamMap.pipe(map(params => params.get('pageId') ? Number(params.get('pageId')) : null)));
 
     // Fetch course items (pages and tests)
     pages$ = this.route.paramMap.pipe(
@@ -68,6 +69,16 @@ export class CourseViewerComponent {
                 // Update completed IDs
                 if (progress && progress.completed_page_ids) {
                     this.completedPageIds.set(progress.completed_page_ids);
+                }
+
+                // Check if there's a pageId from query params (deep-linking)
+                const targetPageId = this.pageId();
+                if (targetPageId) {
+                    const targetPage = pages.find(p => p.id === targetPageId);
+                    if (targetPage) {
+                        this.selectPage(targetPage);
+                        return;
+                    }
                 }
 
                 // Find first incomplete page

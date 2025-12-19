@@ -25,6 +25,66 @@
         </div>
     </div>
 
+    <!-- Lesson Search -->
+    <div class="lesson-search-container relative max-w-2xl mx-auto">
+        <div class="relative">
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd"
+                        d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z"
+                        clip-rule="evenodd" />
+                </svg>
+            </div>
+            <input type="text" [ngModel]="searchQuery()" (ngModelChange)="onSearchInput($event)"
+                (keydown)="onSearchKeydown($event)"
+                class="block w-full rounded-lg border-0 py-3 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                [placeholder]="'SEARCH_LESSONS' | translate">
+        </div>
+
+        <!-- Autocomplete Dropdown -->
+        @if (searchDropdownOpen() && filteredLessons().length > 0) {
+        <div
+            class="absolute z-10 mt-2 w-full bg-white rounded-lg shadow-lg border border-gray-200 max-h-96 overflow-y-auto">
+            @for (lesson of filteredLessons(); track lesson.id; let i = $index) {
+            <button (click)="navigateToLesson(lesson)" [class.bg-indigo-50]="selectedResultIndex() === i"
+                class="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-start gap-3 border-b border-gray-100 last:border-b-0 transition-colors">
+                <div class="flex-shrink-0 mt-0.5">
+                    @if (lesson.type === 'test') {
+                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
+                        </path>
+                    </svg>
+                    } @else {
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                    }
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 truncate">{{ lesson.title }}</p>
+                    <p class="text-xs text-gray-500 truncate">{{ 'IN_COURSE' | translate }}: {{ lesson.course_title }}
+                    </p>
+                </div>
+            </button>
+            }
+        </div>
+        }
+
+        @if (searchDropdownOpen() && searchQuery().trim() && filteredLessons().length === 0) {
+        <div
+            class="absolute z-10 mt-2 w-full bg-white rounded-lg shadow-lg border border-gray-200 px-4 py-8 text-center">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p class="mt-2 text-sm text-gray-500">{{ 'NO_SEARCH_RESULTS' | translate }}</p>
+        </div>
+        }
+    </div>
+
     <!-- Course Grid -->
     <div>
         <div class="flex items-center justify-between mb-6">

@@ -1,7 +1,8 @@
-import { Component, inject, signal, computed, effect, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, effect, OnInit, HostListener } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { LearningService } from '../../services/learning.service';
 import { TranslateModule } from '@ngx-translate/core';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
@@ -9,7 +10,7 @@ import { ConfigService } from '../../services/config.service';
 
 @Component({
     selector: 'app-dashboard',
-    imports: [TranslateModule],
+    imports: [TranslateModule, FormsModule],
     templateUrl: './dashboard.html'
 })
 export class DashboardComponent implements OnInit {
@@ -22,6 +23,21 @@ export class DashboardComponent implements OnInit {
     activeTab = signal<'todo' | 'library'>('todo');
 
     courses = signal<any[]>([]);
+
+    // Search functionality
+    allLessons = signal<any[]>([]);
+    searchQuery = signal<string>('');
+    searchDropdownOpen = signal<boolean>(false);
+    selectedResultIndex = signal<number>(-1);
+
+    filteredLessons = computed(() => {
+        const query = this.searchQuery().toLowerCase().trim();
+        if (!query) return [];
+
+        return this.allLessons()
+            .filter(lesson => lesson.title.toLowerCase().includes(query))
+            .slice(0, 10); // Limit to 10 results
+    });
 
     todoCourses = computed(() => this.courses().filter((c: any) => c.status === 'todo' || c.status === 'expired'));
     libraryCourses = computed(() => this.courses().filter((c: any) => c.status === 'completed'));
@@ -47,11 +63,18 @@ export class DashboardComponent implements OnInit {
             return;
         }
         this.loadCourses();
+        this.loadLessons();
     }
 
     loadCourses() {
         this.learningService.getMyCourses().subscribe(courses => {
             this.courses.set(courses);
+        });
+    }
+
+    loadLessons() {
+        this.learningService.getMyLessons().subscribe(lessons => {
+            this.allLessons.set(lessons);
         });
     }
 
@@ -156,5 +179,59 @@ export class DashboardComponent implements OnInit {
 
     getImageUrl(imageUrl: string): string {
         return `${this.config.apiUrl}/uploads/${imageUrl}`;
+    }
+
+    // Search methods
+    onSearchInput(value: string) {
+        this.searchQuery.set(value);
+        this.selectedResultIndex.set(-1);
+        this.searchDropdownOpen.set(value.trim().length > 0);
+    }
+
+    navigateToLesson(lesson: any) {
+        this.searchQuery.set('');
+        this.searchDropdownOpen.set(false);
+        this.router.navigate(['/learn', lesson.course_id], {
+            queryParams: { pageId: lesson.id }
+        });
+    }
+
+    onSearchKeydown(event: KeyboardEvent) {
+        const results = this.filteredLessons();
+        if (!results.length) return;
+
+        switch (event.key) {
+            case 'ArrowDown':
+                event.preventDefault();
+                this.selectedResultIndex.update(i =>
+                    i < results.length - 1 ? i + 1 : i
+                );
+                break;
+            case 'ArrowUp':
+                event.preventDefault();
+                this.selectedResultIndex.update(i => i > 0 ? i - 1 : -1);
+                break;
+            case 'Enter':
+                event.preventDefault();
+                const index = this.selectedResultIndex();
+                if (index >= 0 && index < results.length) {
+                    this.navigateToLesson(results[index]);
+                }
+                break;
+            case 'Escape':
+                this.searchQuery.set('');
+                this.searchDropdownOpen.set(false);
+                break;
+        }
+    }
+
+    @HostListener('document:click', ['$event'])
+    onDocumentClick(event: MouseEvent) {
+        const target = event.target as HTMLElement;
+        const searchContainer = target.closest('.lesson-search-container');
+
+        if (!searchContainer && this.searchDropdownOpen()) {
+            this.searchDropdownOpen.set(false);
+        }
     }
 }

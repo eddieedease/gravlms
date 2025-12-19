@@ -128,6 +128,9 @@
     "SEARCH_PLACEHOLDER": "Zoeken...",
     "ALL_GROUPS": "Alle Groepen",
     "NO_RESULTS": "Geen resultaten gevonden",
+    "SEARCH_LESSONS": "Zoek lessen...",
+    "NO_SEARCH_RESULTS": "Geen lessen gevonden",
+    "IN_COURSE": "in",
     "PORTFOLIO": {
         "TITLE": "Mijn Portfolio",
         "COMPLETED_COURSES": "Voltooide Cursussen",

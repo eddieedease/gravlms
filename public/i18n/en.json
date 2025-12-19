@@ -136,6 +136,9 @@
     "ALL_STATUS": "All Statuses",
     "COURSE_IMAGE": "Course Image",
     "REMOVE_IMAGE": "Remove Image",
+    "SEARCH_LESSONS": "Search lessons...",
+    "NO_SEARCH_RESULTS": "No lessons found",
+    "IN_COURSE": "in",
     "PORTFOLIO": {
         "TITLE": "My Portfolio",
         "COMPLETED_COURSES": "Completed Courses",

@@ -133,6 +133,36 @@ function registerLearningRoutes($app, $authMiddleware)
             }
         });
 
+        // Get all lessons for logged-in user's assigned courses
+        $group->get('/my-lessons', function (Request $request, Response $response, $args) {
+            $user = $request->getAttribute('user');
+            $userId = $user->id;
+
+            try {
+                $pdo = getDbConnection();
+                // Get all pages/lessons from courses assigned to this user
+                $sql = "SELECT cp.id, cp.title, cp.type, cp.course_id, cp.display_order, c.title as course_title
+                        FROM course_pages cp
+                        JOIN courses c ON cp.course_id = c.id
+                        WHERE c.id IN (
+                            SELECT course_id FROM user_courses WHERE user_id = ?
+                            UNION
+                            SELECT gc.course_id FROM group_courses gc 
+                            JOIN group_users gu ON gc.group_id = gu.group_id 
+                            WHERE gu.user_id = ?
+                        )
+                        ORDER BY c.display_order ASC, cp.display_order ASC";
+
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([$userId, $userId]);
+                $lessons = $stmt->fetchAll();
+
+                return jsonResponse($response, $lessons);
+            } catch (\Exception $e) {
+                return jsonResponse($response, ['error' => $e->getMessage()], 500);
+            }
+        });
+
         // Get assigned courses for a specific user (Admin)
         $group->get('/user-courses/{userId}', function (Request $request, Response $response, $args) {
             $userId = $args['userId'];

@@ -35,6 +35,10 @@ export class LearningService {
         return this.http.get<any[]>(`${this.apiUrl}/my-courses`, { headers: this.getHeaders() });
     }
 
+    getMyLessons() {
+        return this.http.get<any[]>(`${this.apiUrl}/my-lessons`, { headers: this.getHeaders() });
+    }
+
     getUserCourses(userId: number) {
         return this.http.get<any[]>(`${this.apiUrl}/user-courses/${userId}`, { headers: this.getHeaders() });
     }
