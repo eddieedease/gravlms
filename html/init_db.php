@@ -274,6 +274,28 @@ try {
     $pdo->exec($sqlTestResults);
     echo "Table 'test_results' created or already exists.<br>";
 
+    // Create organization_settings table
+    $sqlOrgSettings = "CREATE TABLE IF NOT EXISTS organization_settings (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        org_name VARCHAR(255) DEFAULT 'My Organization',
+        org_slogan VARCHAR(255) DEFAULT 'Learning for everyone',
+        org_main_color VARCHAR(50) DEFAULT '#3b82f6',
+        org_logo_url VARCHAR(255) NULL,
+        org_header_image_url VARCHAR(255) NULL,
+        org_email VARCHAR(255) DEFAULT '',
+        news_message_enabled BOOLEAN DEFAULT FALSE,
+        news_message_content TEXT NULL
+    )";
+    $pdo->exec($sqlOrgSettings);
+    echo "Table 'organization_settings' created or already exists.<br>";
+
+    // Insert default row if not exists
+    $stmt = $pdo->query("SELECT count(*) FROM organization_settings");
+    if ($stmt->fetchColumn() == 0) {
+        $pdo->exec("INSERT INTO organization_settings (org_name) VALUES ('My Organization')");
+        echo "Inserted default organization settings.<br>";
+    }
+
     // --- Migrations for existing databases ---
 
     // Ensure 'type' column exists in course_pages

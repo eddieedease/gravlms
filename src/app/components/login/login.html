@@ -1,5 +1,8 @@
 <div class="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8 bg-gray-50">
     <div class="sm:mx-auto sm:w-full sm:max-w-sm">
+        @if (orgService.settings().org_logo_url) {
+        <img [src]="orgService.settings().org_logo_url" alt="Logo" class="mx-auto h-16 w-auto mb-6 object-contain">
+        }
         <h2 class="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">{{ 'SIGN_IN_TITLE' |
             translate }}</h2>
     </div>

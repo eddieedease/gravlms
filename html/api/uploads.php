@@ -37,7 +37,9 @@ function registerUploadRoutes($app, $authMiddleware)
         }
 
         // Determine upload directory
-        $baseDir = file_exists('/var/www/uploads') ? '/var/www/uploads' : __DIR__ . '/../../uploads';
+        // Store in project root 'public/uploads' directory
+        // Docker volume maps ./public/uploads to /var/www/uploads
+        $baseDir = file_exists('/var/www/uploads') ? '/var/www/uploads' : __DIR__ . '/../../public/uploads';
         $relPath = '';
 
         if ($courseId) {
@@ -50,14 +52,17 @@ function registerUploadRoutes($app, $authMiddleware)
             } else {
                 $relPath = "/$courseId/misc";
             }
+        } elseif ($type === 'organization') {
+            $relPath = "/organization";
         } else {
-            $relPath = ""; // Root or misc, as before. Let's keep root for backward compat if needed, or move to 'misc'
+            $relPath = "";
         }
 
         $targetDir = $baseDir . $relPath;
 
         if (!file_exists($targetDir)) {
             mkdir($targetDir, 0777, true);
+            chmod($targetDir, 0777); // Ensure explicit 777
         }
 
         // Generate unique filename
@@ -67,42 +72,45 @@ function registerUploadRoutes($app, $authMiddleware)
 
         try {
             $uploadedFile->moveTo($targetPath);
+            chmod($targetPath, 0666); // Ensure readable/writable by host user
 
             // Return relative URL
-            // If path was constructed with subdirs, URL needs to match
-            // Front controller for uploads needs to handle slashes in url?
-            // Actually, the GET route below expects a {filename}. Slim 3 route args don't gobble slashes by default unless regex used.
-            // We should update the GET route to allow paths.
-
-            // Construct the URL to return. 
-            // If we used subdirectories, the "filename" passed to GET API needs to include them.
-            // e.g. "123/thumbnails/img_abc.jpg"
-            // So we return 'url' => '/api/uploads/123/thumbnails/img_abc.jpg'
-
+            // Since we store in public/uploads, and public is web root for Angular, URL is /uploads/...
             $urlKey = $relPath ? ltrim($relPath . '/' . $filename, '/') : $filename;
 
             return jsonResponse($response, [
                 'status' => 'success',
                 'filename' => $urlKey,
-                'url' => '/api/uploads/' . $urlKey
+                'url' => '/uploads/' . $urlKey
             ], 201);
         } catch (Exception $e) {
             return jsonResponse($response, ['error' => 'Failed to save file: ' . $e->getMessage()], 500);
         }
     })->add($authMiddleware);
 
-    // Serve uploaded image (public access)
-    // Use regex to allow slashes in filename param for subdirectories
+    // Serve uploaded image (public access) - Not strictly needed if Angular serves public/, but good for backend logic/production
     $app->get('/api/uploads/{filename:.*}', function (Request $request, Response $response, $args) {
         $filename = $args['filename'];
 
         // Use same logic as upload: Docker dev vs production
-        $baseDir = file_exists('/var/www/uploads') ? '/var/www/uploads' : __DIR__ . '/../../uploads';
+        $baseDir = file_exists('/var/www/uploads') ? '/var/www/uploads' : __DIR__ . '/../../public/uploads';
         $filepath = $baseDir . '/' . $filename;
 
         // Security check: Normalize path and check if it starts with baseDir
         $realBase = realpath($baseDir);
         $realPath = realpath($filepath);
+
+        // Fallback for legacy uploads in html/uploads
+        if (!file_exists($filepath)) {
+            $legacyBase = file_exists('/var/www/html/uploads') ? '/var/www/html/uploads' : __DIR__ . '/../uploads';
+            $legacyPath = $legacyBase . '/' . $filename;
+            if (file_exists($legacyPath)) {
+                $baseDir = $legacyBase;
+                $filepath = $legacyPath;
+                $realBase = realpath($baseDir);
+                $realPath = realpath($filepath);
+            }
+        }
 
         if ($realPath === false || strpos($realPath, $realBase) !== 0) {
             // Invalid path or directory traversal attempt

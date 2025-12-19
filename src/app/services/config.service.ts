@@ -12,7 +12,7 @@ declare global {
     providedIn: 'root'
 })
 export class ConfigService {
-    private config = window.APP_CONFIG || { apiUrl: 'http://localhost:8080/api' };
+    private config = window.APP_CONFIG || { apiUrl: '/api' };
 
     get apiUrl(): string {
         return this.config.apiUrl;

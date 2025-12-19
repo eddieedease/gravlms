@@ -32,11 +32,20 @@
                 class="border-b-2 py-4 px-1 text-sm font-medium transition-colors hover:text-gray-700 hover:border-gray-300">
                 {{ 'EMAIL_SETTINGS' | translate }}
             </button>
+            <button (click)="setTab('organisation')" [class.border-algolia-primary]="activeTab() === 'organisation'"
+                [class.text-algolia-primary]="activeTab() === 'organisation'"
+                [class.border-transparent]="activeTab() !== 'organisation'"
+                [class.text-gray-500]="activeTab() !== 'organisation'"
+                class="border-b-2 py-4 px-1 text-sm font-medium transition-colors hover:text-gray-700 hover:border-gray-300">
+                {{ 'ORGANISATION' | translate }}
+            </button>
         </nav>
     </div>
 
-    <!-- Users Tab -->
+    <!-- ... Users, Groups tabs ... -->
     @if (activeTab() === 'users') {
+
+
     <div>
         <!-- Users Header -->
         <div class="flex flex-col sm:flex-row sm:items-center mb-6 justify-between gap-4">
@@ -419,6 +428,131 @@
                 {{ emailStatus()?.message }}
             </div>
             }
+        </div>
+    </div>
+    }
+
+    <!-- Organisation Tab -->
+    @if (activeTab() === 'organisation') {
+    <div>
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold text-gray-900">{{ 'ORGANISATION_SETTINGS' | translate }}</h2>
+            <p class="mt-1 text-sm text-gray-600">{{ 'MANAGE_ORGANISATION_BRANDING' | translate }}</p>
+        </div>
+
+        <div class="card p-6 max-w-2xl">
+            <form [formGroup]="orgForm" (ngSubmit)="onOrgSubmit()" class="space-y-6">
+                <!-- Branding -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">{{ 'BRANDING' | translate }}</h3>
+                    <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                        <div class="sm:col-span-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'RG_NAME' | translate
+                                }}</label>
+                            <input type="text" formControlName="org_name" class="input-field">
+                        </div>
+
+                        <div class="sm:col-span-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'ORG_SLOGAN' | translate
+                                }}</label>
+                            <input type="text" formControlName="org_slogan" class="input-field">
+                        </div>
+
+                        <div class="sm:col-span-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'MAIN_COLOR' | translate
+                                }}</label>
+                            <div class="flex items-center gap-2">
+                                <input type="color" formControlName="org_main_color"
+                                    class="h-10 w-20 p-1 border border-gray-300 rounded-md">
+                                <span class="text-sm text-gray-500">{{ orgForm.get('org_main_color')?.value }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Images -->
+                <div class="border-t border-gray-200 pt-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">{{ 'IMAGES' | translate }}</h3>
+
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'LOGO' | translate }}</label>
+                            <div class="flex items-center space-x-4">
+                                @if (orgLogoUrl()) {
+                                <img [src]="orgLogoUrl()" alt="Logo"
+                                    class="h-12 w-auto object-contain bg-gray-50 border border-gray-200 rounded">
+                                <button type="button" (click)="removeLogo()"
+                                    class="text-sm text-red-600 hover:text-red-500">
+                                    {{ 'REMOVE' | translate }}
+                                </button>
+                                }
+                                <input type="file" (change)="onLogoSelected($event)" accept="image/*"
+                                    class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-algolia-primary file:text-white hover:file:bg-indigo-700">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'HEADER_IMAGE' | translate
+                                }}</label>
+                            <div class="space-y-2">
+                                @if (orgHeaderUrl()) {
+                                <img [src]="orgHeaderUrl()" alt="Header"
+                                    class="h-20 w-full object-cover rounded-md border border-gray-200">
+                                <button type="button" (click)="removeHeaderImage()"
+                                    class="text-sm text-red-600 hover:text-red-500">
+                                    {{ 'REMOVE' | translate }}
+                                </button>
+                                }
+                                <input type="file" (change)="onHeaderImageSelected($event)" accept="image/*"
+                                    class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-algolia-primary file:text-white hover:file:bg-indigo-700">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact -->
+                <div class="border-t border-gray-200 pt-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">{{ 'CONTACT_INFO' | translate }}</h3>
+                    <div class="sm:col-span-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'ORG_EMAIL' | translate
+                            }}</label>
+                        <input type="email" formControlName="org_email" class="input-field">
+                    </div>
+                </div>
+
+                <!-- News Message -->
+                <div class="border-t border-gray-200 pt-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">{{ 'NEWS_MESSAGE' | translate }}</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="newsEnabled" formControlName="news_message_enabled"
+                                class="h-4 w-4 text-algolia-primary focus:ring-algolia-primary border-gray-300 rounded">
+                            <label for="newsEnabled" class="ml-2 block text-sm text-gray-900">
+                                {{ 'ENABLE_NEWS_MESSAGE' | translate }}
+                            </label>
+                        </div>
+
+                        @if (orgForm.get('news_message_enabled')?.value) {
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'MESSAGE_CONTENT' | translate
+                                }}</label>
+                            <textarea formControlName="news_message_content" rows="3" class="input-field"></textarea>
+                        </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="pt-6 border-t border-gray-200">
+                    <button type="submit" [disabled]="orgForm.invalid || isSavingOrg()"
+                        class="btn-primary flex justify-center w-full sm:w-auto">
+                        @if (isSavingOrg()) {
+                        <span>Saving...</span>
+                        } @else {
+                        <span>{{ 'SAVE_CHANGES' | translate }}</span>
+                        }
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
     }

@@ -7,6 +7,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
 import { ConfigService } from '../../services/config.service';
+import { OrganisationService } from '../../services/organisation.service';
 
 @Component({
     selector: 'app-dashboard',
@@ -19,6 +20,7 @@ export class DashboardComponent implements OnInit {
     private authService = inject(AuthService);
     private apiService = inject(ApiService);
     private config = inject(ConfigService);
+    public orgService = inject(OrganisationService);
 
     activeTab = signal<'todo' | 'library'>('todo');
 

@@ -1,11 +1,13 @@
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { catchError, throwError } from 'rxjs';
 import { inject } from '@angular/core';
-import { AuthService } from './auth.service';
+import { Router } from '@angular/router';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-    const authService = inject(AuthService);
-    const token = authService.getToken();
+    // Avoid circular dependency by not injecting AuthService here
+    // AuthService -> HttpClient -> AuthInterceptor -> AuthService
+    const token = localStorage.getItem('token');
+    const router = inject(Router);
 
     // Clone the request and add the authorization header if token exists
     if (token) {
@@ -19,7 +21,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req).pipe(
         catchError((error: HttpErrorResponse) => {
             if (error.status === 401) {
-                authService.logout();
+                // Clear state manually as we can't call authService.logout() easily without circular dep
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                router.navigate(['/login']);
             }
             return throwError(() => error);
         })

@@ -5,6 +5,7 @@ import { ApiService } from './services/api.service';
 import { AsyncPipe } from '@angular/common';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { LoadingSpinnerComponent } from './components/loading-spinner/loading-spinner.component';
+import { OrganisationService } from './services/organisation.service';
 
 @Component({
   selector: 'app-root',
@@ -16,6 +17,8 @@ export class App {
   protected readonly auth = inject(AuthService);
   private readonly apiService = inject(ApiService);
   private readonly translate = inject(TranslateService);
+  // Inject to trigger global settings load (color, etc)
+  private readonly orgService = inject(OrganisationService);
 
   protected readonly apiMessage$ = this.apiService.getTestMessage();
 
