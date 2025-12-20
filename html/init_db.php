@@ -23,7 +23,7 @@ try {
         username VARCHAR(50) NOT NULL UNIQUE,
         email VARCHAR(255) UNIQUE,
         password VARCHAR(255) NOT NULL,
-        role ENUM('admin', 'editor', 'viewer', 'monitor') DEFAULT 'viewer',
+        role ENUM('admin', 'editor', 'viewer', 'monitor', 'user') DEFAULT 'viewer',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     )";
@@ -364,12 +364,12 @@ try {
         echo "Migration: Added 'image_url' column to courses.<br>";
     }
 
-    // Ensure 'monitor' role exists in users enum
+    // Ensure 'monitor' and 'user' role exists in users enum
     // This is tricky with MySQL/MariaDB enums.
     // We can try to modify the column blindly or check if it contains 'monitor'.
     // A safe way is to just modify it to include the superset.
-    $pdo->exec("ALTER TABLE users MODIFY COLUMN role ENUM('admin', 'editor', 'viewer', 'monitor') DEFAULT 'viewer'");
-    echo "Migration: Updated users role enum to include 'monitor'.<br>";
+    $pdo->exec("ALTER TABLE users MODIFY COLUMN role ENUM('admin', 'editor', 'viewer', 'monitor', 'user') DEFAULT 'viewer'");
+    echo "Migration: Updated users role enum to include 'monitor' and 'user'.<br>";
 
     // Ensure 'validity_days' column exists in group_courses
     $stmt = $pdo->query("SHOW COLUMNS FROM group_courses LIKE 'validity_days'");

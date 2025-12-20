@@ -35,9 +35,10 @@
                     [class.border-green-200]="submitted() && option.is_correct"
                     [class.bg-red-50]="submitted() && !option.is_correct && userAnswers()[question.id]?.includes(option.id)"
                     [class.border-red-200]="submitted() && !option.is_correct && userAnswers()[question.id]?.includes(option.id)"
-                    (click)="toggleOption(question.id, option.id)">
+                    (click)="toggleOption(question.id, option.id, isMultipleChoice(question))">
                     <div class="flex items-center h-5">
-                        <input type="radio" [name]="'question_' + question.id"
+                        <input [type]="isMultipleChoice(question) ? 'checkbox' : 'radio'"
+                            [name]="'question_' + question.id"
                             [checked]="userAnswers()[question.id]?.includes(option.id)" [disabled]="submitted()"
                             class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300">
                     </div>

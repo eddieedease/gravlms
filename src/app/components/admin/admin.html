@@ -114,23 +114,24 @@
             <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'USERNAME' | translate }}</label>
-                    <input type="text" formControlName="username" class="input-field">
+                    <input type="text" formControlName="username" class="input-field" autocomplete="off">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'EMAIL' | translate }}</label>
-                    <input type="email" formControlName="email" class="input-field">
+                    <input type="email" formControlName="email" class="input-field" autocomplete="off">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         {{ 'PASSWORD' | translate }} {{ isEditing() ? ('PASSWORD_HINT' | translate) : '' }}
                     </label>
-                    <input type="password" formControlName="password" class="input-field">
+                    <input type="password" formControlName="password" class="input-field" autocomplete="new-password">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'ROLE' | translate }}</label>
                     <select formControlName="role" class="input-field">
                         <option value="admin">{{ 'ADMIN' | translate }}</option>
                         <option value="editor">{{ 'EDITOR' | translate }}</option>
+                        <option value="user">{{ 'USER' | translate }}</option>
                     </select>
                 </div>
                 <!-- Action buttons moved to footer style if preferred, or kept here -->

@@ -56,7 +56,7 @@ export class Admin implements OnInit {
     username: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
     password: [''],
-    role: ['editor']
+    role: ['user']
   });
 
   assignForm = this.fb.group({
@@ -148,7 +148,7 @@ export class Admin implements OnInit {
   startCreate() {
     this.isEditing.set(false);
     this.editingUserId = null;
-    this.form.reset({ role: 'editor' });
+    this.form.reset({ role: 'user' });
     this.showForm.set(true);
   }
 

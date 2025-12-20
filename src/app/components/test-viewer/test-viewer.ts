@@ -86,6 +86,10 @@ export class TestViewerComponent implements OnInit, OnChanges {
     this.userAnswers.set({ ...currentAnswers });
   }
 
+  isMultipleChoice(question: any): boolean {
+    return question.options.filter((o: any) => o.is_correct).length > 1;
+  }
+
   submit() {
     if (this.submitted()) return;
 
@@ -99,10 +103,13 @@ export class TestViewerComponent implements OnInit, OnChanges {
         this.submitted.set(true);
 
         if (result.passed) {
-          this.passed.emit({
-            pageId: this.pageId,
-            courseCompleted: result.course_completed || false
-          });
+          // Add delay before emitting passed event
+          setTimeout(() => {
+            this.passed.emit({
+              pageId: this.pageId,
+              courseCompleted: result.course_completed || false
+            });
+          }, 2000);
         }
       },
       error: (err) => {
