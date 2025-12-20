@@ -42,6 +42,26 @@ try {
         echo "Default admin user created.<br>";
     }
 
+    // Create default editor user if not exists
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE username = ?");
+    $stmt->execute(['editor']);
+    if ($stmt->fetchColumn() == 0) {
+        $password = password_hash('password', PASSWORD_DEFAULT);
+        $stmt = $pdo->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)");
+        $stmt->execute(['editor', 'editor@gravlms.com', $password, 'editor']);
+        echo "Default editor user created.<br>";
+    }
+
+    // Create default normal user if not exists
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE username = ?");
+    $stmt->execute(['user']);
+    if ($stmt->fetchColumn() == 0) {
+        $password = password_hash('password', PASSWORD_DEFAULT);
+        $stmt = $pdo->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)");
+        $stmt->execute(['user', 'user@gravlms.com', $password, 'user']);
+        echo "Default normal user created.<br>";
+    }
+
     // Create lti_tools table BEFORE courses (to satisfy foreign key)
     $sqlLtiTools = "CREATE TABLE IF NOT EXISTS lti_tools (
         id INT AUTO_INCREMENT PRIMARY KEY,

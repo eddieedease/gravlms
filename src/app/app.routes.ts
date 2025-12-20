@@ -23,7 +23,7 @@ export const routes: Routes = [
     { path: 'learn/:courseId', component: CourseViewerComponent, canActivate: [authGuard] },
     { path: 'admin', component: Admin, canActivate: [authGuard, roleGuard(['admin'])] },
     { path: 'editor', component: Editor, canActivate: [authGuard, roleGuard(['admin', 'editor'])] },
-    { path: 'results', component: ResultsComponent, canActivate: [authGuard, roleGuard(['admin'])] },
+    { path: 'results', component: ResultsComponent, canActivate: [authGuard, roleGuard(['admin', 'monitor'])] },
     {
         path: 'portfolio',
         loadComponent: () => import('./components/portfolio/portfolio').then(m => m.PortfolioComponent),

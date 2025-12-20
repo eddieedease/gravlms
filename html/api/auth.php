@@ -39,7 +39,8 @@ function registerAuthRoutes($app)
                         'id' => $user['id'],
                         'username' => $user['username'],
                         'email' => $user['email'],
-                        'role' => $user['role']
+                        'role' => $user['role'],
+                        'is_monitor' => isUserMonitor($pdo, $user['id'])
                     ]
                 ];
 
@@ -52,7 +53,8 @@ function registerAuthRoutes($app)
                         'id' => $user['id'],
                         'username' => $user['username'],
                         'email' => $user['email'],
-                        'role' => $user['role']
+                        'role' => $user['role'],
+                        'is_monitor' => isUserMonitor($pdo, $user['id'])
                     ]
                 ]);
             } else {
@@ -87,7 +89,7 @@ function registerAuthRoutes($app)
                 // Send email
                 $config = getConfig();
                 $emailConfig = $config['email'] ?? [];
-                
+
                 if (!empty($emailConfig) && $emailConfig['enabled']) {
                     $resetLink = "http://localhost:4200/reset-password?token=" . $token;
                     $emailService = new EmailService($emailConfig);
@@ -138,4 +140,13 @@ function registerAuthRoutes($app)
             return jsonResponse($response, ['error' => $e->getMessage()], 500);
         }
     });
+}
+
+function isUserMonitor($pdo, $userId)
+{
+    if (!$userId)
+        return false;
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM group_monitors WHERE user_id = ?");
+    $stmt->execute([$userId]);
+    return $stmt->fetchColumn() > 0;
 }

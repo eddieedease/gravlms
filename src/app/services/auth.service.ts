@@ -66,6 +66,11 @@ export class AuthService {
         return user && (user.role === 'admin' || user.role === 'editor');
     }
 
+    isMonitor() {
+        const user = this.currentUser();
+        return user && (user.is_monitor === true || user.role === 'admin'); // Admins are implicit monitors
+    }
+
     // Note: Monitor capability is dynamic (group assignment), but this checks the explicit role
     // For checking access to "Results" page, we might need a more permissive check or just let backend 403.
     // However, we want to show the specific nav item. The backend says if you are a monitor for ANY group you can see results.
@@ -79,7 +84,9 @@ export class AuthService {
     // Or simpler: Anyone who is NOT just a 'viewer' can try to click Results?
     hasPrivilegedAccess() {
         const user = this.currentUser();
-        return user && ['admin', 'editor', 'monitor'].includes(user.role);
+        // Check roles OR monitor status
+        if (!user) return false;
+        return ['admin', 'editor'].includes(user.role) || this.isMonitor();
     }
 
     forgotPassword(email: string) {

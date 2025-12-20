@@ -20,7 +20,7 @@ function registerResultsRoutes($app, $authMiddleware)
             $pdo = getDbConnection();
 
             // Permissions Check
-            $allowedUserIds = []; 
+            $allowedUserIds = [];
             $isAdmin = ($user->role === 'admin');
 
             // Check if user is a monitor for specific groups
@@ -46,23 +46,23 @@ function registerResultsRoutes($app, $authMiddleware)
                 $totalPages = $stmt->fetchColumn();
 
                 // 2. Build Query for Assigned Users
-                // Users can be assigned directly OR via groups
+// Users can be assigned directly OR via groups
                 $sql = "SELECT DISTINCT u.id, u.username, u.email,
-                               (SELECT GROUP_CONCAT(g.name SEPARATOR ', ') 
-                                FROM `groups` g 
-                                JOIN group_users gu2 ON g.id = gu2.group_id 
-                                WHERE gu2.user_id = u.id) as group_names,
-                               (SELECT COUNT(*) FROM completed_lessons cl 
-                                JOIN course_pages cp ON cl.page_id = cp.id 
-                                WHERE cl.user_id = u.id AND cp.course_id = ?) as completed_count
-                        FROM users u
-                        LEFT JOIN group_users gu ON u.id = gu.user_id
-                        WHERE (
-                            u.id IN (SELECT user_id FROM user_courses WHERE course_id = ?)
-                            OR
-                            gu.group_id IN (SELECT group_id FROM group_courses WHERE course_id = ?)
-                        )";
-                
+(SELECT GROUP_CONCAT(g.name SEPARATOR ', ')
+FROM `groups` g
+JOIN group_users gu2 ON g.id = gu2.group_id
+WHERE gu2.user_id = u.id) as group_names,
+(SELECT COUNT(*) FROM completed_lessons cl
+JOIN course_pages cp ON cl.page_id = cp.id
+WHERE cl.user_id = u.id AND cp.course_id = ?) as completed_count
+FROM users u
+LEFT JOIN group_users gu ON u.id = gu.user_id
+WHERE (
+u.id IN (SELECT user_id FROM user_courses WHERE course_id = ?)
+OR
+gu.group_id IN (SELECT group_id FROM group_courses WHERE course_id = ?)
+)";
+
                 $params = [$courseId, $courseId, $courseId];
 
                 // Access Control
@@ -96,9 +96,9 @@ function registerResultsRoutes($app, $authMiddleware)
                 $uniqueUsers = [];
                 foreach ($rows as $r) {
                     // Check status filter in PHP to keep SQL simpler (logic is easier here)
-                    $completed = (int)$r['completed_count'];
-                    $total = (int)$totalPages;
-                    
+                    $completed = (int) $r['completed_count'];
+                    $total = (int) $totalPages;
+
                     $status = 'not_started';
                     if ($completed >= $total && $total > 0) {
                         $status = 'completed';
@@ -113,7 +113,7 @@ function registerResultsRoutes($app, $authMiddleware)
                     $r['total_pages'] = $total;
                     $r['status'] = $status;
                     $r['progress_percent'] = ($total > 0) ? round(($completed / $total) * 100) : 0;
-                    
+
                     $uniqueUsers[$r['id']] = $r;
                 }
 
@@ -121,18 +121,18 @@ function registerResultsRoutes($app, $authMiddleware)
 
             } else {
                 // DEFAULT VIEW: Recent Completions
-                // Build Query
+// Build Query
                 $sql = "SELECT cc.id,
-                               u.username, u.email, 
-                               c.title as course_title,
-                               g.name as group_name,
-                               cc.completed_at
-                        FROM completed_courses cc
-                        JOIN users u ON cc.user_id = u.id
-                        JOIN courses c ON cc.course_id = c.id
-                        LEFT JOIN group_users gu ON u.id = gu.user_id 
-                        LEFT JOIN `groups` g ON gu.group_id = g.id
-                        WHERE 1=1";
+u.username, u.email,
+c.title as course_title,
+g.name as group_name,
+cc.completed_at
+FROM completed_courses cc
+JOIN users u ON cc.user_id = u.id
+JOIN courses c ON cc.course_id = c.id
+LEFT JOIN group_users gu ON u.id = gu.user_id
+LEFT JOIN `groups` g ON gu.group_id = g.id
+WHERE 1=1";
 
                 $params = [];
 
@@ -193,8 +193,8 @@ function registerResultsRoutes($app, $authMiddleware)
             $user = $request->getAttribute('user');
             $queryParams = $request->getQueryParams();
 
-            // Re-use logic or abstract it? 
-            // For MVP copypasta logic for permissions/query build is safest to avoid side effects refactoring `get`
+            // Re-use logic or abstract it?
+// For MVP copypasta logic for permissions/query build is safest to avoid side effects refactoring `get`
 
             $groupId = $queryParams['group_id'] ?? null;
             $search = $queryParams['search'] ?? null;
@@ -212,16 +212,16 @@ function registerResultsRoutes($app, $authMiddleware)
                 }
             }
 
-            $sql = "SELECT u.username, u.email, 
-                           c.title as course_title,
-                           cc.completed_at,
-                           g.name as group_name
-                    FROM completed_courses cc
-                    JOIN users u ON cc.user_id = u.id
-                    JOIN courses c ON cc.course_id = c.id
-                    LEFT JOIN group_users gu ON u.id = gu.user_id
-                    LEFT JOIN `groups` g ON gu.group_id = g.id
-                    WHERE 1=1";
+            $sql = "SELECT u.username, u.email,
+c.title as course_title,
+cc.completed_at,
+g.name as group_name
+FROM completed_courses cc
+JOIN users u ON cc.user_id = u.id
+JOIN courses c ON cc.course_id = c.id
+LEFT JOIN group_users gu ON u.id = gu.user_id
+LEFT JOIN `groups` g ON gu.group_id = g.id
+WHERE 1=1";
 
             $params = [];
 

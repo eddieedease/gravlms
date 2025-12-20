@@ -3,6 +3,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ModalComponent } from '../modal/modal';
+import { AutocompleteComponent } from '../autocomplete/autocomplete';
 import { LtiManagementComponent } from './lti-management/lti-management';
 import { UserService } from '../../services/user.service';
 import { GroupsService } from '../../services/groups.service';
@@ -13,7 +14,7 @@ import { OrganisationService } from '../../services/organisation.service';
 
 @Component({
   selector: 'app-admin',
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule, ModalComponent, LtiManagementComponent],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule, ModalComponent, LtiManagementComponent, AutocompleteComponent],
   templateUrl: './admin.html',
   providers: [DatePipe]
 })
@@ -306,9 +307,14 @@ export class Admin implements OnInit {
     if (this.assignGroupMonitorForm.valid && this.selectedGroup) {
       const userId = this.assignGroupMonitorForm.get('userId')?.value;
       if (userId) {
-        this.apiService.addMonitorToGroup(this.selectedGroup.id, +userId).subscribe(() => {
-          this.loadGroupDetails(this.selectedGroup.id);
-          this.assignGroupMonitorForm.reset();
+        this.apiService.addMonitorToGroup(this.selectedGroup.id, +userId).subscribe({
+          next: () => {
+            this.loadGroupDetails(this.selectedGroup.id);
+            this.assignGroupMonitorForm.reset();
+          },
+          error: (err: any) => {
+            alert(err.error?.error || 'Failed to add monitor');
+          }
         });
       }
     }

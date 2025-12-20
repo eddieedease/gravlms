@@ -8,10 +8,36 @@ function registerGroupRoutes($app, $authMiddleware)
 
         // List all groups
         $group->get('', function (Request $request, Response $response, $args) {
+            $user = $request->getAttribute('user');
+            $role = $user->role ?? 'user';
+            $userId = $user->id;
+
             try {
                 $pdo = getDbConnection();
-                $stmt = $pdo->query("SELECT * FROM `groups` ORDER BY created_at DESC");
-                $groups = $stmt->fetchAll();
+
+                if ($role === 'admin') {
+                    $stmt = $pdo->query("SELECT * FROM `groups` ORDER BY created_at DESC");
+                } else {
+                    // Start by checking if they are a monitor
+                    // If not admin, they only see groups they monitor
+                    $stmt = $pdo->prepare("
+                        SELECT g.* 
+                        FROM `groups` g
+                        JOIN group_monitors gm ON g.id = gm.group_id
+                        WHERE gm.user_id = ?
+                        ORDER BY g.created_at DESC
+                    ");
+                    $stmt->execute([$userId]);
+                }
+
+                // If it was admin, execute query (PDO::query returns statement, prepare returns statement but needs execute)
+                if ($role === 'admin') {
+                    // $stmt is already executed/result set from query()
+                    $groups = $stmt->fetchAll();
+                } else {
+                    $groups = $stmt->fetchAll();
+                }
+
                 return jsonResponse($response, $groups);
             } catch (PDOException $e) {
                 return jsonResponse($response, ['error' => $e->getMessage()], 500);

@@ -1,0 +1,46 @@
+<div class="relative w-full">
+    <div class="relative">
+        <input type="text" [value]="displayValue()" (input)="onInput($event)" (focus)="open()" (blur)="onBlur()"
+            [placeholder]="placeholder" class="input-field w-full pr-8" [class.border-red-300]="hasError"
+            [disabled]="disabled">
+
+        @if (value()) {
+        <button type="button" (click)="clear($event)"
+            class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+        } @else {
+        <div class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+        </div>
+        }
+    </div>
+
+    @if (isOpen()) {
+    <div
+        class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+        @if (filteredData().length > 0) {
+        @for (item of filteredData(); track item[valueKey]) {
+        <button type="button" (mousedown)="select(item)"
+            class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition-colors"
+            [class.bg-algolia-primary-50]="isActive(item)" [class.text-algolia-primary]="isActive(item)">
+            {{ item[displayKey] }}
+            @if (secondaryKey) {
+            <span class="text-xs text-gray-500 ml-2">({{ item[secondaryKey!] }})</span>
+            }
+        </button>
+        }
+        } @else {
+        <div class="px-4 py-2 text-sm text-gray-500 italic">
+            {{ 'NO_RESULTS' | translate }}
+        </div>
+        }
+    </div>
+    }
+</div>
