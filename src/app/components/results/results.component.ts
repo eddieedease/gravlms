@@ -116,6 +116,11 @@ export class ResultsComponent implements OnInit {
             if (this.statusFilter() !== 'all') {
                 params.status = this.statusFilter();
             }
+        } else if (this.selectedGroupId()) {
+            params.view = 'group_status';
+            if (this.statusFilter() !== 'all') {
+                params.status = this.statusFilter();
+            }
         } else {
             params.view = 'recent';
         }

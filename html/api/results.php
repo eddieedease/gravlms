@@ -117,7 +117,79 @@ gu.group_id IN (SELECT group_id FROM group_courses WHERE course_id = ?)
                     $uniqueUsers[$r['id']] = $r;
                 }
 
-                return jsonResponse($response, array_values($uniqueUsers));
+            } elseif ($view === 'group_status') {
+                if (!$groupId) {
+                    return jsonResponse($response, ['error' => 'Group ID is required for group status view'], 400);
+                }
+
+                // Check permissions
+                if (!$isAdmin && !in_array($groupId, $monitorGroupIds)) {
+                    return jsonResponse($response, ['error' => 'Access denied for this group'], 403);
+                }
+
+                // Get all users in group AND all courses assigned to group
+                // We want a list of (User, Course) pairs with their status
+                $sql = "SELECT 
+                            u.id as user_id, u.username, u.email,
+                            c.id as course_id, c.title as course_title,
+                            (SELECT COUNT(*) FROM course_pages cp WHERE cp.course_id = c.id) as total_pages,
+                            (SELECT COUNT(*) FROM completed_lessons cl 
+                             JOIN course_pages cp ON cl.page_id = cp.id 
+                             WHERE cl.user_id = u.id AND cp.course_id = c.id) as completed_count,
+                            (SELECT completed_at FROM completed_courses cc 
+                             WHERE cc.user_id = u.id AND cc.course_id = c.id LIMIT 1) as completed_at
+                        FROM users u
+                        JOIN group_users gu ON u.id = gu.user_id
+                        JOIN group_courses gc ON gu.group_id = gc.group_id
+                        JOIN courses c ON gc.course_id = c.id
+                        WHERE gu.group_id = ?";
+
+                $params = [$groupId];
+
+                if ($search) {
+                    $sql .= " AND (u.username LIKE ? OR u.email LIKE ? OR c.title LIKE ?)";
+                    $term = "%$search%";
+                    $params[] = $term;
+                    $params[] = $term;
+                    $params[] = $term;
+                }
+
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($params);
+                $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                $results = [];
+                foreach ($rows as $r) {
+                    $completed = (int) $r['completed_count'];
+                    $total = (int) $r['total_pages'];
+
+                    $status = 'not_started';
+                    if ($r['completed_at']) {
+                        $status = 'completed';
+                    } elseif ($completed > 0) { // Busy if started but not fully completed (or not marked in completed_courses yet)
+                        $status = 'busy';
+                        // Keep distinct from completed_courses check? 
+                        // If total_pages > 0 and completed >= total, effectively completed too, 
+                        // but completed_courses table is single source of truth for 'completed' status usually.
+                        // Let's trust completed_at first.
+                        if ($completed >= $total && $total > 0)
+                            $status = 'completed';
+                    }
+
+                    if ($statusFilter !== 'all' && $status !== $statusFilter) {
+                        continue;
+                    }
+
+                    $r['status'] = $status;
+                    $r['progress_percent'] = ($total > 0) ? round(($completed / $total) * 100) : 0;
+
+                    // ID for tracking in frontend list
+                    $r['id'] = $r['user_id'] . '-' . $r['course_id'];
+
+                    $results[] = $r;
+                }
+
+                return jsonResponse($response, $results);
 
             } else {
                 // DEFAULT VIEW: Recent Completions
