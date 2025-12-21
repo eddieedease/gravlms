@@ -32,6 +32,19 @@ export class Editor implements OnInit {
   courseImagePreview = signal<string>('');
 
   courses = signal<any[]>([]);
+  searchQuery = signal<string>('');
+
+  filteredCourses = computed(() => {
+    const query = this.searchQuery().toLowerCase();
+    const allCourses = this.courses();
+
+    if (!query) return allCourses;
+
+    return allCourses.filter(course =>
+      course.title.toLowerCase().includes(query)
+    );
+  });
+
   selectedCourse = signal<any>(null);
 
   pages = signal<any[]>([]);

@@ -13,27 +13,92 @@
     </div>
 
     <!-- Filters -->
+    <!-- Filters -->
     <div class="bg-white p-4 rounded-lg shadow mb-6 flex flex-wrap gap-4 items-end">
-        <div class="flex-1 min-w-[200px]">
+        <div class="flex-1 min-w-[200px] relative course-dropdown">
             <label class="block text-sm font-medium text-gray-700 mb-1">{{ 'COURSE' | translate }}</label>
-            <select [(ngModel)]="selectedCourseId" (ngModelChange)="onFilterChange()"
-                class="w-full border rounded-md py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="">{{ 'ALL_COURSES' | translate }}</option>
-                @for (course of courses(); track course.id) {
-                <option [value]="course.id">{{ course.title }}</option>
+            <div class="relative">
+                <button type="button" (click)="courseDropdownOpen.set(!courseDropdownOpen())"
+                    class="w-full border rounded-md py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-left bg-white flex justify-between items-center">
+                    <span [class.text-gray-500]="!selectedCourseId()">{{ selectedCourseName() || (('ALL_COURSES' |
+                        translate)) }}</span>
+                    <svg class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+
+                @if (courseDropdownOpen()) {
+                <div
+                    class="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-200 py-1 max-h-60 overflow-hidden flex flex-col">
+                    <div class="p-2 border-b border-gray-100">
+                        <input type="text" [ngModel]="courseSearchQuery()"
+                            (ngModelChange)="courseSearchQuery.set($event)" [placeholder]="'SEARCH_COURSES' | translate"
+                            class="w-full text-sm rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 p-1.5 border"
+                            (click)="$event.stopPropagation()">
+                    </div>
+                    <ul class="overflow-y-auto flex-1">
+                        <li (click)="selectCourse('')"
+                            class="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                            [class.bg-blue-50]="selectedCourseId() === ''">
+                            {{ 'ALL_COURSES' | translate }}
+                        </li>
+                        @for (course of filteredCourses(); track course.id) {
+                        <li (click)="selectCourse(course.id)"
+                            class="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                            [class.bg-blue-50]="selectedCourseId() === course.id.toString()">
+                            {{ course.title }}
+                        </li>
+                        }
+                        @if (filteredCourses().length === 0) {
+                        <li class="px-3 py-2 text-sm text-gray-500 italic">{{ 'NO_RESULTS' | translate }}</li>
+                        }
+                    </ul>
+                </div>
                 }
-            </select>
+            </div>
         </div>
 
-        <div class="flex-1 min-w-[200px]">
+        <div class="flex-1 min-w-[200px] relative group-dropdown">
             <label class="block text-sm font-medium text-gray-700 mb-1">{{ 'GROUPS' | translate }}</label>
-            <select [(ngModel)]="selectedGroupId" (ngModelChange)="onFilterChange()"
-                class="w-full border rounded-md py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="">{{ 'ALL_GROUPS' | translate }}</option>
-                @for (group of groups(); track group.id) {
-                <option [value]="group.id">{{ group.name }}</option>
+            <div class="relative">
+                <button type="button" (click)="groupDropdownOpen.set(!groupDropdownOpen())"
+                    class="w-full border rounded-md py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-left bg-white flex justify-between items-center">
+                    <span [class.text-gray-500]="!selectedGroupId()">{{ selectedGroupName() || (('ALL_GROUPS' |
+                        translate)) }}</span>
+                    <svg class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+
+                @if (groupDropdownOpen()) {
+                <div
+                    class="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-200 py-1 max-h-60 overflow-hidden flex flex-col">
+                    <div class="p-2 border-b border-gray-100">
+                        <input type="text" [ngModel]="groupSearchQuery()" (ngModelChange)="groupSearchQuery.set($event)"
+                            [placeholder]="'SEARCH_GROUPS' | translate"
+                            class="w-full text-sm rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 p-1.5 border"
+                            (click)="$event.stopPropagation()">
+                    </div>
+                    <ul class="overflow-y-auto flex-1">
+                        <li (click)="selectGroup('')"
+                            class="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                            [class.bg-blue-50]="selectedGroupId() === ''">
+                            {{ 'ALL_GROUPS' | translate }}
+                        </li>
+                        @for (group of filteredGroups(); track group.id) {
+                        <li (click)="selectGroup(group.id)"
+                            class="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                            [class.bg-blue-50]="selectedGroupId() === group.id.toString()">
+                            {{ group.name }}
+                        </li>
+                        }
+                        @if (filteredGroups().length === 0) {
+                        <li class="px-3 py-2 text-sm text-gray-500 italic">{{ 'NO_RESULTS' | translate }}</li>
+                        }
+                    </ul>
+                </div>
                 }
-            </select>
+            </div>
         </div>
 
         @if (selectedCourseId()) {

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, computed, HostListener, ElementRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
@@ -17,6 +17,7 @@ export class ResultsComponent implements OnInit {
     private apiService = inject(ApiService);
     private courseService = inject(CourseService);
     private authService = inject(AuthService);
+    private elementRef = inject(ElementRef);
 
     results = signal<any[]>([]);
     groups = signal<any[]>([]);
@@ -28,6 +29,41 @@ export class ResultsComponent implements OnInit {
     selectedCourseId = signal<string>('');
     statusFilter = signal<string>('all');
 
+    // Dropdown UI state
+    courseDropdownOpen = signal(false);
+    groupDropdownOpen = signal(false);
+
+    courseSearchQuery = signal('');
+    groupSearchQuery = signal('');
+
+    // Computed filtered lists
+    filteredCourses = computed(() => {
+        const query = this.courseSearchQuery().toLowerCase();
+        const all = this.courses();
+        if (!query) return all;
+        return all.filter(c => c.title.toLowerCase().includes(query));
+    });
+
+    filteredGroups = computed(() => {
+        const query = this.groupSearchQuery().toLowerCase();
+        const all = this.groups();
+        if (!query) return all;
+        return all.filter(g => g.name.toLowerCase().includes(query));
+    });
+
+    // Helper to get selected names
+    selectedCourseName = computed(() => {
+        const id = this.selectedCourseId();
+        if (!id) return null;
+        return this.courses().find(c => c.id == id)?.title || 'Unknown Course';
+    });
+
+    selectedGroupName = computed(() => {
+        const id = this.selectedGroupId();
+        if (!id) return null;
+        return this.groups().find(g => g.id == id)?.name || 'Unknown Group';
+    });
+
     isLoading = signal(false);
 
     ngOnInit() {
@@ -36,20 +72,26 @@ export class ResultsComponent implements OnInit {
         this.loadResults();
     }
 
-    loadGroups() {
-        // If admin, load all groups. If monitor, we technically only see assigned groups.
-        // However, the backend /groups endpoint returns all groups currently or maybe only visible?
-        // Let's assume for now we list all groups for filtering if admin (or let the dropdown be populated by what is returned).
-        // The previous implementation of getGroups() returns all. Monitors shouldn't see all groups in dropdown if they can't access them...
-        // But let's keep it simple: Filter dropdown by groups they actually have monitor access to?
-        // Getting "My Monitored Groups" would be a nice endpoint, but for now let's just use what we have.
-        // If getting 403 on specific group, so be it.
+    @HostListener('document:click', ['$event'])
+    onClick(event: MouseEvent) {
+        if (!this.elementRef.nativeElement.contains(event.target)) {
+            this.courseDropdownOpen.set(false);
+            this.groupDropdownOpen.set(false);
+        } else {
+            // Handle clicking inside comp but outside specific dropdowns
+            // This is tricky with simple approach, so we'll do:
+            // logic is typically handled by simple stopPropagation on container click or check target
+            // implementation inside template click handlers or checking closest
+            const target = event.target as HTMLElement;
+            if (!target.closest('.course-dropdown')) this.courseDropdownOpen.set(false);
+            if (!target.closest('.group-dropdown')) this.groupDropdownOpen.set(false);
+        }
+    }
 
-        // Better: If we had an endpoint /my-monitored-groups.
-        // For now, let's load all and handle errors or filtering in backend.
+    loadGroups() {
         this.apiService.getGroups().subscribe({
             next: (groups) => this.groups.set(groups),
-            error: () => { } // Maybe 403 if not admin?
+            error: () => { }
         });
     }
 
@@ -92,6 +134,19 @@ export class ResultsComponent implements OnInit {
 
     onFilterChange() {
         this.loadResults();
+    }
+
+    // Dropdown helpers
+    selectCourse(courseId: string) {
+        this.selectedCourseId.set(courseId);
+        this.courseDropdownOpen.set(false);
+        this.onFilterChange();
+    }
+
+    selectGroup(groupId: string) {
+        this.selectedGroupId.set(groupId);
+        this.groupDropdownOpen.set(false);
+        this.onFilterChange();
     }
 
     exportCsv() {
