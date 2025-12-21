@@ -68,7 +68,12 @@ export class AuthService {
 
     isMonitor() {
         const user = this.currentUser();
-        return user && (user.is_monitor === true || user.role === 'admin'); // Admins are implicit monitors
+        return user && (user.is_monitor === true || user.role === 'admin');
+    }
+
+    isAssessor() {
+        const user = this.currentUser();
+        return user && (user.is_assessor === true);
     }
 
     // Note: Monitor capability is dynamic (group assignment), but this checks the explicit role
@@ -95,5 +100,13 @@ export class AuthService {
 
     resetPassword(token: string, password: string) {
         return this.http.post(`${this.apiUrl}/reset-password`, { token, password });
+    }
+
+    getUser() {
+        return this.currentUser();
+    }
+
+    isLtiUser() {
+        return this.isLtiMode();
     }
 }

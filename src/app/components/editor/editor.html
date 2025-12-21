@@ -116,9 +116,9 @@
 
                             @if (createItemDropdownOpen()) {
                             <div
-                                class="absolute left-1/2 -translate-x-1/2 mt-1 w-32 bg-white rounded-md shadow-lg border border-gray-200 z-10">
+                                class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-100 py-1">
                                 <button (click)="createPage('page'); toggleCreateItemDropdown()"
-                                    class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 rounded-t-md">
+                                    class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
                                     <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -128,7 +128,7 @@
                                     {{ 'PAGE' | translate }}
                                 </button>
                                 <button (click)="createPage('test'); toggleCreateItemDropdown()"
-                                    class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 rounded-b-md">
+                                    class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
                                     <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -136,6 +136,28 @@
                                         </path>
                                     </svg>
                                     {{ 'TEST' | translate }}
+                                </button>
+                                <button (click)="createPage('video'); toggleCreateItemDropdown()"
+                                    class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z">
+                                        </path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    {{ 'VIDEO' | translate }}
+                                </button>
+                                <button (click)="createPage('assessment'); toggleCreateItemDropdown()"
+                                    class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                        </path>
+                                    </svg>
+                                    {{ 'ASSIGNMENT' | translate }}
                                 </button>
                             </div>
                             }
@@ -176,6 +198,7 @@
             </div>
             }
         </div>
+
 
         <!-- Toggle Sidebar Button (Desktop) -->
         <div class="hidden sm:flex flex-col justify-center">
@@ -271,52 +294,8 @@
                             <button type="button" (click)="insertMarkdown('italic')"
                                 class="p-1.5 hover:bg-gray-200 rounded text-gray-700 transition-colors" title="Italic">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <line x1="19" y1="4" x2="10" y2="4" stroke-width="2" stroke-linecap="round"></line>
-                                    <line x1="14" y1="20" x2="5" y2="20" stroke-width="2" stroke-linecap="round"></line>
-                                    <line x1="15" y1="4" x2="9" y2="20" stroke-width="2" stroke-linecap="round"></line>
-                                </svg>
-                            </button>
-                            <div class="w-px bg-gray-300 mx-1"></div>
-                            <button type="button" (click)="insertMarkdown('h1')"
-                                class="px-2 py-1 hover:bg-gray-200 rounded text-gray-700 text-xs font-semibold transition-colors"
-                                title="Heading 1">
-                                H1
-                            </button>
-                            <button type="button" (click)="insertMarkdown('h2')"
-                                class="px-2 py-1 hover:bg-gray-200 rounded text-gray-700 text-xs font-semibold transition-colors"
-                                title="Heading 2">
-                                H2
-                            </button>
-                            <button type="button" (click)="insertMarkdown('h3')"
-                                class="px-2 py-1 hover:bg-gray-200 rounded text-gray-700 text-xs font-semibold transition-colors"
-                                title="Heading 3">
-                                H3
-                            </button>
-                            <div class="w-px bg-gray-300 mx-1"></div>
-                            <button type="button" (click)="insertMarkdown('ul')"
-                                class="p-1.5 hover:bg-gray-200 rounded text-gray-700 transition-colors"
-                                title="Bullet List">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <line x1="8" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"></line>
-                                    <line x1="8" y1="12" x2="21" y2="12" stroke-width="2" stroke-linecap="round"></line>
-                                    <line x1="8" y1="18" x2="21" y2="18" stroke-width="2" stroke-linecap="round"></line>
-                                    <circle cx="4" cy="6" r="1" fill="currentColor"></circle>
-                                    <circle cx="4" cy="12" r="1" fill="currentColor"></circle>
-                                    <circle cx="4" cy="18" r="1" fill="currentColor"></circle>
-                                </svg>
-                            </button>
-                            <button type="button" (click)="insertMarkdown('ol')"
-                                class="p-1.5 hover:bg-gray-200 rounded text-gray-700 transition-colors"
-                                title="Numbered List">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <line x1="10" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"></line>
-                                    <line x1="10" y1="12" x2="21" y2="12" stroke-width="2" stroke-linecap="round">
-                                    </line>
-                                    <line x1="10" y1="18" x2="21" y2="18" stroke-width="2" stroke-linecap="round">
-                                    </line>
-                                    <text x="4" y="9" font-size="8" fill="currentColor">1.</text>
-                                    <text x="4" y="15" font-size="8" fill="currentColor">2.</text>
-                                    <text x="4" y="21" font-size="8" fill="currentColor">3.</text>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M16 5h-8M14 19h-8M14 5l-4 14"></path>
                                 </svg>
                             </button>
                             <div class="w-px bg-gray-300 mx-1"></div>

@@ -1,0 +1,118 @@
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Assessments Dashboard</h1>
+        <p class="mt-2 text-gray-600">Review and grade pending assignments from your groups.</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="border-b border-gray-200 mb-6">
+        <nav class="-mb-px flex space-x-8">
+            <button (click)="setTab('pending')" [class.border-indigo-500]="activeStatus() === 'pending'"
+                [class.text-indigo-600]="activeStatus() === 'pending'"
+                class="whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                Pending Reviews
+            </button>
+            <button (click)="setTab('graded')" [class.border-indigo-500]="activeStatus() === 'graded'"
+                [class.text-indigo-600]="activeStatus() === 'graded'"
+                class="whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                Grading History
+            </button>
+        </nav>
+    </div>
+
+    @if (loading()) {
+    <div class="flex justify-center p-8">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+    </div>
+    }
+
+    @if (!loading() && submissions().length === 0) {
+    <div class="text-center p-8 bg-gray-50 rounded-lg border border-gray-200">
+        <p class="text-gray-500">No {{ activeStatus() }} assessments found.</p>
+    </div>
+    }
+
+    @if (submissions().length > 0) {
+    <div class="grid gap-6">
+        @for (sub of submissions(); track sub.submission_id) {
+        <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+            <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                <div>
+                    <h3 class="font-bold text-lg">{{ sub.lesson_title }}</h3>
+                    <div class="text-sm text-gray-500">
+                        Course: {{ sub.course_title }} | Student: <span class="font-medium text-gray-900">{{
+                            sub.student_name }}</span> ({{sub.group_name}})
+                    </div>
+                </div>
+                <div class="text-xs text-gray-400">
+                    Submitted: {{ sub.submitted_at | date:'medium' }}
+                </div>
+            </div>
+
+            <div class="p-6">
+                <div class="mb-4">
+                    <h4 class="text-sm font-medium text-gray-700 uppercase tracking-wide mb-2">Instructions</h4>
+                    <p class="text-gray-600 italic text-sm">Review the submission below.</p>
+                </div>
+
+                <!-- User Submission Content -->
+                <div class="mb-6 p-4 bg-gray-50 rounded border border-gray-100">
+                    <h4 class="text-sm font-medium text-gray-700 mb-2">Student Response:</h4>
+                    <p class="whitespace-pre-wrap text-gray-800">{{ sub.submission_text || 'No text provided.' }}</p>
+
+                    @if (sub.file_url) {
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <a [href]="getFileUrl(sub.file_url)" target="_blank"
+                            class="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800">
+                            <i class="ph ph-file-arrow-down"></i> Download Attachment
+                        </a>
+                    </div>
+                    }
+                </div>
+
+                <!-- Grading Form / Status -->
+                @if (activeStatus() === 'pending') {
+                <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-end bg-blue-50 p-4 rounded-lg">
+                    <div class="flex-1 w-full">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Feedback</label>
+                        <textarea #feedbackInput class="w-full p-2 border border-gray-300 rounded text-sm h-20"
+                            placeholder="Provide feedback to the student..."></textarea>
+                    </div>
+                    <div class="flex gap-2">
+                        <button (click)="grade(sub.submission_id, 'passed', feedbackInput.value)"
+                            class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium">
+                            Pass
+                        </button>
+                        <button (click)="grade(sub.submission_id, 'failed', feedbackInput.value)"
+                            class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 font-medium">
+                            Fail
+                        </button>
+                    </div>
+                </div>
+                } @else {
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-bold uppercase text-xs tracking-wide text-gray-500">Graded Status</span>
+                        <span [class.bg-green-100]="sub.status === 'passed'"
+                            [class.text-green-800]="sub.status === 'passed'"
+                            [class.bg-red-100]="sub.status === 'failed'" [class.text-red-800]="sub.status === 'failed'"
+                            class="px-2 py-1 rounded-full text-xs font-bold uppercase">
+                            {{ sub.status }}
+                        </span>
+                    </div>
+                    @if (sub.feedback) {
+                    <div class="text-sm text-gray-700">
+                        <span class="font-medium">Feedback:</span> {{ sub.feedback }}
+                    </div>
+                    }
+                    <div class="mt-2 text-xs text-gray-400">
+                        Graded on {{ sub.graded_at | date:'medium' }}
+                    </div>
+                </div>
+                }
+            </div>
+        </div>
+        }
+    </div>
+    }
+</div>

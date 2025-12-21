@@ -49,6 +49,36 @@ function registerUploadRoutes($app, $authMiddleware)
                 $relPath = "/$courseId/thumbnails";
             } elseif ($type === 'content') {
                 $relPath = "/$courseId/content";
+            } elseif ($type === 'assignment') {
+                // Determine group ID for this user and course
+                // Requires database connection
+                try {
+                    require_once __DIR__ . '/db.php'; // Ensure db is loaded
+                    $pdo = getDbConnection();
+                    $user = $request->getAttribute('user');
+                    $userId = $user->id;
+
+                    // Find group that links this user and course
+                    $stmt = $pdo->prepare("
+                        SELECT gu.group_id 
+                        FROM group_users gu 
+                        JOIN group_courses gc ON gu.group_id = gc.group_id 
+                        WHERE gu.user_id = ? AND gc.course_id = ?
+                        LIMIT 1
+                    ");
+                    $stmt->execute([$userId, $courseId]);
+                    $groupId = $stmt->fetchColumn();
+
+                    if ($groupId) {
+                        $relPath = "/$groupId";
+                    } else {
+                        // Fallback if no group found (shouldn't happen if properly assigned)
+                        $relPath = "/$courseId/assignments/$userId";
+                    }
+                } catch (Exception $e) {
+                    // Fallback
+                    $relPath = "/$courseId/assignments/error";
+                }
             } else {
                 $relPath = "/$courseId/misc";
             }

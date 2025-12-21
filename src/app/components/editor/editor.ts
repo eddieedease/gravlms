@@ -87,6 +87,7 @@ export class Editor implements OnInit {
     title: ['', Validators.required],
     content: [''],
     type: ['page'],
+    instructions: [''], // For assessment
     course_id: [null as number | null]
   });
 
@@ -221,18 +222,39 @@ export class Editor implements OnInit {
       title: page.title,
       content: page.content,
       type: page.type || 'page',
-      course_id: page.course_id
+      course_id: page.course_id,
+      instructions: '' // Reset instructions, ideally fetch them if assessment
     });
+
+    // If assessment, fetch details?
+    // Actually our pages list currently doesn't include instructions.
+    // We might need to fetch them.
+    // However, the user request says: "When creating an assigment type page we can form an assignment and ask for an optional file upload."
+    // If we want to EDIT it, we need to load it. 
+    // Let's assume for now we use the `getAssessmentForPage` API if type is assessment.
+
+    if (page.type === 'assessment') {
+      this.apiService.getAssessmentForPage(page.id).subscribe({
+        next: (res) => {
+          if (res.assessment) {
+            this.pageForm.patchValue({ instructions: res.assessment.instructions });
+          }
+        },
+        error: () => { } // Ignore if new
+      });
+    }
+
     this.updatePreview(page.content || '');
   }
 
-  createPage(type: 'page' | 'test' = 'page') {
+  createPage(type: 'page' | 'test' | 'video' | 'assessment' = 'page') {
     if (!this.selectedCourse()) return;
     const newPage = {
-      title: type === 'test' ? 'New Test' : 'New Page',
+      title: type === 'test' ? 'New Test' : (type === 'video' ? 'New Video' : (type === 'assessment' ? 'New Assessment' : 'New Page')),
       content: '',
       type: type,
-      course_id: this.selectedCourse().id
+      course_id: this.selectedCourse().id,
+      instructions: '' // For assessment
     };
     this.courseService.createPage(newPage).subscribe(() => {
       this.loadPages();

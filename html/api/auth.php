@@ -40,7 +40,8 @@ function registerAuthRoutes($app)
                         'username' => $user['username'],
                         'email' => $user['email'],
                         'role' => $user['role'],
-                        'is_monitor' => isUserMonitor($pdo, $user['id'])
+                        'is_monitor' => isUserMonitor($pdo, $user['id']),
+                        'is_assessor' => isUserAssessor($pdo, $user['id'])
                     ]
                 ];
 
@@ -54,7 +55,8 @@ function registerAuthRoutes($app)
                         'username' => $user['username'],
                         'email' => $user['email'],
                         'role' => $user['role'],
-                        'is_monitor' => isUserMonitor($pdo, $user['id'])
+                        'is_monitor' => isUserMonitor($pdo, $user['id']),
+                        'is_assessor' => isUserAssessor($pdo, $user['id'])
                     ]
                 ]);
             } else {
@@ -147,6 +149,15 @@ function isUserMonitor($pdo, $userId)
     if (!$userId)
         return false;
     $stmt = $pdo->prepare("SELECT COUNT(*) FROM group_monitors WHERE user_id = ?");
+    $stmt->execute([$userId]);
+    return $stmt->fetchColumn() > 0;
+}
+
+function isUserAssessor($pdo, $userId)
+{
+    if (!$userId)
+        return false;
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM group_assessors WHERE user_id = ?");
     $stmt->execute([$userId]);
     return $stmt->fetchColumn() > 0;
 }

@@ -36,10 +36,16 @@
               Editor
             </a>
             }
-            @if (auth.isAdmin() || auth.isMonitor()) {
+            @if (auth.isMonitor()) {
             <a routerLink="/results" routerLinkActive="border-algolia-primary text-white"
               class="border-transparent text-gray-400 hover:border-gray-300 hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors">
               {{ 'RESULTS' | translate }}
+            </a>
+            }
+            @if (auth.isAssessor()) {
+            <a routerLink="/assessments" routerLinkActive="border-algolia-primary text-white"
+              class="border-transparent text-gray-400 hover:border-gray-300 hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors">
+              {{ 'ASSESSMENTS' | translate }}
             </a>
             }
             @if (auth.isAdmin()) {
@@ -122,6 +128,11 @@
         <a routerLink="/results" (click)="closeMobileMenu()" routerLinkActive="bg-gray-900 text-white"
           class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">{{
           'RESULTS' | translate }}</a>
+        }
+        @if (auth.isAdmin() || auth.isAssessor()) {
+        <a routerLink="/assessments" (click)="closeMobileMenu()" routerLinkActive="bg-gray-900 text-white"
+          class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">{{
+          'ASSESSMENTS' | translate }}</a>
         }
         @if (auth.isAdmin()) {
         <a routerLink="/admin" (click)="closeMobileMenu()" routerLinkActive="bg-gray-900 text-white"

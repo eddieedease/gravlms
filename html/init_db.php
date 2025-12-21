@@ -316,13 +316,62 @@ try {
         echo "Inserted default organization settings.<br>";
     }
 
+    // Create group_assessors table
+    $sqlGroupAssessors = "CREATE TABLE IF NOT EXISTS group_assessors (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        group_id INT NOT NULL,
+        user_id INT NOT NULL,
+        assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (group_id) REFERENCES `groups`(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        UNIQUE(group_id, user_id)
+    )";
+    $pdo->exec($sqlGroupAssessors);
+    echo "Table 'group_assessors' created or already exists.<br>";
+
+    // Create assessments table
+    $sqlAssessments = "CREATE TABLE IF NOT EXISTS assessments (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        page_id INT NOT NULL,
+        instructions TEXT,
+        allow_file_upload BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (page_id) REFERENCES course_pages(id) ON DELETE CASCADE
+    )";
+    $pdo->exec($sqlAssessments);
+    echo "Table 'assessments' created or already exists.<br>";
+
+    // Create assessment_submissions table
+    $sqlAssessmentSubmissions = "CREATE TABLE IF NOT EXISTS assessment_submissions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        assessment_id INT NOT NULL,
+        user_id INT NOT NULL,
+        file_url VARCHAR(255) NULL,
+        submission_text TEXT NULL,
+        status ENUM('pending', 'passed', 'failed') DEFAULT 'pending',
+        submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        graded_at TIMESTAMP NULL,
+        graded_by INT NULL,
+        feedback TEXT NULL,
+        FOREIGN KEY (assessment_id) REFERENCES assessments(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (graded_by) REFERENCES users(id) ON DELETE SET NULL
+    )";
+    $pdo->exec($sqlAssessmentSubmissions);
+    echo "Table 'assessment_submissions' created or already exists.<br>";
+
     // --- Migrations for existing databases ---
 
-    // Ensure 'type' column exists in course_pages
+    // Ensure 'type' column exists in course_pages and has correct ENUM
     $stmt = $pdo->query("SHOW COLUMNS FROM course_pages LIKE 'type'");
     if ($stmt->rowCount() == 0) {
-        $pdo->exec("ALTER TABLE course_pages ADD COLUMN type ENUM('page', 'test') DEFAULT 'page' AFTER content");
+        $pdo->exec("ALTER TABLE course_pages ADD COLUMN type ENUM('page', 'test', 'video', 'assessment', 'assignment') DEFAULT 'page' AFTER content");
         echo "Migration: Added 'type' column to course_pages.<br>";
+    } else {
+        // Evaluate if we need to update the ENUM
+        // Prior row 10 has 'assignment', so we must include it.
+        $pdo->exec("ALTER TABLE course_pages MODIFY COLUMN type ENUM('page', 'test', 'video', 'assessment', 'assignment') DEFAULT 'page'");
+        echo "Migration: Updated 'type' column ENUM in course_pages.<br>";
     }
 
     // Ensure 'page_id' column exists in tests

@@ -84,6 +84,9 @@ export class Admin implements OnInit {
   assignGroupMonitorForm = this.fb.group({
     userId: ['', Validators.required]
   });
+  assignGroupAssessorForm = this.fb.group({
+    userId: ['', Validators.required]
+  });
   assignGroupCourseForm = this.fb.group({
     courseId: ['', Validators.required],
     validityDays: ['']
@@ -91,6 +94,7 @@ export class Admin implements OnInit {
 
   groupUsers = signal<any[]>([]);
   groupMonitors = signal<any[]>([]);
+  groupAssessors = signal<any[]>([]);
   groupCourses = signal<any[]>([]);
 
   // Email Settings
@@ -267,8 +271,14 @@ export class Admin implements OnInit {
 
   selectGroup(group: any) {
     this.selectedGroup = group;
-    this.showGroupDetails.set(true);
-    this.loadGroupDetails(group.id);
+    this.isEditingGroup.set(true);
+    // Reset forms
+    this.assignGroupUserForm.reset();
+    this.assignGroupMonitorForm.reset();
+    this.assignGroupAssessorForm.reset();
+    this.assignGroupCourseForm.reset();
+
+    this.loadGroupDetails(group);
   }
 
   closeGroupDetails() {
@@ -276,28 +286,52 @@ export class Admin implements OnInit {
     this.showGroupDetails.set(false);
   }
 
-  loadGroupDetails(groupId: number) {
-    this.groupsService.getGroupUsers(groupId).subscribe(u => this.groupUsers.set(u));
-    this.apiService.getGroupMonitors(groupId).subscribe(m => this.groupMonitors.set(m));
-    this.groupsService.getGroupCourses(groupId).subscribe(c => this.groupCourses.set(c));
+  refreshGroupDetails() {
+    if (this.selectedGroup) {
+      this.loadGroupDetails(this.selectedGroup);
+    }
+  }
+
+  loadGroupDetails(group: any) {
+    // Load users
+    this.groupsService.getGroupUsers(group.id).subscribe(users => {
+      this.groupUsers.set(users);
+    });
+
+    // Load monitors
+    this.apiService.getGroupMonitors(group.id).subscribe(monitors => {
+      this.groupMonitors.set(monitors);
+    });
+
+    // Load assessors
+    this.apiService.getGroupAssessors(group.id).subscribe(assessors => {
+      this.groupAssessors.set(assessors);
+    });
+
+    // Load courses
+    if (this.groupsService.getGroupCourses) {
+      this.groupsService.getGroupCourses(group.id).subscribe(courses => this.groupCourses.set(courses));
+    } else {
+      this.apiService.getGroupCourses(group.id).subscribe(courses => this.groupCourses.set(courses));
+    }
+
+    this.showGroupDetails.set(true);
   }
 
   addUserToGroup() {
     if (this.assignGroupUserForm.valid && this.selectedGroup) {
-      const userId = this.assignGroupUserForm.get('userId')?.value;
-      if (userId) {
-        this.groupsService.addUserToGroup(this.selectedGroup.id, +userId).subscribe(() => {
-          this.loadGroupDetails(this.selectedGroup.id);
-          this.assignGroupUserForm.reset();
-        });
-      }
+      const userId = this.assignGroupUserForm.value.userId;
+      this.groupsService.addUserToGroup(this.selectedGroup.id, +userId!).subscribe(() => {
+        this.refreshGroupDetails();
+        this.assignGroupUserForm.reset();
+      });
     }
   }
 
   removeUserFromGroup(userId: number) {
     if (this.selectedGroup && confirm('Remove user from group?')) {
       this.groupsService.removeUserFromGroup(this.selectedGroup.id, userId).subscribe(() => {
-        this.loadGroupDetails(this.selectedGroup.id);
+        this.refreshGroupDetails();
       });
     }
   }
@@ -305,25 +339,50 @@ export class Admin implements OnInit {
   // Monitor Logic
   addMonitorToGroup() {
     if (this.assignGroupMonitorForm.valid && this.selectedGroup) {
-      const userId = this.assignGroupMonitorForm.get('userId')?.value;
-      if (userId) {
-        this.apiService.addMonitorToGroup(this.selectedGroup.id, +userId).subscribe({
-          next: () => {
-            this.loadGroupDetails(this.selectedGroup.id);
-            this.assignGroupMonitorForm.reset();
-          },
-          error: (err: any) => {
-            alert(err.error?.error || 'Failed to add monitor');
-          }
-        });
-      }
+      const userId = this.assignGroupMonitorForm.value.userId;
+      this.apiService.addMonitorToGroup(this.selectedGroup.id, +userId!).subscribe({
+        next: () => {
+          this.refreshGroupDetails();
+          this.assignGroupMonitorForm.reset();
+        },
+        error: (err: any) => {
+          alert(err.error?.error || 'Failed to add monitor');
+        }
+      });
     }
   }
 
   removeMonitorFromGroup(userId: number) {
     if (this.selectedGroup && confirm('Remove monitor from group?')) {
       this.apiService.removeMonitorFromGroup(this.selectedGroup.id, userId).subscribe(() => {
-        this.loadGroupDetails(this.selectedGroup.id);
+        this.refreshGroupDetails();
+      });
+    }
+  }
+
+  // Assessor Logic
+
+  addAssessorToGroup() {
+    if (this.assignGroupAssessorForm.valid && this.selectedGroup) {
+      const userId = this.assignGroupAssessorForm.get('userId')?.value;
+      if (userId) {
+        this.apiService.addAssessorToGroup(this.selectedGroup.id, +userId).subscribe({
+          next: () => {
+            this.refreshGroupDetails();
+            this.assignGroupAssessorForm.reset();
+          },
+          error: (err: any) => {
+            alert(err.error?.error || 'Failed to add assessor');
+          }
+        });
+      }
+    }
+  }
+
+  removeAssessorFromGroup(userId: number) {
+    if (this.selectedGroup && confirm('Remove assessor from group?')) {
+      this.apiService.removeAssessorFromGroup(this.selectedGroup.id, userId).subscribe(() => {
+        this.refreshGroupDetails();
       });
     }
   }
@@ -334,7 +393,7 @@ export class Admin implements OnInit {
       const { courseId, validityDays } = this.assignGroupCourseForm.value;
       if (courseId) {
         this.groupsService.addCourseToGroup(this.selectedGroup.id, +courseId, validityDays ? +validityDays : undefined).subscribe(() => {
-          this.loadGroupDetails(this.selectedGroup.id);
+          this.refreshGroupDetails();
           this.assignGroupCourseForm.reset();
         });
       }
@@ -344,7 +403,7 @@ export class Admin implements OnInit {
   removeCourseFromGroup(courseId: number) {
     if (this.selectedGroup && confirm('Remove course from group?')) {
       this.groupsService.removeCourseFromGroup(this.selectedGroup.id, courseId).subscribe(() => {
-        this.loadGroupDetails(this.selectedGroup.id);
+        this.refreshGroupDetails();
       });
     }
   }

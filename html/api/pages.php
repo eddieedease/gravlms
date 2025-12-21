@@ -29,11 +29,22 @@ function registerPageRoutes($app, $authMiddleware)
 
             try {
                 $pdo = getDbConnection();
+                $pdo->beginTransaction();
+
                 $stmt = $pdo->prepare("INSERT INTO course_pages (title, content, type, course_id) VALUES (?, ?, ?, ?)");
                 $stmt->execute([$title, $content, $type, $course_id]);
                 $id = $pdo->lastInsertId();
+
+                if ($type === 'assessment') {
+                    $instructions = $data['instructions'] ?? '';
+                    $stmtAss = $pdo->prepare("INSERT INTO assessments (page_id, instructions) VALUES (?, ?)");
+                    $stmtAss->execute([$id, $instructions]);
+                }
+
+                $pdo->commit();
                 return jsonResponse($response, ['status' => 'success', 'message' => 'Page created', 'id' => $id], 201);
             } catch (PDOException $e) {
+                $pdo->rollBack();
                 return jsonResponse($response, ['error' => $e->getMessage()], 500);
             }
         });
@@ -73,16 +84,40 @@ function registerPageRoutes($app, $authMiddleware)
                 }
 
                 if (empty($fields)) {
-                    return jsonResponse($response, ['message' => 'No changes provided']);
+                    // It's possible we only want to update assessment table
+                    // But usually frontend sends some page fields too.
                 }
 
-                $values[] = $id;
-                $sql = "UPDATE course_pages SET " . implode(', ', $fields) . " WHERE id = ?";
-                $stmt = $pdo->prepare($sql);
-                $stmt->execute($values);
+                $pdo->beginTransaction();
 
+                if (!empty($fields)) {
+                    $values[] = $id;
+                    $sql = "UPDATE course_pages SET " . implode(', ', $fields) . " WHERE id = ?";
+                    $stmt = $pdo->prepare($sql);
+                    $stmt->execute($values);
+                }
+
+                // Update Assessment if needed
+                if ($type === 'assessment' || ($type === null && isset($data['instructions']))) {
+                    $instructions = $data['instructions'] ?? null;
+                    if ($instructions !== null) {
+                        // Upsert assessment
+                        $stmtCheck = $pdo->prepare("SELECT id FROM assessments WHERE page_id = ?");
+                        $stmtCheck->execute([$id]);
+                        if ($stmtCheck->fetch()) {
+                            $stmtUpd = $pdo->prepare("UPDATE assessments SET instructions = ? WHERE page_id = ?");
+                            $stmtUpd->execute([$instructions, $id]);
+                        } else {
+                            $stmtIns = $pdo->prepare("INSERT INTO assessments (page_id, instructions) VALUES (?, ?)");
+                            $stmtIns->execute([$id, $instructions]);
+                        }
+                    }
+                }
+
+                $pdo->commit();
                 return jsonResponse($response, ['status' => 'success', 'message' => 'Page updated']);
             } catch (PDOException $e) {
+                $pdo->rollBack();
                 return jsonResponse($response, ['error' => $e->getMessage()], 500);
             }
         });

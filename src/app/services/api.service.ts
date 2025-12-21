@@ -13,6 +13,16 @@ export class ApiService {
     this.apiUrl = this.config.apiUrl;
   }
 
+  uploadFile(file: File, type: string, contextId?: number): Observable<{ filename: string, url: string }> {
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('type', type);
+    if (contextId) {
+      formData.append('course_id', contextId.toString());
+    }
+    return this.http.post<{ filename: string, url: string }>(`${this.apiUrl}/uploads`, formData);
+  }
+
   // Groups
   getGroups(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/groups`);
@@ -65,6 +75,40 @@ export class ApiService {
 
   removeMonitorFromGroup(groupId: number, userId: number): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/groups/${groupId}/monitors/${userId}`);
+  }
+
+  // Group Assessors
+  getGroupAssessors(groupId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/groups/${groupId}/assessors`);
+  }
+
+  addAssessorToGroup(groupId: number, userId: number): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/groups/${groupId}/assessors`, { user_id: userId });
+  }
+
+  removeAssessorFromGroup(groupId: number, userId: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/groups/${groupId}/assessors/${userId}`);
+  }
+
+  // Assessments
+  getAssessments(status: 'pending' | 'graded' = 'pending'): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/assessments/list`, { params: { status } });
+  }
+
+  getPendingAssessments(): Observable<any[]> {
+    return this.getAssessments('pending');
+  }
+
+  getAssessmentForPage(pageId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/assessments/page/${pageId}`);
+  }
+
+  submitAssessment(pageId: number, text: string, fileUrl: string | null): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/assessments/submit`, { page_id: pageId, text, file_url: fileUrl });
+  }
+
+  gradeAssessment(submissionId: number, status: 'passed' | 'failed', feedback: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/assessments/grade`, { submission_id: submissionId, status, feedback });
   }
 
   // Results

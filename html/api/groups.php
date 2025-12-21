@@ -287,5 +287,62 @@ function registerGroupRoutes($app, $authMiddleware)
             }
         });
 
+        // Add assessor to group
+        $group->post('/{groupId}/assessors', function (Request $request, Response $response, $args) {
+            $groupId = $args['groupId'];
+            $data = json_decode($request->getBody()->getContents(), true);
+            $userId = $data['user_id'] ?? null;
+
+            if (!$userId) {
+                return jsonResponse($response, ['error' => 'User ID is required'], 400);
+            }
+
+            try {
+                $pdo = getDbConnection();
+                $stmt = $pdo->prepare("INSERT INTO group_assessors (group_id, user_id) VALUES (?, ?)");
+                $stmt->execute([$groupId, $userId]);
+                return jsonResponse($response, ['status' => 'success', 'message' => 'Assessor added to group']);
+            } catch (PDOException $e) {
+                if ($e->getCode() == 23000) {
+                    return jsonResponse($response, ['error' => 'User is already an assessor for this group'], 409);
+                }
+                return jsonResponse($response, ['error' => $e->getMessage()], 500);
+            }
+        });
+
+        // Remove assessor from group
+        $group->delete('/{groupId}/assessors/{userId}', function (Request $request, Response $response, $args) {
+            $groupId = $args['groupId'];
+            $userId = $args['userId'];
+
+            try {
+                $pdo = getDbConnection();
+                $stmt = $pdo->prepare("DELETE FROM group_assessors WHERE group_id = ? AND user_id = ?");
+                $stmt->execute([$groupId, $userId]);
+                return jsonResponse($response, ['status' => 'success', 'message' => 'Assessor removed from group']);
+            } catch (PDOException $e) {
+                return jsonResponse($response, ['error' => $e->getMessage()], 500);
+            }
+        });
+
+        // Get assessors of group
+        $group->get('/{groupId}/assessors', function (Request $request, Response $response, $args) {
+            $groupId = $args['groupId'];
+            try {
+                $pdo = getDbConnection();
+                $stmt = $pdo->prepare("
+                    SELECT u.id, u.username, u.email, u.role 
+                    FROM users u 
+                    JOIN group_assessors ga ON u.id = ga.user_id 
+                    WHERE ga.group_id = ?
+                ");
+                $stmt->execute([$groupId]);
+                $assessors = $stmt->fetchAll();
+                return jsonResponse($response, $assessors);
+            } catch (PDOException $e) {
+                return jsonResponse($response, ['error' => $e->getMessage()], 500);
+            }
+        });
+
     })->add($authMiddleware);
 }

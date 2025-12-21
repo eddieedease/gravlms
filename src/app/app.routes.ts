@@ -21,7 +21,6 @@ export const routes: Routes = [
     { path: 'reset-password', component: ResetPasswordComponent },
     { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
     { path: 'learn/:courseId', component: CourseViewerComponent, canActivate: [authGuard] },
-    { path: 'admin', component: Admin, canActivate: [authGuard, roleGuard(['admin'])] },
     { path: 'editor', component: Editor, canActivate: [authGuard, roleGuard(['admin', 'editor'])] },
     { path: 'results', component: ResultsComponent, canActivate: [authGuard, roleGuard(['admin', 'monitor'])] },
     {
@@ -29,5 +28,12 @@ export const routes: Routes = [
         loadComponent: () => import('./components/portfolio/portfolio').then(m => m.PortfolioComponent),
         canActivate: [authGuard]
     },
-    { path: '**', redirectTo: '' }
+    { path: 'admin', component: Admin, canActivate: [authGuard, roleGuard(['admin'])] },
+    {
+        path: 'assessments',
+        loadComponent: () => import('./components/assessor-dashboard/assessor-dashboard').then(m => m.AssessorDashboardComponent),
+        canActivate: [authGuard]
+    },
+    { path: '', redirectTo: 'login', pathMatch: 'full' },
+    { path: '**', redirectTo: 'login' }
 ];

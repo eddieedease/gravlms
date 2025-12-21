@@ -1,101 +1,111 @@
-import { Component, inject, signal, effect } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { LearningService } from '../../services/learning.service';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CourseService } from '../../services/course.service';
-import { ApiService } from '../../services/api.service';
-import { AuthService } from '../../services/auth.service';
-import { TranslateModule } from '@ngx-translate/core';
 import { MarkedPipe } from '../../pipes/marked.pipe';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { TranslateModule } from '@ngx-translate/core';
 import { map, switchMap, tap } from 'rxjs/operators';
-import { combineLatest } from 'rxjs';
+import { Observable } from 'rxjs';
 import { TestViewerComponent } from '../test-viewer/test-viewer';
 import { CompletionModalComponent } from '../completion-modal/completion-modal';
-
+import { AuthService } from '../../services/auth.service';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { ApiService } from '../../services/api.service';
+import { FormsModule } from '@angular/forms';
+import { OrganisationService } from '../../services/organisation.service';
+import { LearningService } from '../../services/learning.service';
 
 @Component({
     selector: 'app-course-viewer',
-    imports: [CommonModule, TranslateModule, MarkedPipe, TestViewerComponent, CompletionModalComponent],
-    templateUrl: './course-viewer.html'
+    standalone: true,
+    imports: [CommonModule, MarkedPipe, TranslateModule, TestViewerComponent, CompletionModalComponent, FormsModule],
+    templateUrl: './course-viewer.html',
+    styleUrls: ['./course-viewer.scss']
 })
-export class CourseViewerComponent {
-    private route = inject(ActivatedRoute);
-    private router = inject(Router);
-    private learningService = inject(LearningService);
-    private courseService = inject(CourseService);
-    private apiService = inject(ApiService);
-    private authService = inject(AuthService);
-
-    isLtiMode = this.authService.isLtiMode;
-
-    courseId = toSignal(this.route.paramMap.pipe(map(params => Number(params.get('courseId')))));
-    pageId = toSignal(this.route.queryParamMap.pipe(map(params => params.get('pageId') ? Number(params.get('pageId')) : null)));
-
-    // Fetch course items (pages and tests)
-    pages$ = this.route.paramMap.pipe(
-        switchMap(params => this.courseService.getPages().pipe(
-            map(pages => pages.filter(p => p.course_id == params.get('courseId')).sort((a, b) => a.display_order - b.display_order))
-        ))
-    );
-
-    course$ = this.route.paramMap.pipe(
-        switchMap(params => this.courseService.getCourses().pipe(
-            map(courses => courses.find(c => c.id == Number(params.get('courseId'))))
-        ))
-    );
-
-    progress$ = this.route.paramMap.pipe(
-        switchMap(params => this.learningService.getCourseProgress(Number(params.get('courseId'))))
-    );
-
+export class CourseViewerComponent implements OnInit {
     selectedPage = signal<any>(null);
+    pages$!: Observable<any[]>;
+    courseId!: number;
+    sidebarOpen = signal(true);
+    showCompletionModal = signal(false);
+    courseTitle = signal('');
+
+    // Progress & Completion
     completedPageIds = signal<number[]>([]);
-    showCompletionModal = signal<boolean>(false);
-    courseTitle = signal<string>('');
-    sidebarOpen = signal<boolean>(true);
+    courseCompleted = signal(false);
 
-    constructor() {
-        // Set course title
-        this.course$.subscribe(course => {
-            if (course) {
-                this.courseTitle.set(course.title);
+    // LTI Logic
+    isLtiMode = signal(false);
+
+    // Assessment Logic
+    assessmentInstructions = signal('');
+    assessmentStatus = signal<string | null>(null);
+    assessmentFeedback = signal<string | null>(null);
+    submissionText = '';
+    submissionFile: File | null = null;
+    isSubmitting = signal(false);
+
+    constructor(
+        private route: ActivatedRoute,
+        private router: Router,
+        private courseService: CourseService,
+        private authService: AuthService,
+        private sanitizer: DomSanitizer,
+        private apiService: ApiService,
+        private orgService: OrganisationService,
+        private learningService: LearningService
+    ) {
+        this.isLtiMode.set(this.authService.isLtiUser());
+    }
+
+    ngOnInit() {
+        // Try to get courseId from param 'courseId' first, then 'id'
+        const paramId = this.route.snapshot.paramMap.get('courseId') || this.route.snapshot.paramMap.get('id');
+        this.courseId = paramId ? +paramId : 0;
+
+        // Check if LTI user is allowed to access this course
+        if (this.isLtiMode()) {
+            const user = this.authService.getUser();
+            if (user.lti_course_id && +user.lti_course_id !== this.courseId) {
+                // In strict LTI mode, we might redirect or show error.
+                // For now allowing proceed but logs/logic might be needed.
             }
-        });
+        }
 
-        // Combine pages and progress to determine which page to show
-        combineLatest([this.pages$, this.progress$]).subscribe(([pages, progress]) => {
-            if (pages && pages.length > 0) {
-                // Update completed IDs
-                if (progress && progress.completed_page_ids) {
-                    this.completedPageIds.set(progress.completed_page_ids);
-                }
-
-                // Check if there's a pageId from query params (deep-linking)
-                const targetPageId = this.pageId();
-                if (targetPageId) {
-                    const targetPage = pages.find(p => p.id === targetPageId);
-                    if (targetPage) {
-                        this.selectPage(targetPage);
-                        return;
-                    }
-                }
-
-                // Find first incomplete page
-                const completedIds = this.completedPageIds();
-                const firstIncomplete = pages.find(p => !completedIds.includes(p.id));
-
-                // If we already have a selection, don't override it unless it's invalid
-                if (!this.selectedPage()) {
-                    if (firstIncomplete) {
-                        this.selectPage(firstIncomplete);
+        this.pages$ = this.courseService.getCoursePages(this.courseId).pipe(
+            tap(pages => {
+                if (pages.length > 0 && !this.selectedPage()) {
+                    // Check for query param pageId
+                    const pageIdStr = this.route.snapshot.queryParamMap.get('pageId');
+                    if (pageIdStr) {
+                        const p = pages.find(page => page.id === +pageIdStr);
+                        if (p) this.selectPage(p);
+                        else this.selectPage(pages[0]);
                     } else {
-                        // If all completed (or none), select the first one
                         this.selectPage(pages[0]);
                     }
                 }
-            }
+            })
+        );
+
+        this.courseService.getCourse(this.courseId).subscribe(course => {
+            this.courseTitle.set(course.title);
         });
+
+        this.loadProgress();
+    }
+
+    loadProgress() {
+        this.learningService.getCourseProgress(this.courseId).subscribe(progress => {
+            if (progress.completed_page_ids) {
+                this.completedPageIds.set(progress.completed_page_ids);
+            }
+            this.courseCompleted.set(progress.is_completed);
+        });
+    }
+
+    isCompleted(pageId: number): boolean {
+        return this.completedPageIds().includes(pageId);
     }
 
     toggleSidebar() {
@@ -104,24 +114,92 @@ export class CourseViewerComponent {
 
     selectPage(page: any) {
         this.selectedPage.set(page);
-        // On mobile, auto-close sidebar when selecting a page
-        if (window.innerWidth < 640) { // sm breakpoint
+
+        // Only close sidebar on mobile (sm breakpoint is 640px)
+        if (window.innerWidth < 640) {
             this.sidebarOpen.set(false);
+        }
+
+        // Reset assessment state
+        this.assessmentInstructions.set('');
+        this.assessmentStatus.set(null);
+        this.assessmentFeedback.set(null);
+        this.submissionText = '';
+        this.submissionFile = null;
+
+        if (page.type === 'assessment') {
+            this.loadAssessmentDetails(page.id);
         }
     }
 
+    loadAssessmentDetails(pageId: number) {
+        this.apiService.getAssessmentForPage(pageId).subscribe({
+            next: (res) => {
+                if (res.assessment) {
+                    this.assessmentInstructions.set(res.assessment.instructions);
+                }
+                if (res.submission) {
+                    this.assessmentStatus.set(res.submission.status);
+                    this.assessmentFeedback.set(res.submission.feedback);
+                    this.submissionText = res.submission.submission_text || '';
+                }
+            },
+            error: (err) => console.error(err)
+        });
+    }
+
+    onAssessmentFileSelected(event: any) {
+        const file = event.target.files[0];
+        if (file) {
+            this.submissionFile = file;
+        }
+    }
+
+    submitAssessment() {
+        if (!this.selectedPage()) return;
+
+        this.isSubmitting.set(true);
+
+        const submitData = (fileUrl: string | null) => {
+            this.apiService.submitAssessment(this.selectedPage().id, this.submissionText, fileUrl).subscribe({
+                next: () => {
+                    this.isSubmitting.set(false);
+                    this.assessmentStatus.set('pending');
+                    alert('Assessment submitted for grading!');
+                },
+                error: (err) => {
+                    this.isSubmitting.set(false);
+                    alert('Failed to submit assessment: ' + (err.error?.error || 'Unknown error'));
+                }
+            });
+        };
+
+        if (this.submissionFile) {
+            this.apiService.uploadFile(this.submissionFile, 'assignment', this.courseId).subscribe({
+                next: (res) => {
+                    submitData(res.url);
+                },
+                error: () => {
+                    this.isSubmitting.set(false);
+                    alert('Failed to upload file');
+                }
+            });
+        } else {
+            submitData(null);
+        }
+    }
+
+    getSafeHtml(content: string): SafeHtml {
+        return this.sanitizer.bypassSecurityTrustHtml(content);
+    }
+
     completeLesson(pageId: number) {
-        const cid = this.courseId();
-        if (cid) {
-            this.learningService.completeLesson(cid, pageId).subscribe(res => {
-                console.log('Complete lesson response:', res);
+        if (this.courseId) {
+            this.learningService.completeLesson(this.courseId, pageId).subscribe(res => {
                 this.completedPageIds.update(ids => [...ids, pageId]);
                 if (res.course_completed) {
-                    console.log('Course completed! Showing modal...');
                     this.showCompletionModal.set(true);
-                    console.log('Modal state:', this.showCompletionModal());
                 } else {
-                    // Navigate to next item
                     this.navigateToNextItem(pageId);
                 }
             });
@@ -129,31 +207,19 @@ export class CourseViewerComponent {
     }
 
     onTestPassed(pageId: number, courseCompleted: boolean = false) {
-        console.log('Test passed! pageId:', pageId, 'courseCompleted:', courseCompleted);
         this.completedPageIds.update(ids => [...ids, pageId]);
         if (courseCompleted) {
-            console.log('Course completed via test! Showing modal...');
             this.showCompletionModal.set(true);
-            console.log('Modal state:', this.showCompletionModal());
         } else {
-            // Navigate to next item
             this.navigateToNextItem(pageId);
         }
     }
 
     navigateToNextItem(currentPageId: number) {
-        // Get all pages from the observable
-        this.pages$.pipe(
-            map(pages => {
-                const currentIndex = pages.findIndex(p => p.id === currentPageId);
-                if (currentIndex !== -1 && currentIndex < pages.length - 1) {
-                    return pages[currentIndex + 1];
-                }
-                return null;
-            })
-        ).subscribe(nextPage => {
-            if (nextPage) {
-                this.selectPage(nextPage);
+        this.pages$.subscribe(pages => {
+            const currentIndex = pages.findIndex(p => p.id === currentPageId);
+            if (currentIndex !== -1 && currentIndex < pages.length - 1) {
+                this.selectPage(pages[currentIndex + 1]);
             }
         });
     }
@@ -170,10 +236,6 @@ export class CourseViewerComponent {
         }
     }
 
-    isCompleted(pageId: number) {
-        return this.completedPageIds().includes(pageId);
-    }
-
     handleContentClick(event: MouseEvent) {
         const target = event.target as HTMLElement;
         if (target.classList.contains('lti-launch-btn')) {
@@ -185,17 +247,7 @@ export class CourseViewerComponent {
     }
 
     launchLtiTool(toolId: number) {
-        // In a real implementation, we would call the backend to get the signed LTI parameters
-        // and then submit a form.
-        // For now, we'll simulate it or call a placeholder endpoint.
-
         console.log('Launching LTI Tool:', toolId);
-
-        // Example flow:
-        // this.apiService.getLtiLaunchData(toolId).subscribe(data => {
-        //    this.submitLtiForm(data.url, data.params);
-        // });
-
         alert('LTI Launch triggered for Tool ID: ' + toolId + '\n(Backend implementation pending)');
     }
 

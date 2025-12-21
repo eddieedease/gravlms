@@ -323,6 +323,35 @@
                     </ul>
                 </div>
 
+                <!-- Group Assessors -->
+                <div>
+                    <h4 class="text-lg font-medium text-gray-900 mb-4 mt-6">{{ 'ASSESSORS_IN_GROUP' | translate }}</h4>
+                    <p class="text-sm text-gray-600 mb-2">{{ 'ASSESSORS_HINT' | translate }}</p>
+                    <form [formGroup]="assignGroupAssessorForm" (ngSubmit)="addAssessorToGroup()"
+                        class="flex gap-2 mb-4">
+                        <div class="flex-1 relative">
+                            <app-autocomplete formControlName="userId" [data]="users()" displayKey="username"
+                                valueKey="id" secondaryKey="role" placeholder="Select Assessor...">
+                            </app-autocomplete>
+                        </div>
+                        <button type="submit" [disabled]="assignGroupAssessorForm.invalid"
+                            class="btn-primary disabled:opacity-50 whitespace-nowrap">{{ 'ADD' | translate }}</button>
+                    </form>
+                    <ul class="divide-y divide-gray-200 border border-gray-200 rounded-lg max-h-60 overflow-y-auto">
+                        @for (assessor of groupAssessors(); track assessor.id) {
+                        <li class="flex items-center justify-between py-3 px-4">
+                            <span class="text-gray-900">{{ assessor.username }} <span
+                                    class="text-xs text-gray-500">({{assessor.role}})</span></span>
+                            <button (click)="removeAssessorFromGroup(assessor.id)"
+                                class="text-red-600 hover:text-red-500 text-sm">{{ 'REMOVE' | translate }}</button>
+                        </li>
+                        }
+                        @if (groupAssessors().length === 0) {
+                        <li class="py-3 px-4 text-sm text-gray-500">{{ 'NO_ASSESSORS_IN_GROUP' | translate }}</li>
+                        }
+                    </ul>
+                </div>
+
                 <!-- Group Courses -->
                 <div>
                     <h4 class="text-lg font-medium text-gray-900 mb-4">{{ 'COURSES_IN_GROUP' | translate }}</h4>

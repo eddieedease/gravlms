@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AuthService } from './auth.service';
 import { ConfigService } from './config.service';
+import { map } from 'rxjs/operators';
 
 @Injectable({
     providedIn: 'root'
@@ -16,6 +17,10 @@ export class CourseService {
     // Courses
     getCourses() {
         return this.http.get<any[]>(`${this.apiUrl}/courses`);
+    }
+
+    getCourse(id: number) {
+        return this.http.get<any>(`${this.apiUrl}/courses/${id}`);
     }
 
     createCourse(course: any) {
@@ -33,6 +38,12 @@ export class CourseService {
     // Pages (Course Items)
     getPages() {
         return this.http.get<any[]>(`${this.apiUrl}/pages`);
+    }
+
+    getCoursePages(courseId: number) {
+        return this.getPages().pipe(
+            map(pages => pages.filter(p => p.course_id == courseId)) // using == for loose comparison if string/num mismatch
+        );
     }
 
     createPage(page: any) {
