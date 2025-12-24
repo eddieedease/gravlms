@@ -132,14 +132,7 @@ function registerUploadRoutes($app, $authMiddleware)
 
         // Fallback for legacy uploads in html/uploads
         if (!file_exists($filepath)) {
-            $legacyBase = file_exists('/var/www/html/uploads') ? '/var/www/html/uploads' : __DIR__ . '/../uploads';
-            $legacyPath = $legacyBase . '/' . $filename;
-            if (file_exists($legacyPath)) {
-                $baseDir = $legacyBase;
-                $filepath = $legacyPath;
-                $realBase = realpath($baseDir);
-                $realPath = realpath($filepath);
-            }
+            // Legacy fallbacks removed
         }
 
         if ($realPath === false || strpos($realPath, $realBase) !== 0) {
