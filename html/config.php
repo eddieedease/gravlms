@@ -44,11 +44,7 @@ return [
         'allowed_headers' => ['Content-Type', 'Authorization']
     ],
 
-    // LTI Configuration (if needed)
-    'lti' => [
-        'consumer_key' => 'your-lti-consumer-key',
-        'consumer_secret' => 'your-lti-consumer-secret'
-    ],
+
 
     // Email Configuration
     'email' => [

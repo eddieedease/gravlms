@@ -162,7 +162,23 @@ export class ApiService {
     return this.http.delete<any>(`${this.apiUrl}/admin/lti/tools/${id}`);
   }
 
-  getLtiConsumerLaunchParams(toolId: number, courseId?: number): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/lti/consumer/launch`, { tool_id: toolId, course_id: courseId });
+  getLtiConsumers(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/admin/lti/consumers`);
+  }
+
+  createLtiConsumer(consumer: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/admin/lti/consumers`, consumer);
+  }
+
+  updateLtiConsumer(id: number, consumer: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/admin/lti/consumers/${id}`, consumer);
+  }
+
+  deleteLtiConsumer(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/admin/lti/consumers/${id}`);
+  }
+
+  getLtiConsumerLaunchParams(toolId: number, courseId?: number): Observable<{ type: 'LTI-1p0' | 'LTI-1p3', url: string, params?: any }> {
+    return this.http.post<{ type: 'LTI-1p0' | 'LTI-1p3', url: string, params?: any }>(`${this.apiUrl}/lti/consumer/launch`, { tool_id: toolId, course_id: courseId });
   }
 }

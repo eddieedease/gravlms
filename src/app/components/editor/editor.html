@@ -455,6 +455,61 @@
                             }
                         </div>
 
+                        <!-- LTI Provider Info (Sharing) -->
+                        <div class="border-t border-gray-200 pt-4">
+                            <h3 class="text-sm font-medium leading-6 text-gray-900 mb-2">Share Course (LTI Provider)
+                            </h3>
+                            <div class="bg-gray-50 rounded-md p-4 space-y-3">
+                                <p class="text-xs text-gray-500 mb-2">
+                                    To serve this course to another LMS, use these details.
+                                    Ensure you have configured the external LMS in the <strong>Admin > LTI</strong>
+                                    settings first.
+                                </p>
+
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-500 uppercase">LTI 1.3 Launch
+                                        URL</label>
+                                    <div class="mt-1 flex rounded-md shadow-sm">
+                                        <input type="text" readonly [value]="getLti13LaunchUrl()"
+                                            class="block w-full rounded-l-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-xs sm:leading-6 bg-white">
+                                        <button type="button" (click)="copyToClipboard(getLti13LaunchUrl())"
+                                            class="relative -ml-px inline-flex items-center gap-x-1.5 rounded-r-md px-3 py-2 text-xs font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                                            Copy
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-500 uppercase">LTI 1.1 Launch
+                                        URL</label>
+                                    <div class="mt-1 flex rounded-md shadow-sm">
+                                        <input type="text" readonly [value]="getLti11LaunchUrl()"
+                                            class="block w-full rounded-l-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-xs sm:leading-6 bg-white">
+                                        <button type="button" (click)="copyToClipboard(getLti11LaunchUrl())"
+                                            class="relative -ml-px inline-flex items-center gap-x-1.5 rounded-r-md px-3 py-2 text-xs font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                                            Copy
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-500 uppercase">Custom Parameter
+                                        (Required)</label>
+                                    <div class="mt-1 flex rounded-md shadow-sm">
+                                        <input type="text" readonly [value]="'course_id=' + selectedCourse().id"
+                                            class="block w-full rounded-l-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-xs sm:leading-6 bg-white font-mono">
+                                        <button type="button"
+                                            (click)="copyToClipboard('course_id=' + selectedCourse().id)"
+                                            class="relative -ml-px inline-flex items-center gap-x-1.5 rounded-r-md px-3 py-2 text-xs font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                                            Copy
+                                        </button>
+                                    </div>
+                                    <p class="mt-1 text-xs text-gray-500">Add this to the "Custom Parameters" field in
+                                        the external LMS.</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="pt-4 flex justify-end">
                             <button type="submit" [disabled]="!courseForm.valid"
                                 class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50">

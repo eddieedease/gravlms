@@ -266,6 +266,18 @@ try {
     $pdo->exec($sqlLtiKeys);
     echo "Table 'lti_keys' created or already exists.<br>";
 
+    // Create lti_consumers table (For LTI 1.1 Provider Mode - Incoming)
+    $sqlLtiConsumers = "CREATE TABLE IF NOT EXISTS lti_consumers (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        consumer_key VARCHAR(255) NOT NULL UNIQUE,
+        secret VARCHAR(255) NOT NULL,
+        enabled BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )";
+    $pdo->exec($sqlLtiConsumers);
+    echo "Table 'lti_consumers' created or already exists.<br>";
+
     // Create group_monitors table
     $sqlGroupMonitors = "CREATE TABLE IF NOT EXISTS group_monitors (
         id INT AUTO_INCREMENT PRIMARY KEY,

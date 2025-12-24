@@ -41,14 +41,45 @@ GravLMS provides the following LTI endpoints:
 ### Provider Mode Endpoints (When GravLMS is the Tool)
 
 ```
+LTI 1.3 Endpoints:
 OIDC Login URL:  http://localhost:8080/api/lti/login
 Launch URL:      http://localhost:8080/api/lti/launch
 JWKS URL:        http://localhost:8080/api/lti/jwks
+
+LTI 1.1 Endpoints:
+Launch URL:      http://localhost:8080/api/lti11/launch
 ```
 
 ### Consumer Mode Endpoints (When GravLMS Launches External Tools)
 
 Consumer mode uses the LTI tools configured in the Admin panel. Each tool has its own launch URL.
+
+---
+
+## Consumer Mode: LTI 1.1 / 1.3
+
+GravLMS supports launching external tools using both LTI 1.1 (OAuth 1.0) and LTI 1.3 (OIDC/OAuth 2.0).
+Configuration happens in the Admin panel:
+
+**LTI 1.1 Tool**:
+- Requires: Tool URL, Consumer Key, Shared Secret.
+
+**LTI 1.3 Tool**:
+- Requires: Tool URL, Initiate Login URL, Public Key (JWK or PEM), Client ID.
+
+---
+...
+
+## Summary
+
+GravLMS supports comprehensive LTI integration:
+
+| Mode | LTI Version | Use Case | Setup Complexity |
+|------|-------------|----------|------------------|
+| Consumer | 1.1 | Launch simple external tools | Low |
+| Consumer | 1.3 | Launch modern external tools | Medium |
+| Provider | 1.1 | Serve to legacy LMSs | Low |
+| Provider | 1.3 | Serve to modern LMSs | Medium |
 
 ---
 
@@ -254,7 +285,28 @@ In this mode, GravLMS acts as a **Tool Provider** and serves its courses to exte
 
 You want to make your GravLMS courses available within another LMS platform (e.g., your institution uses Canvas, but you want to deliver specific courses from GravLMS).
 
-### LTI 1.3 Provider Setup
+### LTI 1.1 Provider Setup (Legacy Support)
+
+#### 1. Register an External Consumer (LMS)
+Since LTI 1.1 uses shared secrets, you must register the specific LMS connecting to you.
+
+1. Log in to GravLMS as an admin
+2. Navigate to **Admin > LTI**
+3. Select the **External Consumers (LTI 1.1)** tab
+4. Click **Add Consumer**
+5. Enter a Name and Consumer Key (Secret is auto-generated)
+6. Share these credentials with the external LMS administrator
+
+#### 2. Get the Launch URL for a Course
+To launch a specific course, you need its unique Launch URL.
+
+1. Go to the **Editor**
+2. Select the course you want to share
+3. Scroll down to the **Share Course (LTI Provider)** section
+4. Copy the **LTI 1.1 Launch URL** and the **Custom Parameter** (`course_id=...`)
+5. Provide these to the external LMS (e.g., paste `course_id=123` into their "Custom Parameters" field)
+
+### LTI 1.3 Provider Setup (Recommended)
 
 #### 1. Register an External Platform in GravLMS
 

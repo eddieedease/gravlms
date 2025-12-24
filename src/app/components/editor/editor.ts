@@ -517,4 +517,18 @@ export class Editor implements OnInit {
       textarea.setSelectionRange(newPosition, newPosition);
     }, 0);
   }
+  copyToClipboard(text: string) {
+    navigator.clipboard.writeText(text).then(() => {
+      this.uploadStatus.set('Copied to clipboard!');
+      setTimeout(() => this.uploadStatus.set(''), 3000);
+    });
+  }
+
+  getLti13LaunchUrl(): string {
+    return `${this.config.apiUrl.replace('/api', '')}/api/lti/launch`;
+  }
+
+  getLti11LaunchUrl(): string {
+    return `${this.config.apiUrl.replace('/api', '')}/api/lti11/launch`;
+  }
 }

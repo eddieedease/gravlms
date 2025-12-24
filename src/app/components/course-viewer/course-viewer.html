@@ -1,4 +1,23 @@
 <div class="flex h-[calc(100vh-64px)] relative overflow-hidden">
+    @if (isLtiCourse()) {
+    <div class="w-full h-full flex flex-col relative">
+        <div class="p-4 bg-gray-50 border-b flex justify-between items-center">
+            <h1 class="text-xl font-bold text-gray-800">{{ courseTitle() }}</h1>
+            <button (click)="navigateToDashboard()" class="text-sm text-gray-600 hover:text-gray-900">
+                &larr; {{ 'BACK_TO_DASHBOARD' | translate }}
+            </button>
+        </div>
+        <div class="flex-1 relative">
+            <iframe name="lti-frame" class="w-full h-full border-0"></iframe>
+            <!-- Hidden Form for Launch -->
+            <form id="lti-launch-form" target="lti-frame" method="POST" [action]="ltiLaunchUrl()" style="display:none;">
+                @for (entry of ltiLaunchParams() | keyvalue; track entry.key) {
+                <input type="hidden" [name]="entry.key" [value]="entry.value">
+                }
+            </form>
+        </div>
+    </div>
+    } @else {
     <!-- Mobile Sidebar Backdrop -->
     @if (sidebarOpen()) {
     <div class="fixed inset-0 bg-gray-600 bg-opacity-75 z-20 sm:hidden" (click)="toggleSidebar()"></div>
@@ -231,8 +250,7 @@
             }
         </div>
     </div>
-
-    <!-- Completion Modal -->
+    } <!-- Completion Modal -->
     <app-completion-modal [isOpen]="showCompletionModal()" [courseTitle]="courseTitle()"
         (navigateDashboard)="navigateToDashboard()">
     </app-completion-modal>

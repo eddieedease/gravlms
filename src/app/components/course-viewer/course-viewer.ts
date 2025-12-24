@@ -58,20 +58,34 @@ export class CourseViewerComponent implements OnInit {
         this.isLtiMode.set(this.authService.isLtiUser());
     }
 
+    // LTI Iframe Logic
+    isLtiCourse = signal(false);
+    ltiLaunchUrl = signal('');
+    ltiLaunchParams = signal<{ [key: string]: string }>({});
+
     ngOnInit() {
         // Try to get courseId from param 'courseId' first, then 'id'
         const paramId = this.route.snapshot.paramMap.get('courseId') || this.route.snapshot.paramMap.get('id');
         this.courseId = paramId ? +paramId : 0;
 
-        // Check if LTI user is allowed to access this course
-        if (this.isLtiMode()) {
-            const user = this.authService.getUser();
-            if (user.lti_course_id && +user.lti_course_id !== this.courseId) {
-                // In strict LTI mode, we might redirect or show error.
-                // For now allowing proceed but logs/logic might be needed.
-            }
-        }
+        // Load Course Details first to check if it's LTI
+        this.courseService.getCourse(this.courseId).subscribe(course => {
+            this.courseTitle.set(course.title);
 
+            if (course.is_lti && course.lti_tool_id) {
+                this.isLtiCourse.set(true);
+                this.sidebarOpen.set(false); // Hide sidebar for LTI
+                this.prepareLtiLaunch(course.lti_tool_id);
+            } else {
+                // Regular course loading
+                this.loadRegularCoursePages();
+            }
+        });
+
+        this.loadProgress();
+    }
+
+    loadRegularCoursePages() {
         this.pages$ = this.courseService.getCoursePages(this.courseId).pipe(
             tap(pages => {
                 if (pages.length > 0 && !this.selectedPage()) {
@@ -87,13 +101,27 @@ export class CourseViewerComponent implements OnInit {
                 }
             })
         );
-
-        this.courseService.getCourse(this.courseId).subscribe(course => {
-            this.courseTitle.set(course.title);
-        });
-
-        this.loadProgress();
     }
+
+    prepareLtiLaunch(toolId: number) {
+        this.apiService.getLtiConsumerLaunchParams(toolId, this.courseId).subscribe({
+            next: (res) => {
+                this.ltiLaunchUrl.set(res.url);
+                this.ltiLaunchParams.set(res.params || {});
+
+                // Auto-submit the form after a brief delay to ensure DOM is ready
+                setTimeout(() => {
+                    const form = document.getElementById('lti-launch-form') as HTMLFormElement;
+                    if (form) {
+                        form.submit();
+                    }
+                }, 500);
+            },
+            error: (err) => console.error('LTI Params Error', err)
+        });
+    }
+
+    // ... existing methods ...
 
     loadProgress() {
         this.learningService.getCourseProgress(this.courseId).subscribe(progress => {

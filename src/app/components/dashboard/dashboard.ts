@@ -93,13 +93,9 @@ export class DashboardComponent implements OnInit {
             return;
         }
 
-        if (course.is_lti && course.lti_tool_id) {
-            // Launch LTI tool
-            this.launchLtiCourse(course);
-        } else {
-            // Navigate to regular course viewer
-            this.router.navigate(['/learn', courseId]);
-        }
+        // Navigate to course viewer for both regular and LTI courses
+        // The CourseViewerComponent will handle the LTI launch within an iframe
+        this.router.navigate(['/learn', courseId]);
     }
 
     resetCourse(course: any) {
@@ -113,64 +109,38 @@ export class DashboardComponent implements OnInit {
             // Reload courses to update status
             this.loadCourses();
             // Then launch
-            if (course.is_lti && course.lti_tool_id) {
-                this.launchLtiCourse(course);
-            } else {
-                this.router.navigate(['/learn', course.id]);
-            }
+            // Then launch
+            this.router.navigate(['/learn', course.id]);
         });
     }
 
     launchLtiCourse(course: any) {
-        // For LTI 1.3, we need to initiate OIDC login
-        // For LTI 1.1, we need to create a form with OAuth signature
+        if (!course.lti_tool_id) return;
 
-        // Get the tool details
-        this.apiService.getLtiTools().subscribe(tools => {
-            const tool = tools.find((t: any) => t.id === course.lti_tool_id);
-
-            if (!tool) {
-                alert('LTI tool not found');
-                return;
-            }
-
-            if (tool.lti_version === '1.3') {
-                // LTI 1.3: Redirect to tool's initiate login URL
-                const params = new URLSearchParams({
-                    iss: window.location.origin,
-                    login_hint: this.authService.currentUser()?.id.toString() || '',
-                    target_link_uri: tool.tool_url,
-                    lti_message_hint: course.id.toString()
-                });
-
-                window.location.href = `${tool.initiate_login_url}?${params.toString()}`;
-            } else {
-                // LTI 1.1: Create and submit a form
-                this.launchLti11Tool(tool, course);
-            }
-        });
-    }
-
-    launchLti11Tool(tool: any, course: any) {
-        // Use backend endpoint to generate properly signed OAuth parameters
-        this.apiService.getLtiConsumerLaunchParams(tool.id, course.id).subscribe({
+        // Use backend endpoint to generate launch parameters or OIDC URL
+        this.apiService.getLtiConsumerLaunchParams(course.lti_tool_id, course.id).subscribe({
             next: (response) => {
-                // Create and submit form with signed parameters
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = response.url;
-                form.style.display = 'none';
+                if (response.type === 'LTI-1p3') {
+                    // LTI 1.3: Redirect to OIDC Login URL
+                    window.location.href = response.url;
+                } else if (response.type === 'LTI-1p0') {
+                    // LTI 1.1: Create and submit a form
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = response.url;
+                    form.style.display = 'none';
 
-                for (const [key, value] of Object.entries(response.params)) {
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = key;
-                    input.value = value as string;
-                    form.appendChild(input);
+                    for (const [key, value] of Object.entries(response.params)) {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = key;
+                        input.value = value as string;
+                        form.appendChild(input);
+                    }
+
+                    document.body.appendChild(form);
+                    form.submit();
                 }
-
-                document.body.appendChild(form);
-                form.submit();
             },
             error: (err) => {
                 console.error('LTI launch error:', err);

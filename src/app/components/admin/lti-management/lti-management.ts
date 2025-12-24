@@ -16,7 +16,9 @@ export class LtiManagementComponent implements OnInit {
     platforms = signal<any[]>([]);
     tools = signal<any[]>([]);
 
-    activeTab = signal<'platforms' | 'tools'>('platforms');
+    consumers = signal<any[]>([]);
+
+    activeTab = signal<'platforms' | 'tools' | 'consumers'>('platforms');
     showForm = signal(false);
     isEditing = signal(false);
     editingId = signal<number | null>(null);
@@ -43,9 +45,17 @@ export class LtiManagementComponent implements OnInit {
         shared_secret: ['']
     });
 
+    // Consumer Form (LTI 1.1 Provider)
+    consumerForm = this.fb.group({
+        name: ['', Validators.required],
+        consumer_key: ['', Validators.required],
+        secret: [''] // Optional on create (auto-generated), required on update if changing
+    });
+
     ngOnInit() {
         this.loadPlatforms();
         this.loadTools();
+        this.loadConsumers();
     }
 
     loadPlatforms() {
@@ -60,12 +70,19 @@ export class LtiManagementComponent implements OnInit {
         });
     }
 
+    loadConsumers() {
+        this.apiService.getLtiConsumers().subscribe(consumers => {
+            this.consumers.set(consumers);
+        });
+    }
+
     startCreate() {
         this.showForm.set(true);
         this.isEditing.set(false);
         this.editingId.set(null);
         this.platformForm.reset();
         this.toolForm.reset({ lti_version: '1.3' });
+        this.consumerForm.reset();
     }
 
     startEdit(item: any) {
@@ -75,8 +92,14 @@ export class LtiManagementComponent implements OnInit {
 
         if (this.activeTab() === 'platforms') {
             this.platformForm.patchValue(item);
-        } else {
+        } else if (this.activeTab() === 'tools') {
             this.toolForm.patchValue(item);
+        } else {
+            this.consumerForm.patchValue({
+                name: item.name,
+                consumer_key: item.consumer_key,
+                secret: item.secret
+            });
         }
     }
 
@@ -92,6 +115,14 @@ export class LtiManagementComponent implements OnInit {
         if (confirm('Are you sure you want to delete this tool?')) {
             this.apiService.deleteLtiTool(id).subscribe(() => {
                 this.loadTools();
+            });
+        }
+    }
+
+    deleteConsumer(id: number) {
+        if (confirm('Are you sure you want to delete this consumer?')) {
+            this.apiService.deleteLtiConsumer(id).subscribe(() => {
+                this.loadConsumers();
             });
         }
     }
@@ -126,6 +157,22 @@ export class LtiManagementComponent implements OnInit {
             } else {
                 this.apiService.createLtiTool(this.toolForm.value).subscribe(() => {
                     this.loadTools();
+                    this.cancel();
+                });
+            }
+        }
+    }
+
+    onSubmitConsumer() {
+        if (this.consumerForm.valid) {
+            if (this.isEditing() && this.editingId()) {
+                this.apiService.updateLtiConsumer(this.editingId()!, this.consumerForm.value).subscribe(() => {
+                    this.loadConsumers();
+                    this.cancel();
+                });
+            } else {
+                this.apiService.createLtiConsumer(this.consumerForm.value).subscribe(() => {
+                    this.loadConsumers();
                     this.cancel();
                 });
             }
