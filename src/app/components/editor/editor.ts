@@ -61,9 +61,14 @@ export class Editor implements OnInit {
   viewMode = signal<'editor' | 'split' | 'preview'>('editor');
   sidebarOpen = signal<boolean>(true);
   createItemDropdownOpen = signal<boolean>(false);
+  ltiInfoOpen = signal<boolean>(false);
 
   toggleSidebar() {
     this.sidebarOpen.update(v => !v);
+  }
+
+  toggleLtiInfo() {
+    this.ltiInfoOpen.update(v => !v);
   }
 
   toggleCreateItemDropdown() {
