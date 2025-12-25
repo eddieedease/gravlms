@@ -16,6 +16,7 @@ import { ResultsComponent } from './components/results/results.component';
 
 export const routes: Routes = [
     { path: '', component: Landing },
+    { path: 'login/:tenant', component: Login },
     { path: 'login', component: Login },
     { path: 'forgot-password', component: ForgotPasswordComponent },
     { path: 'reset-password', component: ResetPasswordComponent },

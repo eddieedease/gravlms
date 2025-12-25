@@ -1,22 +1,89 @@
 <?php
 require __DIR__ . '/vendor/autoload.php';
 
+// Check if running from CLI
+if (php_sapi_name() !== 'cli') {
+    die("This script must be run from the command line.");
+}
+
+function prompt($message, $default = null)
+{
+    if ($default) {
+        echo $message . " [$default]: ";
+    } else {
+        echo $message . ": ";
+    }
+    $handle = fopen("php://stdin", "r");
+    $line = fgets($handle);
+    fclose($handle);
+    $input = trim($line);
+    return $input === '' ? $default : $input;
+}
+
+echo "GravLMS Database Initializer\n";
+echo "============================\n";
+echo "1. Initialize Master Database (stores tenant info)\n";
+echo "2. Initialize Tenant Database (app schema)\n";
+$choice = prompt("Choose an option", "2");
+
 $host = 'db';
-$db = 'my_app_db';
-$user = 'admin';
-$pass = 'admin';
-$charset = 'utf8mb4';
+$name = 'my_app_db';
+$user = 'root';
+$pass = 'root';
 
-$dsn = "mysql:host=$host;dbname=$db;charset=$charset";
-$options = [
-    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-    PDO::ATTR_EMULATE_PREPARES => false,
-];
+if ($choice === '1') {
+    echo "\n--- Master Database Configuration ---\n";
+    $host = prompt("Host", $host);
+    $name = prompt("Database Name", $name);
+    $user = prompt("User", $user);
+    $pass = prompt("Password", $pass);
 
-try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
-    echo "Connected to database successfully.<br>";
+    try {
+        $dsn = "mysql:host=$host;dbname=$name;charset=utf8mb4";
+        $pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+        echo "Connected to Master DB.\n";
+        initializeMasterSchema($pdo);
+    } catch (PDOException $e) {
+        die("Connection failed: " . $e->getMessage() . "\n");
+    }
+
+} else {
+    echo "\n--- Tenant Database Configuration ---\n";
+    $host = prompt("Host", $host);
+    $name = prompt("Database Name", $name);
+    $user = prompt("User", $user);
+    $pass = prompt("Password", $pass);
+
+    try {
+        $dsn = "mysql:host=$host;dbname=$name;charset=utf8mb4";
+        $pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+        echo "Connected to Tenant DB.\n";
+        initializeTenantSchema($pdo);
+    } catch (PDOException $e) {
+        die("Connection failed: " . $e->getMessage() . "\n");
+    }
+}
+
+function initializeMasterSchema($pdo)
+{
+    echo "Creating master tables...\n";
+    $sqlTenants = "CREATE TABLE IF NOT EXISTS tenants (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        slug VARCHAR(50) NOT NULL UNIQUE,
+        db_host VARCHAR(255) NOT NULL,
+        db_name VARCHAR(255) NOT NULL,
+        db_user VARCHAR(255) NOT NULL,
+        db_password VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )";
+    $pdo->exec($sqlTenants);
+    echo "Table 'tenants' created.\n";
+}
+
+function initializeTenantSchema($pdo)
+{
+    echo "Creating app schema...\n";
 
     $sqlUsers = "CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -402,7 +469,7 @@ try {
             // Drop FK for course_id if exists
             if ($col === 'course_id') {
                 $sql = "SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE 
-                        WHERE TABLE_NAME = 'tests' AND COLUMN_NAME = 'course_id' AND TABLE_SCHEMA = '$db'";
+                        WHERE TABLE_NAME = 'tests' AND COLUMN_NAME = 'course_id' AND TABLE_SCHEMA = DATABASE()";
                 $stmtFK = $pdo->query($sql);
                 $fk = $stmtFK->fetch(PDO::FETCH_ASSOC);
                 if ($fk) {
@@ -498,6 +565,4 @@ try {
         }
     }
 
-} catch (\PDOException $e) {
-    throw new \PDOException($e->getMessage(), (int) $e->getCode());
 }

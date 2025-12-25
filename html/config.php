@@ -8,12 +8,21 @@
 
 return [
     // Database Configuration
+    // Database Configuration
     'database' => [
         'host' => 'db',              // Database host (use 'db' for Docker, or IP/domain for production)
         'name' => 'my_app_db',       // Database name
         'user' => 'root',           // Database username
         'password' => 'root',       // Database password
         'charset' => 'utf8mb4'       // Character set
+    ],
+    // Master Database (for multi-tenancy)
+    'master_database' => [
+        'host' => 'db',
+        'name' => 'lms_master',      // Default master DB name
+        'user' => 'root',
+        'password' => 'root',
+        'charset' => 'utf8mb4'
     ],
 
     // JWT Configuration

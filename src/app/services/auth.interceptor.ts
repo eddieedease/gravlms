@@ -10,13 +10,20 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     const router = inject(Router);
 
     // Clone the request and add the authorization header if token exists
+    const tenantId = localStorage.getItem('tenantId');
+    let headers: any = {};
+
     if (token) {
-        req = req.clone({
-            setHeaders: {
-                Authorization: `Bearer ${token}`
-            }
-        });
+        headers['Authorization'] = `Bearer ${token}`;
     }
+
+    if (tenantId) {
+        headers['X-Tenant-ID'] = tenantId;
+    }
+
+    req = req.clone({
+        setHeaders: headers
+    });
 
     return next(req).pipe(
         catchError((error: HttpErrorResponse) => {
