@@ -16,6 +16,24 @@ function registerCourseRoutes($app, $authMiddleware)
             }
         });
 
+        $group->get('/{id}', function (Request $request, Response $response, $args) {
+            $id = $args['id'];
+            try {
+                $pdo = getDbConnection();
+                $stmt = $pdo->prepare("SELECT * FROM courses WHERE id = ?");
+                $stmt->execute([$id]);
+                $course = $stmt->fetch();
+
+                if (!$course) {
+                    return jsonResponse($response, ['error' => 'Course not found'], 404);
+                }
+
+                return jsonResponse($response, $course);
+            } catch (PDOException $e) {
+                return jsonResponse($response, ['error' => $e->getMessage()], 500);
+            }
+        });
+
         $group->post('', function (Request $request, Response $response, $args) {
             $data = json_decode($request->getBody()->getContents(), true);
             try {
