@@ -17,6 +17,15 @@ GravLMS now supports a **Database-per-Tenant** architecture. This allows multipl
 ## Setup & usage
 
 ### 1. Initialize the Master Database
+You can initialize the database using the web installer or the command line.
+
+**Option A: Web Installer (Recommended for Shared Hosting)**
+1. Navigate to: `http://your-domain.com/install.php`
+2. Select **Master Database** from the dropdown.
+3. Enter your database credentials.
+4. Click "Initialize Database".
+
+**Option B: Command Line**
 Run the initialization script and select **Option 1**:
 ```bash
 php html/init_db.php
@@ -34,7 +43,15 @@ VALUES ('Acme Corp', 'acme', 'db', 'lms_acme', 'root', 'root');
 ```
 
 ### 3. Initialize the Tenant Database
-Run the initialization script again to set up the scheme for the new tenant:
+Run the initialization script to set up the schema for the new tenant.
+
+**Option A: Web Installer**
+1. Navigate to: `http://your-domain.com/install.php`
+2. Select **Tenant Database** from the dropdown.
+3. Enter the **Tenant Database Name** (e.g., `lms_acme`) and credentials.
+4. Click "Initialize Database".
+
+**Option B: Command Line**
 ```bash
 php html/init_db.php
 # Select Option 2 (Tenant Database)

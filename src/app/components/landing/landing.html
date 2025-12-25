@@ -17,14 +17,18 @@
                 <p class="mt-6 text-lg leading-8 text-gray-300">
                     {{ 'LANDING_SUBTITLE' | translate }}
                 </p>
-                <div class="mt-10 flex items-center justify-center gap-x-6">
-                    <a routerLink="/login"
-                        class="rounded-md bg-indigo-500 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400 transition-all duration-300 hover:scale-105">
-                        {{ 'GET_STARTED' | translate }}
-                    </a>
-                    <a href="#"
-                        class="text-sm font-semibold leading-6 text-white hover:text-indigo-300 transition-colors">{{
-                        'LEARN_MORE' | translate }} <span aria-hidden="true">→</span></a>
+                <div class="mt-10 flex flex-col items-center justify-center gap-y-4">
+                    <div class="flex items-center gap-x-4">
+                        <input type="text" [(ngModel)]="tenantSlug" (keyup.enter)="goToLogin()"
+                            placeholder="Organization ID (e.g. main)"
+                            class="rounded-md border-0 py-2.5 px-3.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+
+                        <button (click)="goToLogin()"
+                            class="rounded-md bg-indigo-500 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400 transition-all duration-300 hover:scale-105">
+                            {{ 'GET_STARTED' | translate }}
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-400">Enter your Organization ID to login</p>
                 </div>
             </div>
         </div>

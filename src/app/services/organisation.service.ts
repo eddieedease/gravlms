@@ -41,19 +41,37 @@ export class OrganisationService {
     constructor(private http: HttpClient, private config: ConfigService) {
         this.apiUrl = `${this.config.apiUrl}/organization`;
         this.uploadUrl = `${this.config.apiUrl}/uploads`;
-        this.loadSettings();
+        // this.loadSettings(); // Removed to prevent premature fetching before tenant ID is known
     }
 
 
 
-    loadSettings() {
-        this.http.get<OrganisationSettings>(this.apiUrl).subscribe({
+    loadSettings(tenantId?: string) {
+        let headers = new HttpHeaders();
+        if (tenantId) {
+            headers = headers.set('X-Tenant-ID', tenantId);
+        }
+
+        this.http.get<OrganisationSettings>(this.apiUrl, { headers }).subscribe({
             next: (data) => {
                 this.settings.set(data);
                 this.applyBranding(data);
             },
-            error: (err) => console.error('Failed to load organisation settings', err)
+            error: (err) => {
+                console.error('Failed to load organisation settings', err);
+                // If we failed to load settings with a specific tenant ID, it implies the tenant is invalid
+                if (tenantId) {
+                    // We might want to handle this error in the component, but for now we reset settings
+                    // Ideally we should return an Observable to the component so it can handle the error UI
+                }
+            }
         });
+    }
+
+    // New method that returns observable for the Login component to handle success/error
+    getPublicSettings(tenantId: string): Observable<OrganisationSettings> {
+        const headers = new HttpHeaders().set('X-Tenant-ID', tenantId);
+        return this.http.get<OrganisationSettings>(this.apiUrl, { headers });
     }
 
     updateSettings(data: OrganisationSettings): Observable<any> {

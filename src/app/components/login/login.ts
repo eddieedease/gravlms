@@ -1,5 +1,6 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { finalize, timeout } from 'rxjs/operators';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { OrganisationService } from '../../services/organisation.service';
@@ -17,6 +18,7 @@ export class Login implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly cdr = inject(ChangeDetectorRef);
   public readonly orgService = inject(OrganisationService);
   errorMessage = '';
 
@@ -25,13 +27,48 @@ export class Login implements OnInit {
     password: ['', Validators.required]
   });
 
+  isValidTenant = true;
+  isLoading = true;
+
   ngOnInit() {
-    // Check for tenant param
     this.route.paramMap.subscribe(params => {
       const tenant = params.get('tenant');
+
       if (tenant) {
-        // Store tenant context
+        // 1. Store context
         localStorage.setItem('tenantId', tenant);
+
+        // 2. Fetch Public Branding for this tenant
+        console.log('Login: Start fetch for', tenant);
+        this.orgService.getPublicSettings(tenant)
+          .pipe(
+            timeout(5000), // Force error after 5 seconds if backend hangs
+            finalize(() => {
+              console.log('Login: Finalize');
+              setTimeout(() => {
+                console.log('Login: Setting isLoading = false and detecting changes');
+                this.isLoading = false;
+                this.cdr.detectChanges();
+              });
+            })
+          )
+          .subscribe({
+            next: (settings) => {
+              this.orgService.settings.set(settings);
+              this.isValidTenant = true;
+            },
+            error: (err) => {
+              // Tenant likely doesn't exist or backend error
+              console.error(err);
+              this.isValidTenant = false;
+              this.errorMessage = 'Organization not found. Please check your URL.';
+            }
+          });
+      } else {
+        // No tenant provided in URL
+        this.isValidTenant = false;
+        this.isLoading = false;
+        this.errorMessage = 'Invalid Login URL. Please use the organization-specific link provided to you.';
       }
     });
   }

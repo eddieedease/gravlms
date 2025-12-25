@@ -26,7 +26,14 @@ export class App {
     this.translate.addLangs(['en', 'nl']);
     this.translate.setDefaultLang('nl');
     this.translate.use('nl');
-    this.translate.use('nl');
+
+    // Load organization settings if tenant is known (e.g. from previous session)
+    /*
+    const tenantId = localStorage.getItem('tenantId');
+    if (tenantId) {
+      this.orgService.loadSettings(tenantId);
+    }
+    */
   }
 
   mobileMenuOpen = signal(false);

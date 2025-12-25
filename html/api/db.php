@@ -16,13 +16,20 @@ function getMasterDbConnection()
 
 function getDbConnection($tenantSlug = null)
 {
-    // 1. Try to get tenant slug from argument or header
+    // 1. Try to get tenant slug from argument or headers
     if (!$tenantSlug) {
-        // $_SERVER is more reliable for global access than getallheaders() in some environments
+        // Try $_SERVER (standard for many setups)
         $tenantSlug = $_SERVER['HTTP_X_TENANT_ID'] ?? null;
+
+        // Try getallheaders (for Apache/FPM where $_SERVER might miss custom headers)
+        if (!$tenantSlug && function_exists('getallheaders')) {
+            $headers = getallheaders();
+            // Headers can be case-insensitive
+            $tenantSlug = $headers['X-Tenant-ID'] ?? $headers['x-tenant-id'] ?? null;
+        }
     }
 
-    // 2. If valid slug, try to resolve from Master DB
+    // 2. If valid slug is present, MUST resolve or fail
     if ($tenantSlug) {
         try {
             $pdoMaster = getMasterDbConnection();
@@ -39,14 +46,20 @@ function getDbConnection($tenantSlug = null)
                     PDO::ATTR_EMULATE_PREPARES => false,
                 ];
                 return new PDO($dsn, $tenant['db_user'], $tenant['db_password'], $options);
+            } else {
+                // Tenant ID was provided but not found in Master DB
+                // Do NOT fallback to default DB, as this is a security risk and confusing
+                throw new Exception("Tenant not found: " . htmlspecialchars($tenantSlug));
             }
         } catch (Exception $e) {
-            // If master DB fails or tenant not found, fall through to default
-            // Log error? error_log("Tenant resolution failed: " . $e->getMessage());
+            // Log the error
+            error_log("Tenant Resolution Failed: " . $e->getMessage());
+            // Re-throw so the API returns an error instead of wrong data
+            throw new Exception("Tenant connection failed: " . $e->getMessage());
         }
     }
 
-    // 3. Fallback to default (legacy) configuration
+    // 3. Fallback to default configuration (Only if NO tenant ID was explicitly sent)
     $config = getConfig();
     $dbConfig = $config['database'];
 

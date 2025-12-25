@@ -20,6 +20,12 @@ function registerAuthRoutes($app)
             return jsonResponse($response, ['error' => 'Email and password are required'], 400);
         }
 
+        // Check for Tenant ID
+        $tenantId = $request->getHeaderLine('X-Tenant-ID');
+        if (!$tenantId) {
+            return jsonResponse($response, ['error' => 'Organization ID (Tenant) is required to login. Please use your organization-specific login URL.'], 400);
+        }
+
         try {
             $pdo = getDbConnection();
             $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
@@ -62,8 +68,8 @@ function registerAuthRoutes($app)
             } else {
                 return jsonResponse($response, ['error' => 'Invalid credentials'], 401);
             }
-        } catch (PDOException $e) {
-            return jsonResponse($response, ['error' => $e->getMessage()], 500);
+        } catch (Exception $e) {
+            return jsonResponse($response, ['error' => $e->getMessage()], 400); // 400 because it's likely a bad request (bad tenant)
         }
     });
 

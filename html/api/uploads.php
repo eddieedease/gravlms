@@ -40,15 +40,21 @@ function registerUploadRoutes($app, $authMiddleware)
         // Store in project root 'public/uploads' directory
         // Docker volume maps ./public/uploads to /var/www/uploads
         $baseDir = file_exists('/var/www/uploads') ? '/var/www/uploads' : __DIR__ . '/../../public/uploads';
-        $relPath = '';
+
+        // Multi-tenancy Buffer: Prepend Tenant Slug (default to 'main')
+        $tenantSlug = $request->getHeaderLine('X-Tenant-ID') ?: 'main';
+        // Sanitize slug just to be safe (alphanumeric only)
+        $tenantSlug = preg_replace('/[^a-zA-Z0-9_\-]/', '', $tenantSlug);
+
+        $relPath = '/' . $tenantSlug;
 
         if ($courseId) {
             // Sanitized course ID to be safe
             $courseId = (int) $courseId;
             if ($type === 'thumbnail') {
-                $relPath = "/$courseId/thumbnails";
+                $relPath .= "/$courseId/thumbnails";
             } elseif ($type === 'content') {
-                $relPath = "/$courseId/content";
+                $relPath .= "/$courseId/content";
             } elseif ($type === 'assignment') {
                 // Determine group ID for this user and course
                 // Requires database connection
@@ -70,22 +76,22 @@ function registerUploadRoutes($app, $authMiddleware)
                     $groupId = $stmt->fetchColumn();
 
                     if ($groupId) {
-                        $relPath = "/$groupId";
+                        $relPath .= "/$groupId";
                     } else {
                         // Fallback if no group found (shouldn't happen if properly assigned)
-                        $relPath = "/$courseId/assignments/$userId";
+                        $relPath .= "/$courseId/assignments/$userId";
                     }
                 } catch (Exception $e) {
                     // Fallback
-                    $relPath = "/$courseId/assignments/error";
+                    $relPath .= "/$courseId/assignments/error";
                 }
             } else {
-                $relPath = "/$courseId/misc";
+                $relPath .= "/$courseId/misc";
             }
         } elseif ($type === 'organization') {
-            $relPath = "/organization";
+            $relPath .= "/organization";
         } else {
-            $relPath = "";
+            $relPath .= "";
         }
 
         $targetDir = $baseDir . $relPath;
@@ -106,7 +112,8 @@ function registerUploadRoutes($app, $authMiddleware)
 
             // Return relative URL
             // Since we store in public/uploads, and public is web root for Angular, URL is /uploads/...
-            $urlKey = $relPath ? ltrim($relPath . '/' . $filename, '/') : $filename;
+            // Path is usually /uploads/{tenant}/{folder}/{file}
+            $urlKey = ltrim($relPath . '/' . $filename, '/');
 
             return jsonResponse($response, [
                 'status' => 'success',

@@ -19,7 +19,7 @@ return [
     // Master Database (for multi-tenancy)
     'master_database' => [
         'host' => 'db',
-        'name' => 'lms_master',      // Default master DB name
+        'name' => 'master',      // Default master DB name
         'user' => 'root',
         'password' => 'root',
         'charset' => 'utf8mb4'

@@ -1,69 +1,4 @@
 <?php
-require __DIR__ . '/vendor/autoload.php';
-require_once __DIR__ . '/api/schema.php';
-
-// Check if running from CLI
-if (php_sapi_name() !== 'cli') {
-    die("This script must be run from the command line.");
-}
-
-function prompt($message, $default = null)
-{
-    if ($default) {
-        echo $message . " [$default]: ";
-    } else {
-        echo $message . ": ";
-    }
-    $handle = fopen("php://stdin", "r");
-    $line = fgets($handle);
-    fclose($handle);
-    $input = trim($line);
-    return $input === '' ? $default : $input;
-}
-
-echo "GravLMS Database Initializer\n";
-echo "============================\n";
-echo "1. Initialize Master Database (stores tenant info)\n";
-echo "2. Initialize Tenant Database (app schema)\n";
-$choice = prompt("Choose an option", "2");
-
-$host = 'db';
-$name = 'my_app_db';
-$user = 'root';
-$pass = 'root';
-
-if ($choice === '1') {
-    echo "\n--- Master Database Configuration ---\n";
-    $host = prompt("Host", $host);
-    $name = prompt("Database Name", $name);
-    $user = prompt("User", $user);
-    $pass = prompt("Password", $pass);
-
-    try {
-        $dsn = "mysql:host=$host;dbname=$name;charset=utf8mb4";
-        $pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-        echo "Connected to Master DB.\n";
-        initializeMasterSchema($pdo);
-    } catch (PDOException $e) {
-        die("Connection failed: " . $e->getMessage() . "\n");
-    }
-
-} else {
-    echo "\n--- Tenant Database Configuration ---\n";
-    $host = prompt("Host", $host);
-    $name = prompt("Database Name", $name);
-    $user = prompt("User", $user);
-    $pass = prompt("Password", $pass);
-
-    try {
-        $dsn = "mysql:host=$host;dbname=$name;charset=utf8mb4";
-        $pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-        echo "Connected to Tenant DB.\n";
-        initializeTenantSchema($pdo);
-    } catch (PDOException $e) {
-        die("Connection failed: " . $e->getMessage() . "\n");
-    }
-}
 
 function initializeMasterSchema($pdo)
 {
@@ -167,7 +102,7 @@ function initializeTenantSchema($pdo)
         id INT AUTO_INCREMENT PRIMARY KEY,
         title VARCHAR(255) NOT NULL,
         content TEXT,
-        type ENUM('page', 'test') DEFAULT 'page',
+        type ENUM('page', 'test', 'video', 'assessment', 'assignment') DEFAULT 'page',
         course_id INT NULL,
         display_order INT DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -221,7 +156,7 @@ function initializeTenantSchema($pdo)
         description TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )";
-    echo "Debug SQL: " . htmlspecialchars($sqlGroups) . "<br>";
+    // echo "Debug SQL: " . htmlspecialchars($sqlGroups) . "<br>";
     $pdo->exec($sqlGroups);
     echo "Table 'groups' created or already exists.<br>";
 
