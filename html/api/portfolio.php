@@ -41,6 +41,22 @@ function registerPortfolioRoutes($app, $authMiddleware)
                 $stmtMark->execute([$user->id]);
                 $testResults = $stmtMark->fetchAll(PDO::FETCH_ASSOC);
 
+                // 3. Get Assignment History (Archived Submissions + Active ones?)
+                // User wants to see "original" too. So let's fetch all passed/graded assignments that are archived OR active?
+                // Or just a separate list of "Assignment History".
+                $sqlAssignments = "SELECT asub.id, asub.submission_text, asub.file_url, asub.submitted_at, asub.graded_at, asub.feedback, asub.status, asub.archived_at,
+                                          cp.title as lesson_title, c.title as course_title
+                                   FROM assessment_submissions asub
+                                   JOIN assessments a ON asub.assessment_id = a.id
+                                   JOIN course_pages cp ON a.page_id = cp.id
+                                   JOIN courses c ON cp.course_id = c.id
+                                   WHERE asub.user_id = ? AND (asub.archived_at IS NOT NULL OR asub.status != 'pending')
+                                   ORDER BY asub.submitted_at DESC";
+
+                $stmtAss = $pdo->prepare($sqlAssignments);
+                $stmtAss->execute([$user->id]);
+                $assignmentHistory = $stmtAss->fetchAll(PDO::FETCH_ASSOC);
+
                 // Combine data
                 $portfolio = [
                     'user' => [
@@ -48,7 +64,8 @@ function registerPortfolioRoutes($app, $authMiddleware)
                         'email' => $user->email
                     ],
                     'completed_courses' => $completedCourses,
-                    'test_results' => $testResults
+                    'test_results' => $testResults,
+                    'assignment_history' => $assignmentHistory
                 ];
 
                 return jsonResponse($response, $portfolio);

@@ -163,5 +163,16 @@
         "PASSED": "Geslaagd",
         "FAILED": "Gezakt",
         "NO_RESULTS": "Geen testresultaten beschikbaar."
-    }
+    },
+    "ASSIGNMENT_HISTORY": "Opdrachtgeschiedenis",
+    "NO_ASSIGNMENT_HISTORY": "Geen opdrachtgeschiedenis gevonden.",
+    "ASSIGNMENT": "Opdracht",
+    "SUBMISSION_DETAILS": "Inlever Details",
+    "FEEDBACK": "Feedback",
+    "FILE": "Bestand",
+    "DOWNLOAD_FILE": "Bestand Downloaden",
+    "VIEW_DETAILS": "Bekijk Details",
+    "CLOSE": "Sluiten",
+    "NO_FEEDBACK": "Geen feedback gegeven.",
+    "SEARCH_ASSIGNMENTS": "Zoek opdrachten..."
 }

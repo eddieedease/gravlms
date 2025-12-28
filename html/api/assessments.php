@@ -24,6 +24,8 @@ function registerAssessmentRoutes($app, $authMiddleware)
                         s.status,
                         s.graded_at,
                         s.feedback,
+                        s.file_url,
+                        s.submission_text,
                         u.username as student_name,
                         u.id as student_id,
                         cp.title as lesson_title,
@@ -46,6 +48,9 @@ function registerAssessmentRoutes($app, $authMiddleware)
                 } else if ($status === 'graded') {
                     $sql .= " AND (s.status = 'passed' OR s.status = 'failed')";
                 }
+
+                // Exclude archived (reset) submissions
+                $sql .= " AND s.archived_at IS NULL";
 
                 $sql .= " ORDER BY s.submitted_at DESC"; // Newest first
 
@@ -96,8 +101,8 @@ function registerAssessmentRoutes($app, $authMiddleware)
                     return jsonResponse($response, ['error' => 'Assessment not found for this page'], 404);
                 }
 
-                // Get user submission if exists
-                $stmtSub = $pdo->prepare("SELECT * FROM assessment_submissions WHERE assessment_id = ? AND user_id = ?");
+                // Get user submission if exists (and not archived)
+                $stmtSub = $pdo->prepare("SELECT * FROM assessment_submissions WHERE assessment_id = ? AND user_id = ? AND archived_at IS NULL");
                 $stmtSub->execute([$assessment['id'], $userId]);
                 $submission = $stmtSub->fetch();
 
@@ -141,8 +146,8 @@ function registerAssessmentRoutes($app, $authMiddleware)
                     $assessmentId = $pdo->lastInsertId();
                 }
 
-                // Check existing submission
-                $stmtCheck = $pdo->prepare("SELECT id FROM assessment_submissions WHERE assessment_id = ? AND user_id = ?");
+                // Check existing active submission
+                $stmtCheck = $pdo->prepare("SELECT id FROM assessment_submissions WHERE assessment_id = ? AND user_id = ? AND archived_at IS NULL");
                 $stmtCheck->execute([$assessmentId, $userId]);
                 $existingId = $stmtCheck->fetchColumn();
 

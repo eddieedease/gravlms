@@ -5,6 +5,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { jsPDF } from 'jspdf';
 import { AuthService } from '../../services/auth.service';
 import { ConfigService } from '../../services/config.service';
+import { FormsModule } from '@angular/forms';
 
 interface PortfolioData {
   user: {
@@ -13,12 +14,13 @@ interface PortfolioData {
   };
   completed_courses: any[];
   test_results: any[];
+  assignment_history: any[];
 }
 
 @Component({
   selector: 'app-portfolio',
   standalone: true,
-  imports: [CommonModule, TranslateModule],
+  imports: [CommonModule, TranslateModule, FormsModule],
   templateUrl: './portfolio.html',
   styleUrls: ['./portfolio.css']
 })
@@ -26,6 +28,16 @@ export class PortfolioComponent implements OnInit {
   portfolioData: PortfolioData | null = null;
   loading = true;
   error = '';
+  selectedAssignment: any = null;
+
+  // Pagination and Search State
+  pageSize = 5;
+
+  courseSearch = '';
+  coursePage = 1;
+
+  assignmentSearch = '';
+  assignmentPage = 1;
 
   constructor(
     private http: HttpClient,
@@ -59,6 +71,63 @@ export class PortfolioComponent implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  // Course Helpers
+  get filteredCourses() {
+    if (!this.portfolioData?.completed_courses) return [];
+    if (!this.courseSearch) return this.portfolioData.completed_courses;
+    const query = this.courseSearch.toLowerCase();
+    return this.portfolioData.completed_courses.filter(c =>
+      c.title.toLowerCase().includes(query) ||
+      (c.description && c.description.toLowerCase().includes(query))
+    );
+  }
+
+  get paginatedCourses() {
+    const start = (this.coursePage - 1) * this.pageSize;
+    return this.filteredCourses.slice(start, start + this.pageSize);
+  }
+
+  get totalCoursePages() {
+    return Math.ceil(this.filteredCourses.length / this.pageSize);
+  }
+
+  // Assignment Helpers
+  get filteredAssignments() {
+    if (!this.portfolioData?.assignment_history) return [];
+    if (!this.assignmentSearch) return this.portfolioData.assignment_history;
+    const query = this.assignmentSearch.toLowerCase();
+    return this.portfolioData.assignment_history.filter(a =>
+      a.lesson_title.toLowerCase().includes(query) ||
+      a.course_title.toLowerCase().includes(query)
+    );
+  }
+
+  get paginatedAssignments() {
+    const start = (this.assignmentPage - 1) * this.pageSize;
+    return this.filteredAssignments.slice(start, start + this.pageSize);
+  }
+
+  get totalAssignmentPages() {
+    return Math.ceil(this.filteredAssignments.length / this.pageSize);
+  }
+
+  // Pagination Controls
+  nextCoursePage() {
+    if (this.coursePage < this.totalCoursePages) this.coursePage++;
+  }
+
+  prevCoursePage() {
+    if (this.coursePage > 1) this.coursePage--;
+  }
+
+  nextAssignmentPage() {
+    if (this.assignmentPage < this.totalAssignmentPages) this.assignmentPage++;
+  }
+
+  prevAssignmentPage() {
+    if (this.assignmentPage > 1) this.assignmentPage--;
   }
 
   getCompletedCourse(courseId: any): any {
@@ -124,5 +193,36 @@ export class PortfolioComponent implements OnInit {
     if (!url) return '';
     if (url.startsWith('http')) return url;
     return `${this.config.apiUrl}/uploads/${url}`;
+  }
+
+  getFileUrl(path: string): string {
+    if (!path) return '';
+    if (path.startsWith('http')) return path;
+
+    // Ensure path starts with /
+    if (!path.startsWith('/')) {
+      path = '/' + path;
+    }
+
+    // Assessment file_url often starts with /uploads/ (e.g. /uploads/main/1/file.png)
+    // Backend route is /api/uploads/{filename}
+    // If we append /uploads/main/... to /api, we get /api/uploads/main/...
+    // This matches the route correctly (filename = main/...)
+
+    // Check if path already starts with /uploads/
+    if (path.startsWith('/uploads/')) {
+      return `${this.config.apiUrl}${path}`;
+    }
+
+    // Otherwise assume it's a relative filename and needs /uploads/ prefix
+    return `${this.config.apiUrl}/uploads${path}`;
+  }
+
+  openModal(assignment: any) {
+    this.selectedAssignment = assignment;
+  }
+
+  closeModal() {
+    this.selectedAssignment = null;
   }
 }

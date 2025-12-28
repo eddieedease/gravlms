@@ -171,5 +171,16 @@
         "PASSED": "Passed",
         "FAILED": "Failed",
         "NO_RESULTS": "No test results available."
-    }
+    },
+    "ASSIGNMENT_HISTORY": "Assignment History",
+    "NO_ASSIGNMENT_HISTORY": "No assignment history found.",
+    "ASSIGNMENT": "Assignment",
+    "SUBMISSION_DETAILS": "Submission Details",
+    "FEEDBACK": "Feedback",
+    "FILE": "File",
+    "DOWNLOAD_FILE": "Download File",
+    "VIEW_DETAILS": "View Details",
+    "CLOSE": "Close",
+    "NO_FEEDBACK": "No feedback provided.",
+    "SEARCH_ASSIGNMENTS": "Search assignments..."
 }

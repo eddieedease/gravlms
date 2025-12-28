@@ -51,7 +51,20 @@ export class AssessorDashboardComponent implements OnInit {
     }
 
     getFileUrl(path: string): string {
+        if (!path) return '';
         if (path.startsWith('http')) return path;
-        return `${this.config.apiUrl}/uploads/${path}`;
+
+        // Ensure path starts with /
+        if (!path.startsWith('/')) {
+            path = '/' + path;
+        }
+
+        // If path starts with /uploads/, append to apiUrl directly (result: /api/uploads/main/...)
+        // Backend route matches /api/uploads/{filename}
+        if (path.startsWith('/uploads/')) {
+            return `${this.config.apiUrl}${path}`;
+        }
+
+        return `${this.config.apiUrl}/uploads${path}`;
     }
 }

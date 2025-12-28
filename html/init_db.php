@@ -566,4 +566,11 @@ function initializeTenantSchema($pdo)
         }
     }
 
+    // Ensure 'archived_at' column exists in assessment_submissions
+    $stmt = $pdo->query("SHOW COLUMNS FROM assessment_submissions LIKE 'archived_at'");
+    if ($stmt->rowCount() == 0) {
+        $pdo->exec("ALTER TABLE assessment_submissions ADD COLUMN archived_at TIMESTAMP NULL DEFAULT NULL AFTER feedback");
+        echo "Migration: Added 'archived_at' column to assessment_submissions.<br>";
+    }
+
 }

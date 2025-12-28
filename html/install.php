@@ -23,6 +23,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             initializeTenantSchema($pdo);
             $message = "Tenant database initialized successfully!";
             $messageType = "success";
+        } elseif ($action === "migrate_all") {
+            // New Multi-Tenant Migration
+            require_once __DIR__ . '/migrate_tenants.php';
+            // Capture output buffer to show in message? Or just run it and let it echo?
+            // Since migrateAllTenants echoes directly, we might want to capture it or just let it print below.
+            // But the UI expects $message. Let's capture output.
+            ob_start();
+            migrateAllTenants();
+            $message = ob_get_clean();
+            $messageType = "info"; // Status info
         }
     } catch (PDOException $e) {
         $message = "Connection failed: " . $e->getMessage();
@@ -162,6 +172,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <select name="action" id="action">
                     <option value="tenant">Tenant Database (Default)</option>
                     <option value="master">Master Database (Global)</option>
+                    <option value="migrate_all">Update All Tenants (Multi-Tenant)</option>
                 </select>
             </div>
 

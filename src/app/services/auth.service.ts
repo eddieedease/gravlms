@@ -73,7 +73,8 @@ export class AuthService {
 
     isAssessor() {
         const user = this.currentUser();
-        return user && (user.is_assessor === true);
+        // Check both explicit boolean and string '1' just in case
+        return user && (user.is_assessor === true || user.is_assessor === '1' || user.is_assessor === 1);
     }
 
     // Note: Monitor capability is dynamic (group assignment), but this checks the explicit role

@@ -225,13 +225,24 @@ function registerLearningRoutes($app, $authMiddleware)
                 // Delete completed lessons for this user/course to reset progress
                 // But keep completed_courses history!
 
-                // We need to delete from completed_lessons where page_id belongs to course_id
+                // 1. Delete completed lessons for this user/course to reset progress (Green ticks)
                 $sql = "DELETE cl FROM completed_lessons cl
                         JOIN course_pages cp ON cl.page_id = cp.id
                         WHERE cl.user_id = ? AND cp.course_id = ?";
 
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute([$userId, $courseId]);
+
+                // 2. Archive completed assignments for this user/course
+                // Update assessment_submissions setting archived_at = NOW()
+                $sqlArchive = "UPDATE assessment_submissions asub
+                               JOIN assessments a ON asub.assessment_id = a.id
+                               JOIN course_pages cp ON a.page_id = cp.id
+                               SET asub.archived_at = NOW()
+                               WHERE asub.user_id = ? AND cp.course_id = ? AND asub.archived_at IS NULL";
+
+                $stmtArchive = $pdo->prepare($sqlArchive);
+                $stmtArchive->execute([$userId, $courseId]);
 
                 return jsonResponse($response, ['status' => 'success', 'message' => 'Course reset successfully']);
             } catch (PDOException $e) {
