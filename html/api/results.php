@@ -40,14 +40,15 @@ function registerResultsRoutes($app, $authMiddleware)
                     return jsonResponse($response, ['error' => 'Course ID is required for course progress view'], 400);
                 }
 
-                // 1. Get Total Pages for the course
-                $stmt = $pdo->prepare("SELECT COUNT(*) FROM course_pages WHERE course_id = ?");
-                $stmt->execute([$courseId]);
-                $totalPages = $stmt->fetchColumn();
+                try {
+                    // 1. Get Total Pages for the course
+                    $stmt = $pdo->prepare("SELECT COUNT(*) FROM course_pages WHERE course_id = ?");
+                    $stmt->execute([$courseId]);
+                    $totalPages = $stmt->fetchColumn();
 
-                // 2. Build Query for Assigned Users
+                    // 2. Build Query for Assigned Users
 // Users can be assigned directly OR via groups
-                $sql = "SELECT DISTINCT u.id, u.username, u.email,
+                    $sql = "SELECT DISTINCT u.id, u.username, u.email,
 (SELECT GROUP_CONCAT(g.name SEPARATOR ', ')
 FROM `groups` g
 JOIN group_users gu2 ON g.id = gu2.group_id
@@ -63,59 +64,69 @@ OR
 gu.group_id IN (SELECT group_id FROM group_courses WHERE course_id = ?)
 )";
 
-                $params = [$courseId, $courseId, $courseId];
+                    $params = [$courseId, $courseId, $courseId];
 
-                // Access Control
-                if (!$isAdmin) {
-                    $placeholders = implode(',', array_fill(0, count($monitorGroupIds), '?'));
-                    $sql .= " AND gu.group_id IN ($placeholders)";
-                    $params = array_merge($params, $monitorGroupIds);
-                }
-
-                // Filters
-                if ($groupId) {
-                    if (!$isAdmin && !in_array($groupId, $monitorGroupIds)) {
-                        return jsonResponse($response, ['error' => 'Access denied for this group'], 403);
-                    }
-                    $sql .= " AND gu.group_id = ?";
-                    $params[] = $groupId;
-                }
-
-                if ($search) {
-                    $sql .= " AND (u.username LIKE ? OR u.email LIKE ?)";
-                    $term = "%$search%";
-                    $params[] = $term;
-                    $params[] = $term;
-                }
-
-                $stmt = $pdo->prepare($sql);
-                $stmt->execute($params);
-                $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-                // Deduping users
-                $uniqueUsers = [];
-                foreach ($rows as $r) {
-                    // Check status filter in PHP to keep SQL simpler (logic is easier here)
-                    $completed = (int) $r['completed_count'];
-                    $total = (int) $totalPages;
-
-                    $status = 'not_started';
-                    if ($completed >= $total && $total > 0) {
-                        $status = 'completed';
-                    } elseif ($completed > 0) {
-                        $status = 'busy';
+                    // Access Control
+                    if (!$isAdmin) {
+                        $placeholders = implode(',', array_fill(0, count($monitorGroupIds), '?'));
+                        $sql .= " AND gu.group_id IN ($placeholders)";
+                        $params = array_merge($params, $monitorGroupIds);
                     }
 
-                    if ($statusFilter !== 'all' && $status !== $statusFilter) {
-                        continue;
+                    // Filters
+                    if ($groupId) {
+                        if (!$isAdmin && !in_array($groupId, $monitorGroupIds)) {
+                            return jsonResponse($response, ['error' => 'Access denied for this group'], 403);
+                        }
+                        $sql .= " AND gu.group_id = ?";
+                        $params[] = $groupId;
                     }
 
-                    $r['total_pages'] = $total;
-                    $r['status'] = $status;
-                    $r['progress_percent'] = ($total > 0) ? round(($completed / $total) * 100) : 0;
+                    if ($search) {
+                        $sql .= " AND (u.username LIKE ? OR u.email LIKE ?)";
+                        $term = "%$search%";
+                        $params[] = $term;
+                        $params[] = $term;
+                    }
 
-                    $uniqueUsers[$r['id']] = $r;
+                    $stmt = $pdo->prepare($sql);
+                    $stmt->execute($params);
+                    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                    // Deduping users
+                    $uniqueUsers = [];
+                    foreach ($rows as $r) {
+                        // Check status filter in PHP to keep SQL simpler (logic is easier here)
+                        $completed = (int) $r['completed_count'];
+                        $total = (int) $totalPages;
+
+                        $status = 'not_started';
+                        if ($completed >= $total && $total > 0) {
+                            $status = 'completed';
+                        } elseif ($completed > 0) {
+                            $status = 'busy';
+                        }
+
+                        if ($statusFilter !== 'all' && $status !== $statusFilter) {
+                            continue;
+                        }
+
+                        $r['total_pages'] = $total;
+                        $r['status'] = $status;
+                        $r['progress_percent'] = ($total > 0) ? round(($completed / $total) * 100) : 0;
+
+                        $uniqueUsers[$r['id']] = $r;
+                    }
+                } catch (\Throwable $e) {
+                    return jsonResponse($response, [
+                        'error' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
+                        'trace' => $e->getTraceAsString()
+                    ], 500);
                 }
+
+                return jsonResponse($response, array_values($uniqueUsers));
 
             } elseif ($view === 'group_status') {
                 if (!$groupId) {
