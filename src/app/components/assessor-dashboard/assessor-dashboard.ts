@@ -1,12 +1,13 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { ApiService } from '../../services/api.service';
 import { ConfigService } from '../../services/config.service';
 
 @Component({
     selector: 'app-assessor-dashboard',
     standalone: true,
-    imports: [CommonModule],
+    imports: [CommonModule, TranslateModule],
     templateUrl: './assessor-dashboard.html'
 })
 export class AssessorDashboardComponent implements OnInit {

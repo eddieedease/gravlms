@@ -1,7 +1,7 @@
 <div class="container mx-auto px-4 py-8">
     <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">Assessments Dashboard</h1>
-        <p class="mt-2 text-gray-600">Review and grade pending assignments from your groups.</p>
+        <h1 class="text-3xl font-bold text-gray-900">{{ 'ASSESSMENTS' | translate }}</h1>
+        <p class="mt-2 text-gray-600">{{ 'REVIEW_PENDING_ASSIGNMENTS' | translate }}</p>
     </div>
 
     <!-- Tabs -->
@@ -10,12 +10,12 @@
             <button (click)="setTab('pending')" [class.border-indigo-500]="activeStatus() === 'pending'"
                 [class.text-indigo-600]="activeStatus() === 'pending'"
                 class="whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                Pending Reviews
+                {{ 'PENDING_REVIEWS' | translate }}
             </button>
             <button (click)="setTab('graded')" [class.border-indigo-500]="activeStatus() === 'graded'"
                 [class.text-indigo-600]="activeStatus() === 'graded'"
                 class="whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                Grading History
+                {{ 'GRADING_HISTORY' | translate }}
             </button>
         </nav>
     </div>
@@ -57,14 +57,15 @@
 
                 <!-- User Submission Content -->
                 <div class="mb-6 p-4 bg-gray-50 rounded border border-gray-100">
-                    <h4 class="text-sm font-medium text-gray-700 mb-2">Student Response:</h4>
-                    <p class="whitespace-pre-wrap text-gray-800">{{ sub.submission_text || 'No text provided.' }}</p>
+                    <h4 class="text-sm font-medium text-gray-700 mb-2">{{ 'STUDENT_RESPONSE' | translate }}:</h4>
+                    <p class="whitespace-pre-wrap text-gray-800">{{ sub.submission_text || ('NO_TEXT' | translate) }}
+                    </p>
 
                     @if (sub.file_url) {
                     <div class="mt-4 pt-4 border-t border-gray-200">
                         <a [href]="getFileUrl(sub.file_url)" target="_blank"
                             class="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800">
-                            <i class="ph ph-file-arrow-down"></i> Download Attachment
+                            <i class="ph ph-file-arrow-down"></i> {{ 'DOWNLOAD_ATTACHMENT' | translate }}
                         </a>
                     </div>
                     }
@@ -74,25 +75,26 @@
                 @if (activeStatus() === 'pending') {
                 <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-end bg-blue-50 p-4 rounded-lg">
                     <div class="flex-1 w-full">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Feedback</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ 'FEEDBACK' | translate }}</label>
                         <textarea #feedbackInput class="w-full p-2 border border-gray-300 rounded text-sm h-20"
-                            placeholder="Provide feedback to the student..."></textarea>
+                            [placeholder]="'PROVIDE_FEEDBACK' | translate"></textarea>
                     </div>
                     <div class="flex gap-2">
                         <button (click)="grade(sub.submission_id, 'passed', feedbackInput.value)"
                             class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium">
-                            Pass
+                            {{ 'PASS' | translate }}
                         </button>
                         <button (click)="grade(sub.submission_id, 'failed', feedbackInput.value)"
                             class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 font-medium">
-                            Fail
+                            {{ 'FAIL' | translate }}
                         </button>
                     </div>
                 </div>
                 } @else {
                 <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
                     <div class="flex items-center justify-between mb-2">
-                        <span class="font-bold uppercase text-xs tracking-wide text-gray-500">Graded Status</span>
+                        <span class="font-bold uppercase text-xs tracking-wide text-gray-500">{{ 'GRADED_STATUS' |
+                            translate }}</span>
                         <span [class.bg-green-100]="sub.status === 'passed'"
                             [class.text-green-800]="sub.status === 'passed'"
                             [class.bg-red-100]="sub.status === 'failed'" [class.text-red-800]="sub.status === 'failed'"

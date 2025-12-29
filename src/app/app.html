@@ -28,12 +28,12 @@
             </a>
             <a routerLink="/portfolio" routerLinkActive="border-algolia-primary text-white"
               class="border-transparent text-gray-400 hover:border-gray-300 hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors">
-              Portfolio
+              {{ 'PORTFOLIO_MENU' | translate }}
             </a>
             @if (auth.isEditor()) {
             <a routerLink="/editor" routerLinkActive="border-algolia-primary text-white"
               class="border-transparent text-gray-400 hover:border-gray-300 hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors">
-              Editor
+              {{ 'EDITOR' | translate }}
             </a>
             }
             @if (auth.isMonitor()) {
@@ -51,7 +51,7 @@
             @if (auth.isAdmin()) {
             <a routerLink="/admin" routerLinkActive="border-algolia-primary text-white"
               class="border-transparent text-gray-400 hover:border-gray-300 hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors">
-              Admin
+              {{ 'ADMIN' | translate }}
             </a>
             }
             }
@@ -119,10 +119,12 @@
           class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">{{
           'DASHBOARD' | translate }}</a>
         <a routerLink="/portfolio" (click)="closeMobileMenu()" routerLinkActive="bg-gray-900 text-white"
-          class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Portfolio</a>
+          class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">{{
+          'PORTFOLIO_MENU' | translate }}</a>
         @if (auth.isEditor()) {
         <a routerLink="/editor" (click)="closeMobileMenu()" routerLinkActive="bg-gray-900 text-white"
-          class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Editor</a>
+          class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">{{
+          'EDITOR' | translate }}</a>
         }
         @if (auth.isAdmin() || auth.isMonitor()) {
         <a routerLink="/results" (click)="closeMobileMenu()" routerLinkActive="bg-gray-900 text-white"
@@ -136,7 +138,8 @@
         }
         @if (auth.isAdmin()) {
         <a routerLink="/admin" (click)="closeMobileMenu()" routerLinkActive="bg-gray-900 text-white"
-          class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Admin</a>
+          class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">{{
+          'ADMIN' | translate }}</a>
         }
         }
       </div>

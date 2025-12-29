@@ -1,4 +1,5 @@
 import { Component, inject, OnInit, signal, computed, ElementRef, viewChild, HostListener } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { CourseService } from '../../services/course.service';
 import { AuthService } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
@@ -23,6 +24,7 @@ export class Editor implements OnInit {
   private apiService = inject(ApiService);
   private config = inject(ConfigService);
   private fb = inject(FormBuilder);
+  private sanitizer = inject(DomSanitizer);
 
   fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
   courseThumbnailInput = viewChild<ElementRef<HTMLInputElement>>('courseThumbnailInput');
@@ -57,7 +59,7 @@ export class Editor implements OnInit {
   });
 
   selectedPage = signal<any>(null);
-  previewHtml = signal<string>('');
+  previewHtml = signal<SafeHtml | string>('');
   viewMode = signal<'editor' | 'split' | 'preview'>('editor');
   sidebarOpen = signal<boolean>(true);
   createItemDropdownOpen = signal<boolean>(false);
@@ -118,7 +120,7 @@ export class Editor implements OnInit {
 
   async updatePreview(content: string) {
     const html = await marked.parse(content);
-    this.previewHtml.set(html);
+    this.previewHtml.set(this.sanitizer.bypassSecurityTrustHtml(html));
   }
 
   loadCourses() {
@@ -505,9 +507,55 @@ export class Editor implements OnInit {
         break;
       case 'quote':
         insertText = selectedText
-          ? selectedText.split('\n').map(line => `> ${line}`).join('\n')
+          ? selectedText.split('\n').map(line => '> ' + line).join('\n')
           : '> Quote';
         cursorOffset = selectedText ? insertText.length : 2;
+        break;
+      case 'strike':
+        insertText = `~~${selectedText || 'strikethrough'}~~`;
+        cursorOffset = selectedText ? insertText.length : 2;
+        break;
+      case 'hr':
+        insertText = '\n---\n';
+        cursorOffset = 5;
+        break;
+      case 'table':
+        insertText = `
+| Header 1 | Header 2 |
+| :--- | :--- |
+| Row 1 | Data |
+| Row 2 | Data |
+`;
+        cursorOffset = insertText.length;
+        break;
+      case 'info':
+        insertText = `<div class="p-4 mb-4 bg-blue-50 text-blue-800 rounded-lg border border-blue-200">
+  <strong>Info:</strong> ${selectedText || 'Your content here'}
+</div>`;
+        cursorOffset = insertText.length - 6; // before last </div>
+        break;
+      case 'warning':
+        insertText = `<div class="p-4 mb-4 bg-orange-50 text-orange-800 rounded-lg border border-orange-200">
+  <strong>Warning:</strong> ${selectedText || 'Your content here'}
+</div>`;
+        cursorOffset = insertText.length - 6;
+        break;
+      case 'danger':
+        insertText = `<div class="p-4 mb-4 bg-red-50 text-red-800 rounded-lg border border-red-200">
+  <strong>Danger:</strong> ${selectedText || 'Your content here'}
+</div>`;
+        cursorOffset = insertText.length - 6;
+        break;
+      case 'details':
+        insertText = `<details class="group p-4 bg-gray-50 rounded-lg border border-gray-200">
+  <summary class="font-bold cursor-pointer text-gray-800 select-none">
+    ${selectedText || 'Click to view details'}
+  </summary>
+  <div class="mt-2 text-gray-700">
+    Hidden content goes here...
+  </div>
+</details>`;
+        cursorOffset = insertText.length - 19; // approximate position inside div
         break;
     }
 

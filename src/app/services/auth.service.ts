@@ -40,12 +40,19 @@ export class AuthService {
     }
 
     logout() {
+        this.clearSession();
+        this.router.navigate(['/login']);
+    }
+
+    clearSession() {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         this.currentUser.set(null);
         this.isLtiMode.set(false);
         this.ltiCourseId.set(null);
-        this.router.navigate(['/login']);
+        // Do not remove tenantId here as we might want to preserve it or overwrite it
+        // actually, usually logout implies clearing everything. 
+        // But for switching tenants, we will overwrite tenantId anyway in Login component.
     }
 
     getToken() {
