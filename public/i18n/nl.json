@@ -207,5 +207,6 @@
     "FAIL": "Onvoldoende",
     "GRADED_STATUS": "Beoordelingsstatus",
     "RETAKE": "Opnieuw doen",
-    "RETAKE_HINT": "Doe deze cursus opnieuw"
+    "RETAKE_HINT": "Doe deze cursus opnieuw",
+    "CONGRATULATIONS": "Gefeliciteerd"
 }

@@ -209,5 +209,6 @@
     "FAIL": "Fail",
     "GRADED_STATUS": "Graded Status",
     "RETAKE": "Retake",
-    "RETAKE_HINT": "Retake this course"
+    "RETAKE_HINT": "Retake this course",
+    "CONGRATULATIONS": "Congratulations"
 }

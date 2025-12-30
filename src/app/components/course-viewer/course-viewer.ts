@@ -238,8 +238,6 @@ export class CourseViewerComponent implements OnInit {
         this.completedPageIds.update(ids => [...ids, pageId]);
         if (courseCompleted) {
             this.showCompletionModal.set(true);
-        } else {
-            this.navigateToNextItem(pageId);
         }
     }
 

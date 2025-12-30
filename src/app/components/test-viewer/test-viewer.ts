@@ -15,6 +15,7 @@ import { TranslateModule } from '@ngx-translate/core';
 export class TestViewerComponent implements OnInit, OnChanges {
   @Input() pageId!: number;
   @Output() passed = new EventEmitter<{ pageId: number, courseCompleted: boolean }>();
+  @Output() navigateNext = new EventEmitter<void>();
 
   test = signal<any>(null);
   userAnswers = signal<{ [questionId: number]: number[] }>({}); // questionId -> array of selected option IDs
@@ -87,7 +88,7 @@ export class TestViewerComponent implements OnInit, OnChanges {
   }
 
   isMultipleChoice(question: any): boolean {
-    return question.options.filter((o: any) => o.is_correct).length > 1;
+    return !!question.is_multiple;
   }
 
   submit() {
@@ -103,13 +104,10 @@ export class TestViewerComponent implements OnInit, OnChanges {
         this.submitted.set(true);
 
         if (result.passed) {
-          // Add delay before emitting passed event
-          setTimeout(() => {
-            this.passed.emit({
-              pageId: this.pageId,
-              courseCompleted: result.course_completed || false
-            });
-          }, 2000);
+          this.passed.emit({
+            pageId: this.pageId,
+            courseCompleted: result.course_completed || false
+          });
         }
       },
       error: (err) => {

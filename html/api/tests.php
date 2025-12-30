@@ -38,7 +38,17 @@ function registerTestRoutes($app, $jwtMiddleware)
             foreach ($questions as &$question) {
                 $stmt = $pdo->prepare("SELECT * FROM test_question_options WHERE question_id = ?");
                 $stmt->execute([$question['id']]);
-                $question['options'] = $stmt->fetchAll();
+                $options = $stmt->fetchAll();
+
+                $correctCount = 0;
+                foreach ($options as $opt) {
+                    // Check for truthy value (1, '1', true)
+                    if (!empty($opt['is_correct'])) {
+                        $correctCount++;
+                    }
+                }
+                $question['options'] = $options;
+                $question['is_multiple'] = ($correctCount > 1);
             }
 
             $test['questions'] = $questions;
