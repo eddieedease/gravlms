@@ -192,6 +192,7 @@ function initializeTenantSchema($pdo)
         id INT AUTO_INCREMENT PRIMARY KEY,
         page_id INT NOT NULL,
         description TEXT,
+        show_correct_answers BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (page_id) REFERENCES course_pages(id) ON DELETE CASCADE
     )";
@@ -204,6 +205,7 @@ function initializeTenantSchema($pdo)
         test_id INT NOT NULL,
         question_text TEXT NOT NULL,
         type ENUM('multiple_choice') DEFAULT 'multiple_choice',
+        feedback TEXT NULL,
         display_order INT DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (test_id) REFERENCES tests(id) ON DELETE CASCADE
@@ -506,6 +508,20 @@ function initializeTenantSchema($pdo)
     if ($stmt->rowCount() == 0) {
         $pdo->exec("ALTER TABLE assessment_submissions ADD COLUMN archived_at TIMESTAMP NULL DEFAULT NULL AFTER feedback");
         echo "Migration: Added 'archived_at' column to assessment_submissions.<br>";
+    }
+
+    // Ensure 'show_correct_answers' column exists in tests
+    $stmt = $pdo->query("SHOW COLUMNS FROM tests LIKE 'show_correct_answers'");
+    if ($stmt->rowCount() == 0) {
+        $pdo->exec("ALTER TABLE tests ADD COLUMN show_correct_answers BOOLEAN DEFAULT FALSE AFTER description");
+        echo "Migration: Added 'show_correct_answers' column to tests.<br>";
+    }
+
+    // Ensure 'feedback' column exists in test_questions
+    $stmt = $pdo->query("SHOW COLUMNS FROM test_questions LIKE 'feedback'");
+    if ($stmt->rowCount() == 0) {
+        $pdo->exec("ALTER TABLE test_questions ADD COLUMN feedback TEXT NULL AFTER type");
+        echo "Migration: Added 'feedback' column to test_questions.<br>";
     }
 
 }

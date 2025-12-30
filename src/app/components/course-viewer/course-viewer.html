@@ -161,7 +161,7 @@
 
                 <!-- Instructions -->
                 <div class="bg-blue-50 p-6 rounded-lg mb-6 border border-blue-100">
-                    <h3 class="font-bold text-lg mb-2 text-blue-800">Instructions</h3>
+                    <h3 class="font-bold text-lg mb-2 text-blue-800">{{ 'INSTRUCTIONS' | translate }}</h3>
                     <div [innerHTML]="assessmentInstructions() | marked" class="prose max-w-none">
                     </div>
                 </div>
@@ -174,15 +174,15 @@
                     'bg-gray-50 border border-gray-200': !assessmentStatus()
                 }">
                     <div class="font-bold flex items-center gap-2">
-                        Status:
-                        @if (!assessmentStatus()) { <span>Not Submitted</span> }
-                        @if (assessmentStatus() === 'pending') { <span>Pending Grading</span> }
-                        @if (assessmentStatus() === 'passed') { <span>Passed</span> }
-                        @if (assessmentStatus() === 'failed') { <span>Needs Revision</span> }
+                        {{ 'STATUS' | translate }}:
+                        @if (!assessmentStatus()) { <span>{{ 'NOT_SUBMITTED' | translate }}</span> }
+                        @if (assessmentStatus() === 'pending') { <span>{{ 'PENDING_GRADING' | translate }}</span> }
+                        @if (assessmentStatus() === 'passed') { <span>{{ 'PASSED' | translate }}</span> }
+                        @if (assessmentStatus() === 'failed') { <span>{{ 'NEEDS_REVISION' | translate }}</span> }
                     </div>
                     @if (assessmentFeedback()) {
                     <div class="mt-2 text-sm">
-                        <strong>Feedback:</strong> {{ assessmentFeedback() }}
+                        <strong>{{ 'FEEDBACK' | translate }}:</strong> {{ assessmentFeedback() }}
                     </div>
                     }
                 </div>
@@ -190,15 +190,15 @@
                 <!-- Submission Form -->
                 @if (assessmentStatus() !== 'passed' && assessmentStatus() !== 'pending') {
                 <div class="bg-white p-6 rounded-lg shadow border">
-                    <h3 class="font-bold mb-4">Submit Assignment</h3>
+                    <h3 class="font-bold mb-4">{{ 'SUBMIT_ASSIGNMENT' | translate }}</h3>
 
                     <textarea [(ngModel)]="submissionText"
                         class="w-full h-32 p-3 border rounded mb-4 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                        placeholder="Type your answer here..."></textarea>
+                        [placeholder]="'TYPE_YOUR_ANSWER' | translate"></textarea>
 
                     <div class="mb-4">
-                        <label class="block text-sm font-medium mb-1 text-gray-700">Attachment
-                            (Optional)</label>
+                        <label class="block text-sm font-medium mb-1 text-gray-700">{{ 'ATTACHMENT_OPTIONAL' | translate
+                            }}</label>
                         <input type="file" (change)="onAssessmentFileSelected($event)" class="block w-full text-sm text-gray-500
                             file:mr-4 file:py-2 file:px-4
                             file:rounded-full file:border-0
@@ -211,7 +211,7 @@
                     <button (click)="submitAssessment()"
                         class="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                         [disabled]="isSubmitting()">
-                        {{ isSubmitting() ? 'Submitting...' : 'Submit for Grading' }}
+                        {{ isSubmitting() ? ('SUBMITTING' | translate) : ('SUBMIT_FOR_GRADING' | translate) }}
                     </button>
                 </div>
                 }

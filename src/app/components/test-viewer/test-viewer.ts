@@ -23,6 +23,7 @@ export class TestViewerComponent implements OnInit, OnChanges {
   score = signal<number>(0);
   totalQuestions = signal<number>(0);
   passedStatus = signal<boolean>(false);
+  resultDetails = signal<{ [questionId: number]: { correct_options: number[], feedback: string } } | null>(null);
   loading = signal<boolean>(false);
   error = signal<string>('');
 
@@ -45,6 +46,7 @@ export class TestViewerComponent implements OnInit, OnChanges {
     this.error.set('');
     this.test.set(null);
     this.submitted.set(false);
+    this.resultDetails.set(null); // Reset details
 
     this.courseService.getTestByPageId(this.pageId).subscribe({
       next: (data) => {
@@ -102,6 +104,10 @@ export class TestViewerComponent implements OnInit, OnChanges {
         this.score.set(result.score);
         this.passedStatus.set(result.passed);
         this.submitted.set(true);
+
+        if (result.details) {
+          this.resultDetails.set(result.details);
+        }
 
         if (result.passed) {
           this.passed.emit({

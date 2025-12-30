@@ -1,7 +1,7 @@
 <div class="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-sm">
     @if (test(); as t) {
     <div class="mb-8 border-b border-gray-200 pb-6">
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ t.title }}</h1>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ t.description }}</h1>
         <p class="text-gray-600">{{ t.description }}</p>
     </div>
 
@@ -46,42 +46,58 @@
 
             <div class="space-y-3">
                 @for (option of question.options; track option.id) {
-                <div class="flex items-center p-3 rounded-md border transition-colors cursor-pointer bg-white"
-                    [class.border-gray-200]="!submitted()" [class.hover:bg-gray-50]="!submitted()"
-                    [class.bg-green-50]="submitted() && option.is_correct"
-                    [class.border-green-200]="submitted() && option.is_correct"
-                    [class.bg-red-50]="submitted() && !option.is_correct && userAnswers()[question.id]?.includes(option.id)"
-                    [class.border-red-200]="submitted() && !option.is_correct && userAnswers()[question.id]?.includes(option.id)"
-                    (click)="toggleOption(question.id, option.id, isMultipleChoice(question))">
-                    <div class="flex items-center h-5">
-                        <input [type]="isMultipleChoice(question) ? 'checkbox' : 'radio'"
-                            [name]="'question_' + question.id"
-                            [checked]="userAnswers()[question.id]?.includes(option.id)" [disabled]="submitted()"
-                            class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300">
-                    </div>
-                    <div class="ml-3 text-sm">
-                        <label class="font-medium text-gray-700 cursor-pointer">
-                            {{ option.option_text }}
-                        </label>
-                    </div>
-                    @if (submitted() && option.is_correct) {
-                    <div class="ml-auto text-green-600">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7">
+                <div class="flex items-center p-3 rounded rounded-md border transition-colors relative"
+                    [class.cursor-pointer]="!submitted()"
+                    [class.opacity-50]="submitted() && !userAnswers()[question.id]?.includes(option.id)"
+                    (click)="toggleOption(question.id, option.id, isMultipleChoice(question))" [ngClass]="{
+                        'border-indigo-500 bg-indigo-50': userAnswers()[question.id]?.includes(option.id) && !submitted(),
+                        'border-gray-200 bg-white hover:bg-gray-100': !userAnswers()[question.id]?.includes(option.id) && !submitted(),
+                        
+                        'border-green-500 bg-green-50': submitted() && resultDetails() && resultDetails()![question.id]?.correct_options?.includes(option.id),
+                        'border-red-500 bg-red-50': submitted() && resultDetails() && userAnswers()[question.id]?.includes(option.id) && !resultDetails()![question.id]?.correct_options?.includes(option.id),
+                        'border-gray-200 bg-white': submitted() && !resultDetails()
+                    }">
+
+                    <div class="mr-3 flex items-center justify-center w-5 h-5 rounded border" [ngClass]="{
+                            'bg-indigo-600 border-indigo-600': userAnswers()[question.id]?.includes(option.id) && !submitted(),
+                            'border-gray-400': !userAnswers()[question.id]?.includes(option.id),
+                            'rounded-full': !isMultipleChoice(question),
+                            'rounded': isMultipleChoice(question),
+
+                             'bg-green-600 border-green-600': submitted() && resultDetails() && resultDetails()![question.id]?.correct_options?.includes(option.id),
+                             'bg-red-600 border-red-600': submitted() && resultDetails() && userAnswers()[question.id]?.includes(option.id) && !resultDetails()![question.id]?.correct_options?.includes(option.id)
+                        }">
+
+                        <!-- Checkmark/Dot icon logic -->
+                        <svg *ngIf="userAnswers()[question.id]?.includes(option.id) || (submitted() && resultDetails() && resultDetails()![question.id]?.correct_options?.includes(option.id))"
+                            class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7">
                             </path>
                         </svg>
                     </div>
-                    }
-                    @if (submitted() && !option.is_correct && userAnswers()[question.id]?.includes(option.id)) {
-                    <div class="ml-auto text-red-600">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </div>
-                    }
+
+                    <span class="flex-1">{{ option.option_text }}</span>
+
+                    <!-- Status Text -->
+                    <span *ngIf="submitted() && resultDetails()" class="ml-2 text-sm font-bold">
+                        <span *ngIf="resultDetails()![question.id]?.correct_options?.includes(option.id)"
+                            class="text-green-600">
+                            ✓ {{ 'CORRECT' | translate }}
+                        </span>
+                        <span
+                            *ngIf="userAnswers()[question.id]?.includes(option.id) && !resultDetails()![question.id]?.correct_options?.includes(option.id)"
+                            class="text-red-600">
+                            ✗ {{ 'INCORRECT' | translate }}
+                        </span>
+                    </span>
                 </div>
                 }
+            </div>
+
+            <!-- Feedback Display -->
+            <div *ngIf="submitted() && resultDetails() && resultDetails()![question.id]?.feedback"
+                class="mt-3 p-3 bg-blue-50 text-blue-800 rounded text-sm border border-blue-100">
+                <strong>{{ 'FEEDBACK' | translate }}:</strong> {{ resultDetails()![question.id].feedback }}
             </div>
         </div>
         }
@@ -95,6 +111,7 @@
         </button>
     </div>
     }
+
     } @else {
     <div class="flex justify-center py-12">
         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>

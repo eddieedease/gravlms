@@ -208,5 +208,19 @@
     "GRADED_STATUS": "Beoordelingsstatus",
     "RETAKE": "Opnieuw doen",
     "RETAKE_HINT": "Doe deze cursus opnieuw",
-    "CONGRATULATIONS": "Gefeliciteerd"
+    "CONGRATULATIONS": "Gefeliciteerd",
+    "CORRECT": "Juist",
+    "INCORRECT": "Onjuist",
+    "INSTRUCTIONS": "Instructies",
+    "STATUS": "Status",
+    "NOT_SUBMITTED": "Niet ingediend",
+    "PENDING_GRADING": "In afwachting van beoordeling",
+    "PASSED": "Geslaagd",
+    "NEEDS_REVISION": "Herziening nodig",
+    "SUBMIT_ASSIGNMENT": "Opdracht indienen",
+    "TYPE_YOUR_ANSWER": "Typ hier je antwoord...",
+    "ATTACHMENT_OPTIONAL": "Bijlage (Optioneel)",
+    "CHOOSE_FILE": "Kies bestand",
+    "SUBMIT_FOR_GRADING": "Indienen voor beoordeling",
+    "SUBMITTING": "Bezig met indienen..."
 }

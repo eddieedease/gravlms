@@ -13,6 +13,7 @@ interface Question {
   id?: number;
   question_text: string;
   type: 'multiple_choice';
+  feedback?: string;
   display_order: number;
   options: Option[];
 }
@@ -21,6 +22,7 @@ interface Test {
   id?: number;
   page_id: number;
   description: string;
+  show_correct_answers?: boolean;
   questions: Question[];
 }
 
@@ -38,6 +40,7 @@ export class TestEditorComponent implements OnInit, OnChanges {
   test: Test = {
     page_id: 0,
     description: '',
+    show_correct_answers: false,
     questions: []
   };
 
@@ -63,6 +66,7 @@ export class TestEditorComponent implements OnInit, OnChanges {
     this.test = {
       page_id: this.pageId,
       description: '',
+      show_correct_answers: false,
       questions: []
     };
     this.cdr.markForCheck();
@@ -75,6 +79,8 @@ export class TestEditorComponent implements OnInit, OnChanges {
           this.test.questions.forEach(q => {
             q.options.forEach(o => o.is_correct = !!o.is_correct);
           });
+          // Ensure boolean for show_correct_answers (backend sends 0/1)
+          this.test.show_correct_answers = !!this.test.show_correct_answers;
         }
         this.loading = false;
         this.cdr.markForCheck();
@@ -91,6 +97,7 @@ export class TestEditorComponent implements OnInit, OnChanges {
     this.test.questions.push({
       question_text: '',
       type: 'multiple_choice',
+      feedback: '',
       display_order: this.test.questions.length,
       options: [
         { option_text: '', is_correct: false },

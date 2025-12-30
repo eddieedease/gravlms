@@ -210,5 +210,19 @@
     "GRADED_STATUS": "Graded Status",
     "RETAKE": "Retake",
     "RETAKE_HINT": "Retake this course",
-    "CONGRATULATIONS": "Congratulations"
+    "CONGRATULATIONS": "Congratulations",
+    "CORRECT": "Correct",
+    "INCORRECT": "Incorrect",
+    "INSTRUCTIONS": "Instructions",
+    "STATUS": "Status",
+    "NOT_SUBMITTED": "Not Submitted",
+    "PENDING_GRADING": "Pending Grading",
+    "PASSED": "Passed",
+    "NEEDS_REVISION": "Needs Revision",
+    "SUBMIT_ASSIGNMENT": "Submit Assignment",
+    "TYPE_YOUR_ANSWER": "Type your answer here...",
+    "ATTACHMENT_OPTIONAL": "Attachment (Optional)",
+    "CHOOSE_FILE": "Choose File",
+    "SUBMIT_FOR_GRADING": "Submit for Grading",
+    "SUBMITTING": "Submitting..."
 }

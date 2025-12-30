@@ -77,26 +77,27 @@ function registerTestRoutes($app, $jwtMiddleware)
 
                 if ($existingTest) {
                     $testId = $existingTest['id'];
-                    $stmt = $pdo->prepare("UPDATE tests SET description = ? WHERE id = ?");
-                    $stmt->execute([$data['description'] ?? '', $testId]);
+                    $stmt = $pdo->prepare("UPDATE tests SET description = ?, show_correct_answers = ? WHERE id = ?");
+                    $stmt->execute([$data['description'] ?? '', $data['show_correct_answers'] ? 1 : 0, $testId]);
 
                     // Replace questions (simplistic approach)
                     $stmt = $pdo->prepare("DELETE FROM test_questions WHERE test_id = ?");
                     $stmt->execute([$testId]);
                 } else {
-                    $stmt = $pdo->prepare("INSERT INTO tests (page_id, description) VALUES (?, ?)");
-                    $stmt->execute([$pageId, $data['description'] ?? '']);
+                    $stmt = $pdo->prepare("INSERT INTO tests (page_id, description, show_correct_answers) VALUES (?, ?, ?)");
+                    $stmt->execute([$pageId, $data['description'] ?? '', $data['show_correct_answers'] ? 1 : 0]);
                     $testId = $pdo->lastInsertId();
                 }
 
                 // Add questions
                 if (isset($data['questions']) && is_array($data['questions'])) {
                     foreach ($data['questions'] as $qIndex => $q) {
-                        $stmt = $pdo->prepare("INSERT INTO test_questions (test_id, question_text, type, display_order) VALUES (?, ?, ?, ?)");
+                        $stmt = $pdo->prepare("INSERT INTO test_questions (test_id, question_text, type, feedback, display_order) VALUES (?, ?, ?, ?, ?)");
                         $stmt->execute([
                             $testId,
                             $q['question_text'],
                             $q['type'] ?? 'multiple_choice',
+                            $q['feedback'] ?? null,
                             $q['display_order'] ?? $qIndex
                         ]);
                         $questionId = $pdo->lastInsertId();
@@ -213,12 +214,36 @@ function registerTestRoutes($app, $jwtMiddleware)
                 }
             }
 
-            return jsonResponse($response, [
+            $responsePayload = [
                 'passed' => $passed,
                 'score' => $correctCount,
                 'total' => $totalQuestions,
                 'course_completed' => $courseCompleted
-            ]);
+            ];
+
+            // If test allows showing correct answers, append them
+            // We need to re-fetch the test config to be sure (or just use what we loaded earlier if we did)
+            // We loaded $test earlier only if passed check logic was different.
+            $stmt = $pdo->prepare("SELECT show_correct_answers FROM tests WHERE id = ?");
+            $stmt->execute([$testId]);
+            $testConfig = $stmt->fetch();
+
+            if ($testConfig && $testConfig['show_correct_answers']) {
+                $detailedResults = [];
+                foreach ($questions as $q) {
+                    $stmt = $pdo->prepare("SELECT id FROM test_question_options WHERE question_id = ? AND is_correct = 1");
+                    $stmt->execute([$q['id']]);
+                    $correctOptionIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+                    $detailedResults[$q['id']] = [
+                        'correct_options' => $correctOptionIds,
+                        'feedback' => $q['feedback']
+                    ];
+                }
+                $responsePayload['details'] = $detailedResults;
+            }
+
+            return jsonResponse($response, $responsePayload);
         });
 
     })->add($jwtMiddleware);
