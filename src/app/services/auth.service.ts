@@ -40,8 +40,13 @@ export class AuthService {
     }
 
     logout() {
+        const tenantId = localStorage.getItem('tenantId');
         this.clearSession();
-        this.router.navigate(['/login']);
+        if (tenantId) {
+            this.router.navigate(['/login', tenantId]);
+        } else {
+            this.router.navigate(['/']);
+        }
     }
 
     clearSession() {

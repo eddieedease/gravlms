@@ -37,8 +37,11 @@ function jwtAuthMiddleware()
         }
 
         try {
-            $secretKey = getenv('JWT_SECRET') ?: 'your-secret-key-change-in-production';
-            $decoded = JWT::decode($token, new Key($secretKey, 'HS256'));
+            $config = getConfig();
+            $secretKey = $config['jwt']['secret'];
+            $algorithm = $config['jwt']['algorithm'];
+
+            $decoded = JWT::decode($token, new Key($secretKey, $algorithm));
 
             // Attach user data to request attributes for use in route handlers
             $request = $request->withAttribute('user', $decoded->data);

@@ -34,9 +34,13 @@ function registerAuthRoutes($app)
 
             if ($user && password_verify($password, $user['password'])) {
                 // JWT Configuration
-                $secretKey = getenv('JWT_SECRET') ?: 'your-secret-key-change-in-production';
+                $config = getConfig();
+                $jwtConfig = $config['jwt'];
+                $secretKey = $jwtConfig['secret'];
+                $algorithm = $jwtConfig['algorithm'];
+
                 $issuedAt = time();
-                $expirationTime = $issuedAt + 3600; // 1 hour
+                $expirationTime = $issuedAt + $jwtConfig['expiration'];
                 $payload = [
                     'iat' => $issuedAt,
                     'exp' => $expirationTime,
@@ -51,7 +55,7 @@ function registerAuthRoutes($app)
                     ]
                 ];
 
-                $jwt = JWT::encode($payload, $secretKey, 'HS256');
+                $jwt = JWT::encode($payload, $secretKey, $algorithm);
 
                 return jsonResponse($response, [
                     'status' => 'success',

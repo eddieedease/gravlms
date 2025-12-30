@@ -27,7 +27,7 @@ return [
 
     // JWT Configuration
     'jwt' => [
-        'secret' => 'your-secret-key-here-change-this-in-production',  // IMPORTANT: Change this!
+        'secret' => 'change-in-production-againn ',  // IMPORTANT: Change this!
         'algorithm' => 'HS256',
         'expiration' => 3600 * 24 * 30   // Token expiration in seconds (30 days / 1 month)
     ],
