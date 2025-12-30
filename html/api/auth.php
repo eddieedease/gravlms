@@ -103,7 +103,8 @@ function registerAuthRoutes($app)
                 $emailConfig = $config['email'] ?? [];
 
                 if (!empty($emailConfig) && $emailConfig['enabled']) {
-                    $resetLink = "http://localhost:4200/reset-password?token=" . $token;
+                    $appUrl = $config['app']['frontend_url'] ?? 'http://localhost:4200';
+                    $resetLink = $appUrl . "/reset-password?token=" . $token;
                     $emailService = new EmailService($emailConfig);
                     $subject = "Password Reset Request";
                     $body = "Click the following link to reset your password: <a href='$resetLink'>$resetLink</a>";

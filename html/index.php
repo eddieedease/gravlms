@@ -17,8 +17,10 @@ $app->options('/{routes:.+}', function ($request, $response, $args) {
 
 $app->add(function ($request, $handler) {
     $response = $handler->handle($request);
+    $config = getConfig();
+    $frontendUrl = $config['app']['frontend_url'] ?? 'http://localhost:4200';
     return $response
-        ->withHeader('Access-Control-Allow-Origin', 'http://localhost:4200')
+        ->withHeader('Access-Control-Allow-Origin', $frontendUrl)
         ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization, X-Tenant-ID')
         ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
 });

@@ -24,18 +24,22 @@ function registerLtiRoutes($app, $jwtMiddleware)
             $stmt = $pdo->query("SELECT * FROM lti_platforms ORDER BY created_at DESC");
             $platforms = $stmt->fetchAll();
             $response->getBody()->write(json_encode($platforms));
+            $config = getConfig();
+            $frontendUrl = $config['app']['frontend_url'] ?? 'http://localhost:4200';
             return $response
                 ->withHeader('Content-Type', 'application/json')
-                ->withHeader('Access-Control-Allow-Origin', 'http://localhost:4200')
+                ->withHeader('Access-Control-Allow-Origin', $frontendUrl)
                 ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
                 ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
         } catch (\Throwable $e) {
             error_log("LTI Platforms GET Error: " . $e->getMessage());
             $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
+            $config = getConfig();
+            $frontendUrl = $config['app']['frontend_url'] ?? 'http://localhost:4200';
             return $response
                 ->withStatus(500)
                 ->withHeader('Content-Type', 'application/json')
-                ->withHeader('Access-Control-Allow-Origin', 'http://localhost:4200')
+                ->withHeader('Access-Control-Allow-Origin', $frontendUrl)
                 ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
                 ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
         }
@@ -55,9 +59,11 @@ function registerLtiRoutes($app, $jwtMiddleware)
                 $data['deployment_id'] ?? null
             ]);
             $response->getBody()->write(json_encode(['status' => 'success']));
+            $config = getConfig();
+            $frontendUrl = $config['app']['frontend_url'] ?? 'http://localhost:4200';
             return $response
                 ->withHeader('Content-Type', 'application/json')
-                ->withHeader('Access-Control-Allow-Origin', 'http://localhost:4200')
+                ->withHeader('Access-Control-Allow-Origin', $frontendUrl)
                 ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
                 ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
         } catch (\Throwable $e) {
@@ -349,7 +355,9 @@ function registerLtiRoutes($app, $jwtMiddleware)
             $allParams = array_merge($queryParams, $params);
 
             // Get redirect URL
-            $launchUrl = 'http://localhost:8080/api/lti/launch';
+            $config = getConfig();
+            $backendUrl = $config['app']['backend_url'] ?? 'http://localhost:8080';
+            $launchUrl = $backendUrl . '/api/lti/launch';
             $redirectUrl = $login->getRedirectUrl($launchUrl, $allParams);
 
             return $response->withHeader('Location', $redirectUrl)->withStatus(302);
@@ -426,9 +434,11 @@ function registerLtiRoutes($app, $jwtMiddleware)
             $jwt = \Firebase\JWT\JWT::encode($payload, $secretKey, 'HS256');
 
             // Redirect to course if specified, otherwise dashboard
+            $config = getConfig();
+            $frontendUrl = $config['app']['frontend_url'] ?? 'http://localhost:4200';
             $redirectUrl = $courseId
-                ? "http://localhost:4200/learn/{$courseId}?token={$jwt}"
-                : "http://localhost:4200/dashboard?token={$jwt}";
+                ? "{$frontendUrl}/learn/{$courseId}?token={$jwt}"
+                : "{$frontendUrl}/dashboard?token={$jwt}";
 
             return $response->withHeader('Location', $redirectUrl)->withStatus(302);
 
@@ -535,9 +545,11 @@ function registerLtiRoutes($app, $jwtMiddleware)
             $jwt = \Firebase\JWT\JWT::encode($payload, $secretKey, 'HS256');
 
             // Redirect
+            $config = getConfig();
+            $frontendUrl = $config['app']['frontend_url'] ?? 'http://localhost:4200';
             $redirectUrl = $courseId
-                ? "http://localhost:4200/learn/{$courseId}?token={$jwt}"
-                : "http://localhost:4200/dashboard?token={$jwt}";
+                ? "{$frontendUrl}/learn/{$courseId}?token={$jwt}"
+                : "{$frontendUrl}/dashboard?token={$jwt}";
 
             return $response->withHeader('Location', $redirectUrl)->withStatus(302);
 
@@ -589,7 +601,9 @@ function registerLtiRoutes($app, $jwtMiddleware)
                 // --- LTI 1.3 OIDC Launch ---
                 // We need to initiate the OIDC flow to the tool's initiate_login_url
 
-                $iss = 'http://localhost:8080'; // Platform Issuer
+                $config = getConfig();
+                $backendUrl = $config['app']['backend_url'] ?? 'http://localhost:8080';
+                $iss = $backendUrl; // Platform Issuer
                 $targetLinkUri = $tool['tool_url'];
                 $loginHint = $userId;
                 $ltiMessageHint = $courseId ?? 'dashboard'; // Pass state
@@ -624,7 +638,7 @@ function registerLtiRoutes($app, $jwtMiddleware)
                     'roles' => 'Learner',
                     'context_id' => $courseId ?? 'default',
                     'context_title' => $course['title'] ?? 'Course',
-                    'launch_presentation_return_url' => 'http://localhost:4200/dashboard',
+                    'launch_presentation_return_url' => ($config['app']['frontend_url'] ?? 'http://localhost:4200') . '/dashboard',
                     'oauth_consumer_key' => $tool['consumer_key'],
                     'oauth_signature_method' => 'HMAC-SHA1',
                     'oauth_timestamp' => (string) time(),

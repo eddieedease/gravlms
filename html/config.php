@@ -36,7 +36,9 @@ return [
     'app' => [
         'environment' => 'production',  // 'development' or 'production'
         'debug' => false,               // Set to false in production
-        'timezone' => 'UTC'
+        'timezone' => 'UTC',
+        'frontend_url' => 'http://localhost:4200', // Base URL for the frontend
+        'backend_url' => 'http://localhost:8080'   // Base URL for the backend API
     ],
 
     // Upload Configuration
