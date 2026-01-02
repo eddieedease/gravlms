@@ -7,7 +7,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "lms-mockup": {
+    "gravlms": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -70,10 +70,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "lms-mockup:build:production"
+              "buildTarget": "gravlms:build:production"
             },
             "development": {
-              "buildTarget": "lms-mockup:build:development"
+              "buildTarget": "gravlms:build:development"
             }
           },
           "defaultConfiguration": "development"
