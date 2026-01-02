@@ -5,7 +5,18 @@ use Slim\Factory\AppFactory;
 
 require __DIR__ . '/vendor/autoload.php';
 
+// Include DB/Helpers early to get config
+require_once __DIR__ . '/api/db.php';
+require_once __DIR__ . '/api/helpers.php';
+
 $app = AppFactory::create();
+
+// Set Base Path from Config
+$config = getConfig();
+$basePath = $config['app']['base_path'] ?? '';
+if ($basePath) {
+    $app->setBasePath($basePath);
+}
 
 // Add Error Middleware
 $app->addErrorMiddleware(true, true, true);
@@ -33,8 +44,6 @@ $app->get('/api/test', function (Request $request, Response $response, $args) {
 });
 
 // Include API modules
-require_once __DIR__ . '/api/db.php';
-require_once __DIR__ . '/api/helpers.php';
 require_once __DIR__ . '/api/middleware.php';
 require_once __DIR__ . '/api/auth.php';
 require_once __DIR__ . '/api/users.php';

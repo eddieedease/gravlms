@@ -24,6 +24,7 @@
                 "glob": "**/*",
                 "input": "public"
               },
+              "src/.htaccess",
               {
                 "glob": "**/*",
                 "input": "html",

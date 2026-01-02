@@ -30,7 +30,10 @@ return [
         'debug' => false,               // Set to false in production
         'timezone' => 'UTC',
         'frontend_url' => 'http://localhost:4200', // Base URL for the frontend
-        'backend_url' => 'http://localhost:8080'   // Base URL for the backend API
+        'backend_url' => 'http://localhost:8080',   // Base URL for the backend API
+        // Base Path: Uncomment the one matching your environment
+        'base_path' => '',                          // Development (Docker/Localhost)
+        // 'base_path' => '/backend',               // Production (Shared Hosting / Subdirectory)
     ],
 
     // Upload Configuration
