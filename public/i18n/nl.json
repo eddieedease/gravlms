@@ -220,5 +220,19 @@
     "ATTACHMENT_OPTIONAL": "Bijlage (Optioneel)",
     "CHOOSE_FILE": "Kies bestand",
     "SUBMIT_FOR_GRADING": "Indienen voor beoordeling",
-    "SUBMITTING": "Bezig met indienen..."
+    "SUBMITTING": "Bezig met indienen...",
+    "PASSWORD_RESET_SUCCESS_TITLE": "Wachtwoord succesvol gereset",
+    "PASSWORD_RESET_SUCCESS_MESSAGE": "Je wachtwoord is succesvol bijgewerkt.",
+    "PASSWORD_RESET_LOGIN_INSTRUCTION": "Om in te loggen, ga naar je organisatie-specifieke inlogpagina.",
+    "PASSWORD_RESET_LOGIN_HINT": "(bijv. jouwdomein.nl/login/<strong>[organisatie-naam]</strong>)",
+    "GO_TO_HOME": "Ga naar Home",
+    "ANNOUNCEMENT_TEXT": "Aankondiging van ons nieuwe cursusplatform.",
+    "READ_MORE": "Lees meer",
+    "ORG_ID_PLACEHOLDER": "Organisatie ID (bijv. main)",
+    "ENTER_ORG_ID_HINT": "Voer je Organisatie ID in om in te loggen",
+    "FEATURES_TITLE": "Functies",
+    "FEATURES_SUBTITLE": "Alles wat je nodig hebt om effectief te leren",
+    "FEATURES_DESC": "Ons platform biedt alle tools die je nodig hebt om je voortgang te maken, beheren en volgen.",
+    "FEATURE_1_TITLE": "Interactief Leren",
+    "FEATURE_1_DESC": "Ga aan de slag met dynamische inhoud, quizzen en multimedialessen."
 }

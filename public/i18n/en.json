@@ -222,5 +222,19 @@
     "ATTACHMENT_OPTIONAL": "Attachment (Optional)",
     "CHOOSE_FILE": "Choose File",
     "SUBMIT_FOR_GRADING": "Submit for Grading",
-    "SUBMITTING": "Submitting..."
+    "SUBMITTING": "Submitting...",
+    "PASSWORD_RESET_SUCCESS_TITLE": "Password Reset Successful",
+    "PASSWORD_RESET_SUCCESS_MESSAGE": "Your password has been successfully updated.",
+    "PASSWORD_RESET_LOGIN_INSTRUCTION": "To sign in, please navigate to your organization's specific login page.",
+    "PASSWORD_RESET_LOGIN_HINT": "(e.g., yourdomain.com/login/<strong>[organization-name]</strong>)",
+    "GO_TO_HOME": "Go to Home",
+    "ANNOUNCEMENT_TEXT": "Announcing our new course platform.",
+    "READ_MORE": "Read more",
+    "ORG_ID_PLACEHOLDER": "Organization ID (e.g. main)",
+    "ENTER_ORG_ID_HINT": "Enter your Organization ID to login",
+    "FEATURES_TITLE": "Features",
+    "FEATURES_SUBTITLE": "Everything you need to learn effectively",
+    "FEATURES_DESC": "Our platform provides all the tools you need to create, manage, and track your learning progress.",
+    "FEATURE_1_TITLE": "Interactive Learning",
+    "FEATURE_1_DESC": "Engage with dynamic content, quizzes, and multimedia lessons."
 }
