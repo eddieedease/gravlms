@@ -81,17 +81,31 @@ function handleLti11Outcome($request, $response)
         ltiDebugLog("Database connection established for tenant: $tenantSlug");
 
         // Check if already completed
-        $stmt = $pdo->prepare("SELECT * FROM completed_courses WHERE user_id = ? AND course_id = ?");
+        // Check for existing **ACTIVE** completion (ignore archived ones)
+        $stmt = $pdo->prepare("SELECT * FROM completed_courses WHERE user_id = ? AND course_id = ? AND archived_at IS NULL");
         $stmt->execute([$userId, $courseId]);
         $existing = $stmt->fetch();
 
-        ltiDebugLog("Checked for existing completion: " . ($existing ? "FOUND" : "NOT FOUND"));
+        ltiDebugLog("Checked for existing ACTIVE completion: " . ($existing ? "FOUND" : "NOT FOUND"));
 
         if (!$existing) {
             // Mark course as completed
             ltiDebugLog("Inserting new completion record...");
             $stmt = $pdo->prepare("INSERT INTO completed_courses (user_id, course_id, completed_at) VALUES (?, ?, NOW())");
             $stmt->execute([$userId, $courseId]);
+
+            // Auto-complete all lessons so the course appears 100% done in dashboard
+            $stmtPages = $pdo->prepare("SELECT id FROM course_pages WHERE course_id = ?");
+            $stmtPages->execute([$courseId]);
+            $pageIds = $stmtPages->fetchAll(PDO::FETCH_COLUMN);
+
+            if (!empty($pageIds)) {
+                $stmtLesson = $pdo->prepare("INSERT IGNORE INTO completed_lessons (user_id, page_id, course_id, completed_at) VALUES (?, ?, ?, NOW())");
+                foreach ($pageIds as $pId) {
+                    $stmtLesson->execute([$userId, $pId, $courseId]);
+                }
+                ltiDebugLog("Auto-completed " . count($pageIds) . " lessons for course $courseId");
+            }
             ltiDebugLog("✅ SUCCESS: Course $courseId marked as completed for user $userId");
             error_log("Marked course $courseId as completed for user $userId with score " . ($score ?? 'null'));
         } else {
