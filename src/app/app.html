@@ -127,12 +127,12 @@
           class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">{{
           'EDITOR' | translate }}</a>
         }
-        @if (auth.isAdmin() || auth.isMonitor()) {
+        @if (auth.isMonitor()) {
         <a routerLink="/results" (click)="closeMobileMenu()" routerLinkActive="bg-gray-900 text-white"
           class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">{{
           'RESULTS' | translate }}</a>
         }
-        @if (auth.isAdmin() || auth.isAssessor()) {
+        @if (auth.isAssessor()) {
         <a routerLink="/assessments" (click)="closeMobileMenu()" routerLinkActive="bg-gray-900 text-white"
           class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">{{
           'ASSESSMENTS' | translate }}</a>
@@ -162,7 +162,7 @@
             <button (click)="changeLanguage('en')" class="text-gray-400 hover:text-white">EN</button>
             <button (click)="changeLanguage('nl')" class="text-gray-400 hover:text-white">NL</button>
             @if (auth.currentUser()) {
-            @if (auth.isAdmin() || auth.isMonitor()) {
+            @if (auth.isMonitor()) {
             <a routerLink="/results" routerLinkActive="text-algolia-primary font-semibold"
               class="text-gray-600 hover:text-algolia-primary transition-colors flex items-center gap-1">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
