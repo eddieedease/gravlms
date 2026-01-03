@@ -27,6 +27,26 @@ function getDbConnection($tenantSlug = null)
             // Headers can be case-insensitive
             $tenantSlug = $headers['X-Tenant-ID'] ?? $headers['x-tenant-id'] ?? null;
         }
+
+        // Fallback: Try query parameter (e.g., ?tenant=sleeve1) or request body
+        // Essential for LTI where we can modify the Launch URL but not headers
+        if (!$tenantSlug) {
+            $tenantSlug = $_REQUEST['tenant'] ?? null;
+        }
+
+        // Fallback: Try to determine tenant from Host (Subdomain/Domain)
+        // This is crucial for external integrations like LTI that can't send headers
+        if (!$tenantSlug && isset($_SERVER['HTTP_HOST'])) {
+            $host = explode(':', $_SERVER['HTTP_HOST'])[0]; // Remove port
+            $parts = explode('.', $host);
+            // Use first part as slug (e.g. 'acme' from 'acme.domain.com' or 'eduvio' from 'eduvio.nl')
+            $tenantSlug = $parts[0];
+
+            // Ignore 'localhost' or 'www' unless explicitly set up as tenants
+            if ($tenantSlug === 'www' && count($parts) > 1) {
+                $tenantSlug = $parts[1]; // Use 'domain' from 'www.domain.com'
+            }
+        }
     }
 
     // 2. If valid slug is present, MUST resolve or fail

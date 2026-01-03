@@ -570,18 +570,31 @@ export class Editor implements OnInit {
       textarea.setSelectionRange(newPosition, newPosition);
     }, 0);
   }
+  ltiLaunchUrls = computed(() => {
+    const course = this.selectedCourse();
+    const tenantId = localStorage.getItem('tenantId');
+    const apiBase = this.config.apiUrl.replace('/api', '');
+
+    let lti13 = `${apiBase}/api/lti/launch`;
+    let lti11 = `${apiBase}/api/lti11/launch`;
+
+    if (course) {
+      lti13 = `${lti13}/${course.id}`;
+      lti11 = `${lti11}/${course.id}`;
+    }
+
+    if (tenantId) {
+      lti13 += `?tenant=${tenantId}`;
+      lti11 += `?tenant=${tenantId}`;
+    }
+
+    return { lti13, lti11 };
+  });
+
   copyToClipboard(text: string) {
     navigator.clipboard.writeText(text).then(() => {
       this.uploadStatus.set('Copied to clipboard!');
       setTimeout(() => this.uploadStatus.set(''), 3000);
     });
-  }
-
-  getLti13LaunchUrl(): string {
-    return `${this.config.apiUrl.replace('/api', '')}/api/lti/launch`;
-  }
-
-  getLti11LaunchUrl(): string {
-    return `${this.config.apiUrl.replace('/api', '')}/api/lti11/launch`;
   }
 }

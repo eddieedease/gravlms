@@ -181,4 +181,12 @@ export class ApiService {
   getLtiConsumerLaunchParams(toolId: number, courseId?: number): Observable<{ type: 'LTI-1p0' | 'LTI-1p3', url: string, params?: any }> {
     return this.http.post<{ type: 'LTI-1p0' | 'LTI-1p3', url: string, params?: any }>(`${this.apiUrl}/lti/consumer/launch`, { tool_id: toolId, course_id: courseId });
   }
+
+  sendLtiGrade(courseId: number, score: number = 1.0): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/lti/grade-passback`, { course_id: courseId, score });
+  }
+
+  resetCourse(courseId: number): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/learning/reset/${courseId}`, {});
+  }
 }

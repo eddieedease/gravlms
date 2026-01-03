@@ -380,6 +380,17 @@ To link to a specific GravLMS course from the external LMS, you must pass a **Cu
 6. **User interacts with GravLMS**: Completes lessons, takes tests, etc.
 7. **Optional: Grade passback**: GravLMS can send completion/grade data back to the external LMS
 
+### Handling Retakes & Course Resets
+
+GravLMS implements a **"Smart Auto-Reset"** mechanism for LTI launches to support retakes seamlessly:
+
+1.  **Detection**: When a user launches a course from an external LMS, GravLMS checks the `lis_result_sourcedid` parameter.
+2.  **New Attempt**: If the `lis_result_sourcedid` has changed since the last launch (indicating a new attempt created in the external LMS), GravLMS interprets this as a "Retake".
+3.  **Action**: The system automatically archives the user's previous completion record and clears their lesson progress for that specific course.
+4.  **Result**: The user sees a fresh course state and can start over immediately.
+
+This means you do **not** need a manual "Retake Course" button within GravLMS. The external LMS controls the attempt lifecycle. If a user re-launches the _same_ attempt (same `sourcedid`), their progress is preserved.
+
 ### Example: Serving GravLMS Courses in Canvas
 
 **Scenario**: Your institution uses Canvas, but you want to deliver a specialized course from GravLMS.

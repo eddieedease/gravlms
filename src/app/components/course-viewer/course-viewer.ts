@@ -230,6 +230,9 @@ export class CourseViewerComponent implements OnInit {
             this.learningService.completeLesson(this.courseId, pageId).subscribe(res => {
                 this.completedPageIds.update(ids => [...ids, pageId]);
                 if (res.course_completed) {
+                    if (this.isLtiMode()) {
+                        this.sendLtiGrade();
+                    }
                     this.showCompletionModal.set(true);
                 } else {
                     this.navigateToNextItem(pageId);
@@ -241,8 +244,18 @@ export class CourseViewerComponent implements OnInit {
     onTestPassed(pageId: number, courseCompleted: boolean = false) {
         this.completedPageIds.update(ids => [...ids, pageId]);
         if (courseCompleted) {
+            if (this.isLtiMode()) {
+                this.sendLtiGrade();
+            }
             this.showCompletionModal.set(true);
         }
+    }
+
+    sendLtiGrade() {
+        this.apiService.sendLtiGrade(this.courseId).subscribe({
+            next: () => console.log('LTI Grade sent successfully'),
+            error: (err) => console.error('Failed to send LTI grade', err)
+        });
     }
 
     navigateToNextItem(currentPageId: number) {
@@ -263,6 +276,12 @@ export class CourseViewerComponent implements OnInit {
         // Don't allow navigation to dashboard if in LTI mode
         if (!this.isLtiMode()) {
             this.router.navigate(['/dashboard']);
+        } else {
+            // In LTI mode, 'Return to LMS' might mean closing the window or showing a message
+            // Since we can't reliably close the window if not opened by script, we show a message
+            alert('You have completed the course. You may now close this tab/window to return to your LMS.');
+            // best effort to close
+            window.close();
         }
     }
 

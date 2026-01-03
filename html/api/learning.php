@@ -244,17 +244,10 @@ function registerLearningRoutes($app, $authMiddleware)
                 $stmtArchive = $pdo->prepare($sqlArchive);
                 $stmtArchive->execute([$userId, $courseId]);
 
-                // 3. For LTI Courses: Reset completed_courses status
-                // LTI courses rely on completed_courses for status (since they have no internal lessons)
-                $stmtCheck = $pdo->prepare("SELECT is_lti FROM courses WHERE id = ?");
-                $stmtCheck->execute([$courseId]);
-                $isLti = $stmtCheck->fetchColumn();
-
-                if ($isLti) {
-                    // Soft delete (archive) instead of hard delete to keep history if needed for audits
-                    $stmtResetLti = $pdo->prepare("UPDATE completed_courses SET archived_at = NOW() WHERE user_id = ? AND course_id = ? AND archived_at IS NULL");
-                    $stmtResetLti->execute([$userId, $courseId]);
-                }
+                // 3. Reset completed_courses status (Soft Delete to keep history for portfolio)
+                // We archive the current completion so it's no longer "Active" but stays in history
+                $stmtReset = $pdo->prepare("UPDATE completed_courses SET archived_at = NOW() WHERE user_id = ? AND course_id = ? AND archived_at IS NULL");
+                $stmtReset->execute([$userId, $courseId]);
 
                 return jsonResponse($response, ['status' => 'success', 'message' => 'Course reset successfully']);
             } catch (PDOException $e) {
@@ -297,14 +290,12 @@ function registerLearningRoutes($app, $authMiddleware)
                 $courseCompleted = false;
                 if ($totalLessons > 0 && $completedCount == $totalLessons) {
                     // Mark course as complete
-                    $stmtCourse = $pdo->prepare("INSERT INTO completed_courses (user_id, course_id) VALUES (?, ?)");
+                    $stmtCourse = $pdo->prepare("INSERT INTO completed_courses (user_id, course_id, completed_at) VALUES (?, ?, NOW())");
                     $stmtCourse->execute([$userId, $courseId]);
                     $courseCompleted = true;
 
                     // Send grade back to external LMS if this was an LTI launch
-                    if (!function_exists('sendGradeToExternalLms')) {
-                        require_once __DIR__ . '/lti_helpers.php';
-                    }
+                    require_once __DIR__ . '/lti_helpers.php';
                     sendGradeToExternalLms($userId, $courseId, 1.0); // 1.0 = 100% completion
                 }
 

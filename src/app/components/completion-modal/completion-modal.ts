@@ -25,14 +25,18 @@ import { CommonModule } from '@angular/common';
               </h3>
               <div class="mt-2">
                 <p class="text-sm text-gray-500">
-                  You have successfully completed the course <strong>{{ courseTitle }}</strong>.
+                  @if (isLti) {
+                    You have successfully completed <strong>{{ courseTitle }}</strong>. Your grade has been sent to the LMS.
+                  } @else {
+                    You have successfully completed the course <strong>{{ courseTitle }}</strong>.
+                  }
                 </p>
               </div>
             </div>
           </div>
           <div class="mt-5 sm:mt-6">
             <button type="button" (click)="onDashboard()" class="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-              Back to Dashboard
+              {{ isLti ? 'Return to LMS' : 'Back to Dashboard' }}
             </button>
           </div>
         </div>
@@ -43,6 +47,7 @@ import { CommonModule } from '@angular/common';
 export class CompletionModalComponent {
   @Input() isOpen = false;
   @Input() courseTitle = '';
+  @Input() isLti = false;
   @Output() close = new EventEmitter<void>();
   @Output() navigateDashboard = new EventEmitter<void>();
 
