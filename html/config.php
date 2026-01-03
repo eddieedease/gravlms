@@ -38,7 +38,12 @@ return [
 
     // Upload Configuration
     'upload' => [
-        'path' => __DIR__ . '/../uploads/',  // Path to uploads folder (one level up from backend)
+        // Path to uploads folder relative to this config file
+        // Development: html/config.php -> ../uploads/ resolves to project root uploads/
+        //              But uploads.php will override to use public/uploads/
+        // Production: dist/gravlms/browser/backend/config.php -> ../uploads/
+        //             resolves to dist/gravlms/browser/uploads/ ✓
+        'path' => __DIR__ . '/../uploads/',
         'max_size' => 5 * 1024 * 1024,       // Max file size in bytes (5MB)
         'allowed_types' => ['image/jpeg', 'image/jpg', 'image/png']
     ],

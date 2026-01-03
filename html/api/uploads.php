@@ -37,9 +37,28 @@ function registerUploadRoutes($app, $authMiddleware)
         }
 
         // Determine upload directory
-        // Store in project root 'public/uploads' directory
-        // Docker volume maps ./public/uploads to /var/www/uploads
-        $baseDir = file_exists('/var/www/uploads') ? '/var/www/uploads' : __DIR__ . '/../../public/uploads';
+        // Load config to get the upload path setting
+        $config = require __DIR__ . '/../config.php';
+
+        // Check if we're running from production (NOT in development html/ folder)
+        // Production can be: dist/gravlms/browser/backend/ OR public_html/backend/ (FTP hosting)
+        $isProduction = strpos(__DIR__, '/html/') === false && strpos(__DIR__, '\\html\\') === false;
+
+        if ($isProduction) {
+            // Production: uploads.php is in backend/api/
+            // We want uploads to go to uploads/ (sibling of backend/)
+            // Go up from api/ to backend/, then up to parent, then into uploads/
+            $baseDir = dirname(dirname(__DIR__)) . '/uploads';
+        } else {
+            // Development: Override to use public/uploads for Angular dev server compatibility
+            // Docker volume maps ./public/uploads to /var/www/uploads
+            $baseDir = file_exists('/var/www/uploads') ? '/var/www/uploads' : __DIR__ . '/../../public/uploads';
+        }
+
+        // Debug logging (remove after testing)
+        error_log("Upload Debug - __DIR__: " . __DIR__);
+        error_log("Upload Debug - isProduction: " . ($isProduction ? 'true' : 'false'));
+        error_log("Upload Debug - baseDir: " . $baseDir);
 
         // Multi-tenancy Buffer: Prepend Tenant Slug (default to 'main')
         $tenantSlug = $request->getHeaderLine('X-Tenant-ID') ?: 'main';
@@ -96,6 +115,10 @@ function registerUploadRoutes($app, $authMiddleware)
 
         $targetDir = $baseDir . $relPath;
 
+        // Debug logging (remove after testing)
+        error_log("Upload Debug - relPath: " . $relPath);
+        error_log("Upload Debug - targetDir: " . $targetDir);
+
         if (!file_exists($targetDir)) {
             mkdir($targetDir, 0777, true);
             chmod($targetDir, 0777); // Ensure explicit 777
@@ -106,9 +129,15 @@ function registerUploadRoutes($app, $authMiddleware)
         $filename = uniqid('img_', true) . '.' . $extension;
         $targetPath = $targetDir . '/' . $filename;
 
+        // Debug logging (remove after testing)
+        error_log("Upload Debug - targetPath: " . $targetPath);
+
         try {
             $uploadedFile->moveTo($targetPath);
             chmod($targetPath, 0666); // Ensure readable/writable by host user
+
+            // Debug logging (remove after testing)
+            error_log("Upload Debug - File saved successfully to: " . $targetPath);
 
             // Return relative URL
             // Since we store in public/uploads, and public is web root for Angular, URL is /uploads/...
@@ -129,8 +158,15 @@ function registerUploadRoutes($app, $authMiddleware)
     $app->get('/api/uploads/{filename:.*}', function (Request $request, Response $response, $args) {
         $filename = $args['filename'];
 
-        // Use same logic as upload: Docker dev vs production
-        $baseDir = file_exists('/var/www/uploads') ? '/var/www/uploads' : __DIR__ . '/../../public/uploads';
+        // Use same logic as upload: detect environment
+        $isProduction = strpos(__DIR__, '/html/') === false && strpos(__DIR__, '\\html\\') === false;
+
+        if ($isProduction) {
+            $baseDir = dirname(dirname(__DIR__)) . '/uploads';
+        } else {
+            $baseDir = file_exists('/var/www/uploads') ? '/var/www/uploads' : __DIR__ . '/../../public/uploads';
+        }
+
         $filepath = $baseDir . '/' . $filename;
 
         // Security check: Normalize path and check if it starts with baseDir
