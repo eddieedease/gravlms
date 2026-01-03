@@ -498,8 +498,13 @@ function initializeTenantSchema($pdo)
             }
 
             // 2. Drop the UNIQUE index 'user_id'
-            $pdo->exec("ALTER TABLE completed_courses DROP INDEX user_id");
-            echo "Migration: Dropped UNIQUE index 'user_id' from completed_courses.<br>";
+            try {
+                $pdo->exec("ALTER TABLE completed_courses DROP INDEX user_id");
+                echo "Migration: Dropped UNIQUE index 'user_id' from completed_courses.<br>";
+            } catch (Exception $e) {
+                // Ignore if it fails (e.g. index not found by that specific name)
+                echo "Migration: Could not drop index 'user_id' (might not exist or different name).<br>";
+            }
             break;
         }
 
@@ -519,6 +524,13 @@ function initializeTenantSchema($pdo)
                 // Ignore
             }
         }
+    }
+
+    // Ensure 'archived_at' column exists in completed_courses (for Soft Reset / Retake)
+    $stmt = $pdo->query("SHOW COLUMNS FROM completed_courses LIKE 'archived_at'");
+    if ($stmt->rowCount() == 0) {
+        $pdo->exec("ALTER TABLE completed_courses ADD COLUMN archived_at TIMESTAMP NULL DEFAULT NULL AFTER completed_at");
+        echo "Migration: Added 'archived_at' column to completed_courses.<br>";
     }
 
     // Ensure 'archived_at' column exists in assessment_submissions

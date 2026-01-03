@@ -60,7 +60,7 @@ function registerLearningRoutes($app, $authMiddleware)
                 // Get courses assigned to user, include completion status, validity, and progress counts
                 // Fetch last_completed_at and max validity_days (if in multiple groups)
                 $sql = "SELECT DISTINCT c.*, 
-                        (SELECT completed_at FROM completed_courses cc WHERE cc.course_id = c.id AND cc.user_id = ? ORDER BY completed_at DESC LIMIT 1) as last_completed_at,
+                        (SELECT completed_at FROM completed_courses cc WHERE cc.course_id = c.id AND cc.user_id = ? AND cc.archived_at IS NULL ORDER BY completed_at DESC LIMIT 1) as last_completed_at,
                         (
                            SELECT MAX(gc.validity_days)
                            FROM group_courses gc
@@ -243,6 +243,18 @@ function registerLearningRoutes($app, $authMiddleware)
 
                 $stmtArchive = $pdo->prepare($sqlArchive);
                 $stmtArchive->execute([$userId, $courseId]);
+
+                // 3. For LTI Courses: Reset completed_courses status
+                // LTI courses rely on completed_courses for status (since they have no internal lessons)
+                $stmtCheck = $pdo->prepare("SELECT is_lti FROM courses WHERE id = ?");
+                $stmtCheck->execute([$courseId]);
+                $isLti = $stmtCheck->fetchColumn();
+
+                if ($isLti) {
+                    // Soft delete (archive) instead of hard delete to keep history if needed for audits
+                    $stmtResetLti = $pdo->prepare("UPDATE completed_courses SET archived_at = NOW() WHERE user_id = ? AND course_id = ? AND archived_at IS NULL");
+                    $stmtResetLti->execute([$userId, $courseId]);
+                }
 
                 return jsonResponse($response, ['status' => 'success', 'message' => 'Course reset successfully']);
             } catch (PDOException $e) {
