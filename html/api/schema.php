@@ -283,6 +283,24 @@ function initializeTenantSchema($pdo)
     $pdo->exec($sqlLtiConsumers);
     echo "Table 'lti_consumers' created or already exists.<br>";
 
+    // Create lti_launch_context table (For grade passback to external LMS - Provider Mode)
+    $sqlLtiLaunchContext = "CREATE TABLE IF NOT EXISTS lti_launch_context (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        course_id INT NOT NULL,
+        consumer_id INT NOT NULL,
+        outcome_service_url VARCHAR(500) NOT NULL,
+        result_sourcedid VARCHAR(500) NOT NULL,
+        consumer_secret VARCHAR(255) NOT NULL,
+        created_at DATETIME NOT NULL,
+        UNIQUE KEY user_course_unique (user_id, course_id),
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
+        FOREIGN KEY (consumer_id) REFERENCES lti_consumers(id) ON DELETE CASCADE
+    )";
+    $pdo->exec($sqlLtiLaunchContext);
+    echo "Table 'lti_launch_context' created or already exists.<br>";
+
     // Create group_monitors table
     $sqlGroupMonitors = "CREATE TABLE IF NOT EXISTS group_monitors (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -522,6 +540,21 @@ function initializeTenantSchema($pdo)
     if ($stmt->rowCount() == 0) {
         $pdo->exec("ALTER TABLE test_questions ADD COLUMN feedback TEXT NULL AFTER type");
         echo "Migration: Added 'feedback' column to test_questions.<br>";
+    }
+
+    // Ensure 'score' column exists in completed_lessons (for LTI grade passback)
+    $stmt = $pdo->query("SHOW COLUMNS FROM completed_lessons LIKE 'score'");
+    if ($stmt->rowCount() == 0) {
+        $pdo->exec("ALTER TABLE completed_lessons ADD COLUMN score DECIMAL(5,2) NULL DEFAULT NULL COMMENT 'Score from 0-1 or 0-100' AFTER completed_at");
+        echo "Migration: Added 'score' column to completed_lessons.<br>";
+    }
+
+    // Ensure 'course_id' column exists in completed_lessons (for LTI course completion tracking)
+    $stmt = $pdo->query("SHOW COLUMNS FROM completed_lessons LIKE 'course_id'");
+    if ($stmt->rowCount() == 0) {
+        $pdo->exec("ALTER TABLE completed_lessons ADD COLUMN course_id INT NULL AFTER page_id");
+        $pdo->exec("ALTER TABLE completed_lessons ADD FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE");
+        echo "Migration: Added 'course_id' column to completed_lessons.<br>";
     }
 
 }

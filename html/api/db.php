@@ -61,9 +61,9 @@ function getDbConnection($tenantSlug = null)
 
     // 3. Fallback to default configuration (Only if NO tenant ID was explicitly sent)
     $config = getConfig();
-    $dbConfig = $config['database'];
+    $dbConfig = $config['database'] ?? $config['master_database']; // Fallback to master if database not set
 
-    $dsn = "mysql:host={$dbConfig['host']};dbname={$dbConfig['name']};charset={$dbConfig['charset']}";
+    $dsn = "mysql:host={$dbConfig['host']};dbname={$dbConfig['name']}";
     $options = [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,

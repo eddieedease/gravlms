@@ -8,6 +8,9 @@ use GravLMS\Lti\LtiCache;
 use GravLMS\Lti\LtiCookie;
 use GravLMS\Lti\LtiServiceConnector;
 
+// Include debug logging helper
+require_once __DIR__ . '/lti_debug.php';
+
 require_once __DIR__ . '/LtiDatabase.php';
 require_once __DIR__ . '/LtiCache.php';
 require_once __DIR__ . '/LtiCookie.php';
@@ -508,6 +511,10 @@ function registerLtiRoutes($app, $jwtMiddleware)
             $courseId = $params['custom_course_id'] ?? null;
             // Fallback: try to map resource_link_id if we had a mapping table (we don't yet, so we rely on custom param)
 
+            // Extract LTI Outcomes parameters (for grade passback to external LMS)
+            $outcomeServiceUrl = $params['lis_outcome_service_url'] ?? null;
+            $resultSourcedid = $params['lis_result_sourcedid'] ?? null;
+
             // User Provisioning
             $email = $params['lis_person_contact_email_primary'] ?? ($params['user_id'] . '@lti11.local');
             $name = $params['lis_person_name_full'] ?? 'LTI User';
@@ -527,6 +534,14 @@ function registerLtiRoutes($app, $jwtMiddleware)
                 $role = $user['role'];
             }
 
+            // Store LTI launch context for grade passback
+            if ($outcomeServiceUrl && $resultSourcedid && $courseId) {
+                // Store in session or database for later use
+                $stmt = $pdo->prepare("INSERT INTO lti_launch_context (user_id, course_id, consumer_id, outcome_service_url, result_sourcedid, consumer_secret, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW()) ON DUPLICATE KEY UPDATE outcome_service_url = ?, result_sourcedid = ?, consumer_secret = ?, created_at = NOW()");
+                $stmt->execute([$userId, $courseId, $consumer['id'], $outcomeServiceUrl, $resultSourcedid, $consumer['secret'], $outcomeServiceUrl, $resultSourcedid, $consumer['secret']]);
+                error_log("Stored LTI launch context for user $userId, course $courseId");
+            }
+
             // Generate JWT
             $secretKey = getenv('JWT_SECRET') ?: 'your-secret-key-change-in-production';
             $payload = [
@@ -539,7 +554,9 @@ function registerLtiRoutes($app, $jwtMiddleware)
                     'email' => $email,
                     'role' => $role,
                     'lti_mode' => true,
-                    'lti_course_id' => $courseId
+                    'lti_course_id' => $courseId,
+                    'lti_outcome_url' => $outcomeServiceUrl,
+                    'lti_sourcedid' => $resultSourcedid
                 ]
             ];
             $jwt = \Firebase\JWT\JWT::encode($payload, $secretKey, 'HS256');
@@ -627,6 +644,19 @@ function registerLtiRoutes($app, $jwtMiddleware)
 
             } else {
                 // --- LTI 1.1 Launch ---
+                $config = getConfig();
+                $backendUrl = $config['app']['backend_url'] ?? 'http://localhost:8080';
+
+                // Get tenant slug from headers for multi-tenancy support
+                $tenantSlug = $_SERVER['HTTP_X_TENANT_ID'] ?? null;
+                if (!$tenantSlug && function_exists('getallheaders')) {
+                    $headers = getallheaders();
+                    $tenantSlug = $headers['X-Tenant-ID'] ?? $headers['x-tenant-id'] ?? null;
+                }
+
+                // Generate unique sourcedid for this launch (tenant:user_id:course_id:tool_id:timestamp)
+                $sourcedid = base64_encode(($tenantSlug ?? 'default') . ':' . $userId . ':' . $courseId . ':' . $toolId . ':' . time());
+
                 $params = [
                     'lti_message_type' => 'basic-lti-launch-request',
                     'lti_version' => 'LTI-1p0',
@@ -638,7 +668,15 @@ function registerLtiRoutes($app, $jwtMiddleware)
                     'roles' => 'Learner',
                     'context_id' => $courseId ?? 'default',
                     'context_title' => $course['title'] ?? 'Course',
+                    'context_label' => $course['title'] ?? 'Course',
+                    'tool_consumer_instance_guid' => 'gravlms-' . ($config['app']['instance_id'] ?? 'default'),
+                    'tool_consumer_instance_name' => 'GravLMS',
                     'launch_presentation_return_url' => ($config['app']['frontend_url'] ?? 'http://localhost:4200') . '/dashboard',
+                    'launch_presentation_document_target' => 'window', // Signal we prefer full window
+                    // LTI Outcomes (Grade Passback) parameters
+                    'lis_outcome_service_url' => $backendUrl . '/api/lti/outcomes',
+                    'lis_result_sourcedid' => $sourcedid,
+                    // OAuth parameters
                     'oauth_consumer_key' => $tool['consumer_key'],
                     'oauth_signature_method' => 'HMAC-SHA1',
                     'oauth_timestamp' => (string) time(),
@@ -647,10 +685,33 @@ function registerLtiRoutes($app, $jwtMiddleware)
                     'oauth_callback' => 'about:blank'
                 ];
 
+                // Add custom course_id parameter if provided
+                if ($courseId) {
+                    $params['custom_course_id'] = (string) $courseId;
+                }
+
                 // Generate OAuth 1.0a signature
                 $baseString = buildOAuthBaseString('POST', $tool['tool_url'], $params);
-                $signature = base64_encode(hash_hmac('sha1', $baseString, $tool['shared_secret'] . '&', true));
+                $signingKey = $tool['shared_secret'] . '&'; // Note: token secret is empty for LTI, so just append &
+                $signature = base64_encode(hash_hmac('sha1', $baseString, $signingKey, true));
                 $params['oauth_signature'] = $signature;
+
+                // Log for debugging (remove in production)
+                ltiDebugLog("=== LTI 1.1 LAUNCH ===");
+                ltiDebugLog("Tool URL: " . $tool['tool_url']);
+                ltiDebugLog("Outcomes URL being sent: " . $backendUrl . '/api/lti/outcomes');
+                ltiDebugLog("Sourcedid: " . $sourcedid);
+                ltiDebugLog("Backend URL from config: " . $backendUrl);
+
+                error_log("=== LTI 1.1 Launch Debug ===");
+                error_log("Tool URL: " . $tool['tool_url']);
+                error_log("Consumer Key: " . $tool['consumer_key']);
+                error_log("Sourcedid: " . $sourcedid);
+                error_log("Outcomes URL: " . $backendUrl . '/api/lti/outcomes');
+                error_log("Base String: " . $baseString);
+                error_log("Signing Key: " . $signingKey);
+                error_log("Signature: " . $signature);
+                error_log("All Params: " . json_encode($params));
 
                 $response->getBody()->write(json_encode([
                     'type' => 'LTI-1p0',
@@ -667,6 +728,66 @@ function registerLtiRoutes($app, $jwtMiddleware)
         }
     })->add($jwtMiddleware);
 
+    // --- LTI Outcomes (Grade Passback) Endpoint ---
+    // This endpoint receives completion/grade data from external LTI tools (both 1.1 and 1.3)
+    $app->post('/api/lti/outcomes', function (Request $request, Response $response) {
+        // Log everything about this request
+        ltiDebugLog("========================================");
+        ltiDebugLog("LTI OUTCOMES REQUEST RECEIVED");
+        ltiDebugLog("========================================");
+        ltiDebugLog("Time: " . date('Y-m-d H:i:s'));
+        ltiDebugLog("Method: " . $request->getMethod());
+        ltiDebugLog("URI: " . $request->getUri());
+        ltiDebugLog("Content-Type: " . $request->getHeaderLine('Content-Type'));
+        ltiDebugLog("Authorization: " . substr($request->getHeaderLine('Authorization'), 0, 50) . "...");
+
+        $body = $request->getBody()->getContents();
+        ltiDebugLog("Body Length: " . strlen($body));
+        ltiDebugLog("Body Preview: " . substr($body, 0, 500));
+
+        // Also keep error_log for server logs
+        error_log("LTI Outcomes request received");
+
+        // Reset body for further processing
+        $request->getBody()->rewind();
+
+        try {
+            $contentType = $request->getHeaderLine('Content-Type');
+
+            // LTI 1.1 uses XML (replaceResultRequest)
+            if (strpos($contentType, 'application/xml') !== false || strpos($contentType, 'text/xml') !== false) {
+                ltiDebugLog("Routing to LTI 1.1 handler (XML)");
+                error_log("Routing to LTI 1.1 handler (XML)");
+                return handleLti11Outcome($request, $response);
+            }
+            // LTI 1.3 uses JSON (Assignment and Grade Services)
+            else if (strpos($contentType, 'application/json') !== false) {
+                ltiDebugLog("Routing to LTI 1.3 handler (JSON)");
+                error_log("Routing to LTI 1.3 handler (JSON)");
+                return handleLti13Outcome($request, $response);
+            } else {
+                // Try to auto-detect based on body content
+                $body = $request->getBody()->getContents();
+                if (strpos($body, '<?xml') === 0 || strpos($body, '<imsx_POXEnvelopeRequest') !== false) {
+                    ltiDebugLog("Auto-detected XML, routing to LTI 1.1 handler");
+                    error_log("Auto-detected XML, routing to LTI 1.1 handler");
+                    return handleLti11Outcome($request, $response);
+                } else {
+                    ltiDebugLog("Auto-detected JSON, routing to LTI 1.3 handler");
+                    error_log("Auto-detected JSON, routing to LTI 1.3 handler");
+                    return handleLti13Outcome($request, $response);
+                }
+            }
+        } catch (\Exception $e) {
+            ltiDebugLog("LTI Outcomes Error: " . $e->getMessage());
+            ltiDebugLog("Stack trace: " . $e->getTraceAsString());
+            error_log("LTI Outcomes Error: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+        }
+    });
+
 }
 
 // Helper function to build OAuth base string
@@ -681,4 +802,276 @@ function buildOAuthBaseString($method, $url, $params)
     }
     $paramString = implode('&', $pairs);
     return strtoupper($method) . '&' . rawurlencode($url) . '&' . rawurlencode($paramString);
+}
+
+// Helper function to handle LTI 1.1 Basic Outcomes (XML-based)
+function handleLti11Outcome($request, $response)
+{
+    ltiDebugLog(">>> Inside handleLti11Outcome function");
+
+    $body = $request->getBody()->getContents();
+    ltiDebugLog("Full XML body: " . $body);
+    error_log("LTI 1.1 Outcome Request Body: " . $body);
+
+    // Parse XML
+    $xml = simplexml_load_string($body);
+    if (!$xml) {
+        ltiDebugLog("ERROR: Failed to parse XML");
+        error_log("Failed to parse LTI 1.1 Outcome XML");
+        return createLti11ErrorResponse($response, 'failure', 'Invalid XML');
+    }
+
+    ltiDebugLog("XML parsed successfully");
+
+    // Extract data from XML
+    $messageIdentifier = (string) $xml->imsx_POXHeader->imsx_POXRequestHeaderInfo->imsx_messageIdentifier;
+    $sourcedid = (string) $xml->imsx_POXBody->replaceResultRequest->resultRecord->sourcedGUID->sourcedId;
+    $score = null;
+
+    if (isset($xml->imsx_POXBody->replaceResultRequest->resultRecord->result->resultScore->textString)) {
+        $score = (float) $xml->imsx_POXBody->replaceResultRequest->resultRecord->result->resultScore->textString;
+    }
+
+    ltiDebugLog("Extracted - MessageID: $messageIdentifier");
+    ltiDebugLog("Extracted - Sourcedid: $sourcedid");
+    ltiDebugLog("Extracted - Score: " . ($score ?? 'null'));
+    error_log("LTI 1.1 Outcome - Sourcedid: $sourcedid, Score: " . ($score ?? 'null'));
+
+    // Decode sourcedid (format: user_id:course_id:tool_id:timestamp)
+    $decoded = base64_decode($sourcedid);
+    $parts = explode(':', $decoded);
+
+    ltiDebugLog("Decoded sourcedid: $decoded");
+    ltiDebugLog("Parts count: " . count($parts));
+
+    if (count($parts) < 4) {
+        ltiDebugLog("ERROR: Invalid sourcedid format (expected tenant:user:course:tool:timestamp)");
+        error_log("Invalid sourcedid format: $decoded");
+        return createLti11ErrorResponse($response, 'failure', 'Invalid sourcedid');
+    }
+
+    $tenantSlug = $parts[0];
+    $userId = $parts[1];
+    $courseId = $parts[2];
+    $toolId = $parts[3];
+
+    ltiDebugLog("Tenant: $tenantSlug");
+
+    ltiDebugLog("User ID: $userId, Course ID: $courseId, Tool ID: $toolId");
+    error_log("Extracted - User ID: $userId, Course ID: $courseId, Tool ID: $toolId");
+
+    // Mark course as completed and store score
+    try {
+        ltiDebugLog("Attempting to mark course as completed...");
+        ltiDebugLog("Connecting to tenant database: $tenantSlug");
+        $pdo = getDbConnection($tenantSlug === 'default' ? null : $tenantSlug);
+        ltiDebugLog("Database connection established for tenant: $tenantSlug");
+
+        // Check if already completed
+        $stmt = $pdo->prepare("SELECT * FROM completed_courses WHERE user_id = ? AND course_id = ?");
+        $stmt->execute([$userId, $courseId]);
+        $existing = $stmt->fetch();
+
+        ltiDebugLog("Checked for existing completion: " . ($existing ? "FOUND" : "NOT FOUND"));
+
+        if (!$existing) {
+            // Mark course as completed
+            ltiDebugLog("Inserting new completion record...");
+            $stmt = $pdo->prepare("INSERT INTO completed_courses (user_id, course_id, completed_at) VALUES (?, ?, NOW())");
+            $stmt->execute([$userId, $courseId]);
+            ltiDebugLog("✅ SUCCESS: Course $courseId marked as completed for user $userId");
+            error_log("Marked course $courseId as completed for user $userId with score " . ($score ?? 'null'));
+
+            // Optionally store score in a separate column if needed
+            // For now, we'll log it but completed_courses doesn't have a score column by default
+        } else {
+            ltiDebugLog("Course already completed, skipping insert");
+            error_log("Course $courseId already completed for user $userId, score: " . ($score ?? 'null'));
+        }
+
+        ltiDebugLog("Returning success response to external tool");
+        return createLti11SuccessResponse($response, $messageIdentifier);
+    } catch (\Exception $e) {
+        ltiDebugLog("❌ ERROR in database operation: " . $e->getMessage());
+        ltiDebugLog("Stack trace: " . $e->getTraceAsString());
+        error_log("Error processing LTI 1.1 outcome: " . $e->getMessage());
+        return createLti11ErrorResponse($response, 'failure', $e->getMessage());
+    }
+}
+
+// Helper function to handle LTI 1.3 Assignment and Grade Services (JSON-based)
+function handleLti13Outcome($request, $response)
+{
+    $body = $request->getBody()->getContents();
+    $data = json_decode($body, true);
+
+    error_log("LTI 1.3 Outcome Request: " . json_encode($data));
+
+    // Extract score and user info from the request
+    // LTI 1.3 AGS format varies, but typically includes scoreGiven, scoreMaximum, userId, etc.
+    $score = $data['scoreGiven'] ?? $data['score'] ?? null;
+    $scoreMaximum = $data['scoreMaximum'] ?? 1.0;
+    $userId = $data['userId'] ?? null;
+    $activityProgress = $data['activityProgress'] ?? null;
+    $gradingProgress = $data['gradingProgress'] ?? null;
+
+    // Normalize score to 0-1 range
+    if ($score !== null && $scoreMaximum > 0) {
+        $normalizedScore = $score / $scoreMaximum;
+    } else {
+        $normalizedScore = null;
+    }
+
+    // For LTI 1.3, we might need to extract user/course info differently
+    // This is a simplified implementation - adjust based on your LTI 1.3 setup
+
+    error_log("LTI 1.3 Outcome - User: $userId, Score: " . ($normalizedScore ?? 'null') . ", Progress: $activityProgress");
+
+    // Return success response
+    $response->getBody()->write(json_encode([
+        'status' => 'success',
+        'message' => 'Grade received'
+    ]));
+    return $response->withHeader('Content-Type', 'application/json');
+}
+
+// Helper to create LTI 1.1 success response (XML)
+function createLti11SuccessResponse($response, $messageIdentifier)
+{
+    $xml = '<?xml version="1.0" encoding="UTF-8"?>
+<imsx_POXEnvelopeResponse xmlns="http://www.imsglobal.org/services/ltiv1p1/xsd/imsoms_v1p0">
+    <imsx_POXHeader>
+        <imsx_POXResponseHeaderInfo>
+            <imsx_version>V1.0</imsx_version>
+            <imsx_messageIdentifier>' . htmlspecialchars($messageIdentifier) . '</imsx_messageIdentifier>
+            <imsx_statusInfo>
+                <imsx_codeMajor>success</imsx_codeMajor>
+                <imsx_severity>status</imsx_severity>
+                <imsx_description>Score processed successfully</imsx_description>
+            </imsx_statusInfo>
+        </imsx_POXResponseHeaderInfo>
+    </imsx_POXHeader>
+    <imsx_POXBody>
+        <replaceResultResponse/>
+    </imsx_POXBody>
+</imsx_POXEnvelopeResponse>';
+
+    $response->getBody()->write($xml);
+    return $response->withHeader('Content-Type', 'application/xml');
+}
+
+// Helper to create LTI 1.1 error response (XML)
+function createLti11ErrorResponse($response, $codeMajor, $description)
+{
+    $xml = '<?xml version="1.0" encoding="UTF-8"?>
+<imsx_POXEnvelopeResponse xmlns="http://www.imsglobal.org/services/ltiv1p1/xsd/imsoms_v1p0">
+    <imsx_POXHeader>
+        <imsx_POXResponseHeaderInfo>
+            <imsx_version>V1.0</imsx_version>
+            <imsx_messageIdentifier>unknown</imsx_messageIdentifier>
+            <imsx_statusInfo>
+                <imsx_codeMajor>' . htmlspecialchars($codeMajor) . '</imsx_codeMajor>
+                <imsx_severity>error</imsx_severity>
+                <imsx_description>' . htmlspecialchars($description) . '</imsx_description>
+            </imsx_statusInfo>
+        </imsx_POXResponseHeaderInfo>
+    </imsx_POXHeader>
+    <imsx_POXBody/>
+</imsx_POXEnvelopeResponse>';
+
+    $response->getBody()->write($xml);
+    return $response->withStatus(400)->withHeader('Content-Type', 'application/xml');
+}
+
+// Helper function to send grade back to external LMS (Provider Mode)
+function sendGradeToExternalLms($userId, $courseId, $score = 1.0)
+{
+    try {
+        $pdo = getDbConnection();
+
+        // Get LTI launch context
+        $stmt = $pdo->prepare("SELECT * FROM lti_launch_context WHERE user_id = ? AND course_id = ?");
+        $stmt->execute([$userId, $courseId]);
+        $context = $stmt->fetch();
+
+        if (!$context) {
+            error_log("No LTI launch context found for user $userId, course $courseId");
+            return false;
+        }
+
+        $outcomeServiceUrl = $context['outcome_service_url'];
+        $sourcedid = $context['result_sourcedid'];
+        $consumerSecret = $context['consumer_secret'];
+
+        // Build LTI 1.1 Basic Outcomes XML request
+        $messageId = 'gravlms_' . uniqid();
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>
+<imsx_POXEnvelopeRequest xmlns="http://www.imsglobal.org/services/ltiv1p1/xsd/imsoms_v1p0">
+    <imsx_POXHeader>
+        <imsx_POXRequestHeaderInfo>
+            <imsx_version>V1.0</imsx_version>
+            <imsx_messageIdentifier>' . $messageId . '</imsx_messageIdentifier>
+        </imsx_POXRequestHeaderInfo>
+    </imsx_POXHeader>
+    <imsx_POXBody>
+        <replaceResultRequest>
+            <resultRecord>
+                <sourcedGUID>
+                    <sourcedId>' . htmlspecialchars($sourcedid) . '</sourcedId>
+                </sourcedGUID>
+                <result>
+                    <resultScore>
+                        <language>en</language>
+                        <textString>' . number_format($score, 2) . '</textString>
+                    </resultScore>
+                </result>
+            </resultRecord>
+        </replaceResultRequest>
+    </imsx_POXBody>
+</imsx_POXEnvelopeRequest>';
+
+        // Generate OAuth signature for the request
+        $oauthParams = [
+            'oauth_body_hash' => base64_encode(sha1($xml, true)),
+            'oauth_consumer_key' => $context['consumer_id'], // This should be the consumer key, not ID
+            'oauth_signature_method' => 'HMAC-SHA1',
+            'oauth_timestamp' => (string) time(),
+            'oauth_nonce' => bin2hex(random_bytes(16)),
+            'oauth_version' => '1.0'
+        ];
+
+        $baseString = buildOAuthBaseString('POST', $outcomeServiceUrl, $oauthParams);
+        $signature = base64_encode(hash_hmac('sha1', $baseString, $consumerSecret . '&', true));
+        $oauthParams['oauth_signature'] = $signature;
+
+        // Build OAuth Authorization header
+        $authHeader = 'OAuth ';
+        $authParts = [];
+        foreach ($oauthParams as $key => $value) {
+            $authParts[] = $key . '="' . rawurlencode($value) . '"';
+        }
+        $authHeader .= implode(', ', $authParts);
+
+        // Send HTTP POST request to external LMS
+        $ch = curl_init($outcomeServiceUrl);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $xml);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/xml',
+            'Authorization: ' . $authHeader
+        ]);
+
+        $responseBody = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        error_log("Grade passback to external LMS - HTTP $httpCode - Response: $responseBody");
+
+        return $httpCode >= 200 && $httpCode < 300;
+
+    } catch (\Exception $e) {
+        error_log("Error sending grade to external LMS: " . $e->getMessage());
+        return false;
+    }
 }

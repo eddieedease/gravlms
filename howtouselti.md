@@ -516,14 +516,62 @@ Deep linking allows external tools to return content selections back to GravLMS.
 2. Handling the content item return message
 3. Storing the selected content in GravLMS
 
-### Grade Passback
+### Grade Passback (Bidirectional)
 
-GravLMS can send completion and grade data back to external LMS platforms using LTI Assignment and Grade Services (AGS).
+GravLMS now supports **automatic grade passback** in both directions:
 
-**Implementation Steps**:
-1. Store the `lineitem` URL from the LTI launch
-2. When a user completes a course, send a score to the lineitem URL
-3. Use OAuth 2.0 to authenticate the grade passback request
+#### Consumer Mode: External Tools → GravLMS
+
+When you launch an external LTI tool from GravLMS, the tool can report completion and scores back.
+
+**How it works:**
+1. GravLMS includes `lis_outcome_service_url` and `lis_result_sourcedid` in the launch
+2. External tool completes activity
+3. External tool sends grade to `POST /api/lti/outcomes`
+4. GravLMS marks course as completed and stores score
+
+**Supported formats:**
+- LTI 1.1 Basic Outcomes (XML)
+- LTI 1.3 Assignment and Grade Services (JSON)
+
+**Database storage:**
+- Completion: `completed_lessons` table
+- Score: `score` column (0-1 or 0-100)
+
+#### Provider Mode: GravLMS → External LMS
+
+When an external LMS (Canvas, Moodle) launches GravLMS, completion is automatically reported back.
+
+**How it works:**
+1. External LMS launches GravLMS with `lis_outcome_service_url` and `lis_result_sourcedid`
+2. GravLMS stores this information in `lti_launch_context` table
+3. User completes all lessons in the course
+4. GravLMS automatically sends grade back to external LMS
+5. External LMS updates gradebook
+
+**Implementation:**
+- Automatic on course completion
+- Uses OAuth-signed XML requests
+- Score: 1.0 (100%) on completion
+- No manual intervention required
+
+**Database table:**
+```sql
+lti_launch_context (
+  user_id, course_id, consumer_id,
+  outcome_service_url, result_sourcedid,
+  consumer_secret, created_at
+)
+```
+
+**Troubleshooting:**
+```bash
+# Check if grade passback is working
+docker compose logs -f web | grep "Grade passback"
+
+# Verify launch context was stored
+SELECT * FROM lti_launch_context WHERE user_id = ?;
+```
 
 ---
 
@@ -531,30 +579,69 @@ GravLMS can send completion and grade data back to external LMS platforms using 
 
 GravLMS supports comprehensive LTI integration:
 
-| Mode | LTI Version | Use Case | Setup Complexity |
-|------|-------------|----------|------------------|
-| Consumer | 1.1 | Launch simple external tools | Low |
-| Consumer | 1.3 | Launch modern external tools | Medium |
-| Provider | 1.3 | Serve GravLMS to external LMS | Medium |
+| Mode | LTI Version | Use Case | Grade Passback | Setup Complexity |
+|------|-------------|----------|----------------|------------------|
+| Consumer | 1.1 | Launch external tools | ✅ Receives | Low |
+| Consumer | 1.3 | Launch modern tools | ✅ Receives | Medium |
+| Provider | 1.1 | Serve to external LMS | ✅ Sends | Low |
+| Provider | 1.3 | Serve to modern LMS | ✅ Sends | Medium |
 
 **Next Steps**:
 1. Decide which mode you need (Consumer or Provider)
 2. Follow the setup steps for your chosen mode
 3. Test with a sandbox platform before production
 4. Configure HTTPS and proper domain names for production use
+5. Run database migrations for grade passback support
+
+**Database Setup:**
+```bash
+# Option 1: Web installer
+Navigate to https://yourdomain.com/install.php
+
+# Option 2: Manual migration
+docker compose exec web bash
+mysql -u root -p gravlms < /var/www/html/api/migrations/lti_launch_context.sql
+```
 
 For additional support, consult the IMS Global LTI specification: https://www.imsglobal.org/activity/learning-tools-interoperability
 
 
-Here is how it works based on the codebase analysis:
+## Technical Implementation Details
 
-Storage of External Users & Scores:
-Provider Mode (LTI 1.3): When an external user (e.g., from Canvas) launches GravLMS, we automatically provision a "shadow user" in our users table using their email/sub claim.
-Their progress and scores are stored in our standard tables (completed_lessons, tests, etc.) linked to this shadow user's ID, just like a regular user.
-This approach ensures all our internal logic for tracking completion works seamlessly without needing separate "external" tables.
-LTI Tables & Launches:
-lti_keys: Stores our public/private key pairs for signing LTI 1.3 messages (Provider mode).
-lti_platforms: Stores details of the external LMSs authorized to launch us (Provider mode).
-lti_tools: Stores external tools we want to launch (Consumer mode).
-Do we need 'launches'?: No, we don't have an lti_launches table. The library uses lti_nonces (which you have) for replay protection and cookies/cache to validate the OIDC login state. This is standard and sufficient for secure launches.
-In summary, we treat external users as local users created on-the-fly, which simplifies data management significantly.
+Here is how it works based on the codebase:
+
+### Storage of External Users & Scores
+
+**Provider Mode (LTI 1.1 & 1.3):** 
+When an external user (e.g., from Canvas) launches GravLMS, we automatically provision a "shadow user" in our `users` table using their email/sub claim. Their progress and scores are stored in our standard tables (`completed_lessons`, `completed_courses`, etc.) linked to this shadow user's ID, just like a regular user. This approach ensures all our internal logic for tracking completion works seamlessly without needing separate "external" tables.
+
+**Consumer Mode (LTI 1.1 & 1.3):**
+When GravLMS launches an external tool, completion data from that tool is stored in `completed_lessons` with the `course_id` set to the LTI course ID and an optional `score` value.
+
+### LTI Tables & Launches
+
+- **lti_keys**: Stores our public/private key pairs for signing LTI 1.3 messages (Provider mode)
+- **lti_platforms**: Stores details of the external LMSs authorized to launch us (Provider mode - LTI 1.3)
+- **lti_consumers**: Stores details of external LMSs authorized to launch us (Provider mode - LTI 1.1)
+- **lti_tools**: Stores external tools we want to launch (Consumer mode)
+- **lti_launch_context**: Stores outcome service URLs for grade passback (Provider mode)
+- **lti_nonces**: Replay protection using nonces
+
+**Do we need 'launches'?** 
+No, we don't have an `lti_launches` table. The system uses `lti_nonces` for replay protection and `lti_launch_context` for grade passback. This is standard and sufficient for secure launches.
+
+### Grade Passback Flow
+
+**Provider Mode (GravLMS → External LMS):**
+```
+External LMS Launch → Store outcome_service_url → User completes course → 
+sendGradeToExternalLms() → POST to external LMS → Gradebook updated
+```
+
+**Consumer Mode (External Tool → GravLMS):**
+```
+GravLMS Launch → Include outcome_service_url → User completes activity → 
+External tool POST /api/lti/outcomes → GravLMS marks complete → Score stored
+```
+
+In summary, we treat external users as local users created on-the-fly, and use standard database tables for all tracking. Grade passback is fully automated in both directions.

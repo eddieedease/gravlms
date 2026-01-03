@@ -288,6 +288,12 @@ function registerLearningRoutes($app, $authMiddleware)
                     $stmtCourse = $pdo->prepare("INSERT INTO completed_courses (user_id, course_id) VALUES (?, ?)");
                     $stmtCourse->execute([$userId, $courseId]);
                     $courseCompleted = true;
+
+                    // Send grade back to external LMS if this was an LTI launch
+                    if (!function_exists('sendGradeToExternalLms')) {
+                        require_once __DIR__ . '/lti_helpers.php';
+                    }
+                    sendGradeToExternalLms($userId, $courseId, 1.0); // 1.0 = 100% completion
                 }
 
                 $pdo->commit();

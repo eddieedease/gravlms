@@ -58,10 +58,11 @@ export class CourseViewerComponent implements OnInit {
         this.isLtiMode.set(this.authService.isLtiUser());
     }
 
-    // LTI Iframe Logic
+    // LTI Launch Logic
     isLtiCourse = signal(false);
     ltiLaunchUrl = signal('');
     ltiLaunchParams = signal<{ [key: string]: string }>({});
+    ltiToolUrl = '';
 
     ngOnInit() {
         // Try to get courseId from param 'courseId' first, then 'id'
@@ -108,6 +109,7 @@ export class CourseViewerComponent implements OnInit {
             next: (res) => {
                 this.ltiLaunchUrl.set(res.url);
                 this.ltiLaunchParams.set(res.params || {});
+                this.ltiToolUrl = res.url;
 
                 // Auto-submit the form after a brief delay to ensure DOM is ready
                 setTimeout(() => {
@@ -120,6 +122,8 @@ export class CourseViewerComponent implements OnInit {
             error: (err) => console.error('LTI Params Error', err)
         });
     }
+
+
 
     // ... existing methods ...
 

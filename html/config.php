@@ -10,11 +10,11 @@ return [
 
     // Master Database (for multi-tenancy)
     'master_database' => [
-        'host' => 'db',
-        'name' => 'master',      // Default master DB name
-        'user' => 'root',
-        'password' => 'root',
-        'charset' => 'utf8mb4'
+        'host' => 'localhost',
+        'name' => 'deb33813n500_master',      // Default master DB name
+        'user' => 'deb33813n500_master',
+        'password' => '2EEP5cehDWQUP7NLmN5f',
+        'charset' => 'utf8'  // Changed from utf8mb4 for production MySQL compatibility
     ],
 
     // JWT Configuration
